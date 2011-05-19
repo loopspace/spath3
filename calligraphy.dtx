@@ -1,49 +1,124 @@
 % \iffalse meta-comment
-%
-% Copyright (C) 2011 by <+author+> <<+email+>>
-% ---------------------------------------------------------------------------
-% This work may be distributed and/or modified under the
-% conditions of the LaTeX Project Public License, either version 1.3
-% of this license or (at your option) any later version.
-% The latest version of this license is in
-%   http://www.latex-project.org/lppl.txt
-% and version 1.3 or later is part of all distributions of LaTeX
-% version 2005/12/01 or later.
-%
-% This work has the LPPL maintenance status `maintained'.
-%
-% The Current Maintainer of this work is <+maintainer+>.
-%
-% This work consists of the files calligraphy.dtx and calligraphy.ins
-% and the derived filebase calligraphy.sty.
-%
-% \fi
-%
-% \iffalse
-%<*driver>
-\ProvidesFile{calligraphy.dtx}
-%</driver>
-%<package>\NeedsTeXFormat{LaTeX2e}[1999/12/01]
-%<package>\ProvidesPackage{calligraphy}
+%<*internal>
+\iffalse
+%</internal>
+%<*readme>
+----------------------------------------------------------------
+calligraphy --- a style file for doing calligraphy with TikZ/PGF
+E-mail: stacey@math.ntnu.no
+Released under the LaTeX Project Public License v1.3c or later
+See http://www.latex-project.org/lppl.txt
+----------------------------------------------------------------
+
+This package defines a way of simulating calligraphic lines with TikZ/PGF.
+%</readme>
+%<*internal>
+\fi
+\def\nameofplainTeX{plain}
+\ifx\fmtname\nameofplainTeX\else
+  \expandafter\begingroup
+\fi
+%</internal>
+%<*install>
+\input docstrip.tex
+\keepsilent
+\askforoverwritefalse
+\preamble
+----------------------------------------------------------------
+calligraphy --- a style file for doing calligraphy with TikZ/PGF
+E-mail: stacey@math.ntnu.no
+Released under the LaTeX Project Public License v1.3c or later
+See http://www.latex-project.org/lppl.txt
+----------------------------------------------------------------
+
+\endpreamble
+\postamble
+
+Copyright (C) 2011 by Andrew Stacey <stacey@math.ntnu.no>
+
+This work may be distributed and/or modified under the
+conditions of the LaTeX Project Public License (LPPL), either
+version 1.3c of this license or (at your option) any later
+version.  The latest version of this license is in the file:
+
+http://www.latex-project.org/lppl.txt
+
+This work is "maintained" (as per LPPL maintenance status) by
+Andrew Stacey.
+
+This work consists of the file  calligraphy.dtx
+and the derived files           calligraphy.ins,
+                                calligraphy.pdf, and
+                                calligraphy.sty.
+
+\endpostamble
+\usedir{tex/latex/calligraphy}
+\generate{
+  \file{\jobname.sty}{\from{\jobname.dtx}{package}}
+}
+%</install>
+%<install>\endbatchfile
+%<*internal>
+\usedir{source/latex/calligraphy}
+\generate{
+  \file{\jobname.ins}{\from{\jobname.dtx}{install}}
+}
+\nopreamble\nopostamble
+\usedir{doc/latex/demopkg}
+\generate{
+  \file{README.txt}{\from{\jobname.dtx}{readme}}
+}
+\ifx\fmtname\nameofplainTeX
+  \expandafter\endbatchfile
+\else
+  \expandafter\endgroup
+\fi
+%</internal>
 %<*package>
-    [<+date+> <+version+> <+description+>]
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{calligraphy}[2011/05/19 v1.0 Calligraphic commands with TikZ]
 %</package>
-%
 %<*driver>
 \documentclass{ltxdoc}
-\usepackage{calligraphy}[<+date+>]
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+%\usepackage{morefloats}
+\usepackage{tikz}
+\usepackage{\jobname}
+\usepackage[numbered]{hypdoc}
+\definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9} 
+ 
+\usepackage{listings}
+\lstloadlanguages{[LaTeX]TeX}
+\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+ 
+\usepackage{fancyvrb}
+
+\newenvironment{example}
+  {\VerbatimEnvironment
+   \begin{VerbatimOut}[gobble=2]{example.out}}
+  {\end{VerbatimOut}
+   \begin{center}
+%   \setlength{\parindent}{0pt}
+   \fbox{\begin{minipage}{.9\linewidth}
+     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
+     \lstinputlisting[]{example.out}
+   \end{minipage}}
+
+   \fbox{\begin{minipage}{.9\linewidth}
+     \input{example.out}
+   \end{minipage}}
+\end{center}
+}
 \EnableCrossrefs
 \CodelineIndex
 \RecordChanges
 \begin{document}
-  \DocInput{calligraphy.dtx}
-  \PrintChanges
-  \PrintIndex
+  \DocInput{\jobname.dtx}
 \end{document}
 %</driver>
 % \fi
 %
-% \CheckSum{1786}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -62,38 +137,152 @@
 %   Right brace   \}     Tilde         \~}
 %
 %
-% \changes{<+version+>}{<+date+>}{Converted to DTX file}
+% \changes{1.0}{2011/05/03}{Converted to DTX file}
 %
 % \DoNotIndex{\newcommand,\newenvironment}
 %
 % \providecommand*{\url}{\texttt}
 % \GetFileInfo{calligraphy.dtx}
 % \title{The \textsf{calligraphy} package}
-% \author{<+author+> \\ \url{<+email+>}}
+% \author{Andrew Stacey \\ \url{stacey@math.ntnu.no}}
 % \date{\fileversion~from \filedate}
+%
 %
 % \maketitle
 %
+% 
 % \section{Introduction}
-%
-% Put text here.
-%
-% \section{Usage}
-%
-% Put text here.
-%
-%
-% \DescribeMacro{\calligraphystyle}
-%
-%
-% \DescribeMacro{\pen}
-%
-%
-% \DescribeMacro{\calligraphy}
-%
-%
-% \DescribeMacro{\definepen}
-%
+% 
+% The \texttt{calligraphy} package is designed to enable calligraphic style drawings in TikZ.
+% The idea is to be able to ``stroke'' a line with a ``pen''.
+% As a simple example, compare the two lines in the following picture.
+% 
+% \begin{center}
+% \begin{tikzpicture}
+% \pen (-135:.25) -- (45:.25);
+% \draw[line width=.5cm] (0,0) .. controls +(45:1) and +(-135:1) .. ++(3,0);
+% \calligraphy (0,-1) .. controls +(45:1) and +(-135:1) .. ++(3,0);
+% \end{tikzpicture}
+% \end{center}
+% 
+% The paths are identical in definition but the first is drawn using the standard TikZ path with a line width of .5cm.
+% The second is ``stroked'' with a calligraphic pen of width .5cm angled at 45 degrees.
+% 
+% \section{How It Works}
+% 
+% To know how to use this package, it is worth knowing a little about how it works.
+% A ``pen'' is a path, as is the line that is the template for the pen stroke.
+% The two paths are joined together to form a region which is filled.
+% Thus in constructing the example given in the introduction, the following path is built.
+% 
+% \begin{center}
+% \begin{tikzpicture}
+% \draw (0,-1) .. controls +(45:1) and +(-135:1) .. node (op) {} ++(3,0) -- node (pp) {} ++(45:.5) .. controls +(-135:1) and +(45:1) .. node (opr) {} ++(-3,0) -- node (ppr) {} (0,-1);
+% \draw[<-] (op) -- ++(0,-.5) node[anchor=north] {original path};
+% \draw[<-] (pp) -- ++(.5,0) node[anchor=west] {pen path};
+% \draw[<-] (opr) -- ++(0,.5) node[anchor=south] {original path reversed};
+% \draw[<-] (ppr) -- ++(-.5,0) node[anchor=east] {pen path reversed};
+% \end{tikzpicture}
+% \end{center}
+% 
+% What is important to note about this is that the ``pen'' isn't \emph{actually} dragged along the path, it is merely a simulation.
+% However, it should work as expected providing the following golden rule is not violated:
+% 
+% \begin{quotation}
+% Never \emph{push} a calligraphic pen.
+% \end{quotation}
+% 
+% This is good advice for ordinary calligraphy as well, so a path that is realisable as an honest calligraphic path should be fine with this package.
+% 
+% The paths for both pens and templates can be reasonably complicated.
+% They can contain gaps, but should not contain closed paths, nor rectangles.
+% The implementation works by breaking a path into its constituent pieces (broken up by ``move to''s) and working bit by bit.
+% 
+% \begin{center}
+% \begin{tikzpicture}
+% \pen (-135:.25) -- (-135:.125) (45:.125) -- (45:.25);
+% \calligraphy (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-4)  (0,-4) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \end{tikzpicture}
+% \end{center}
+% 
+% \section{Copperplate}
+% 
+% Copperplate pens are somewhat special.
+% They are ``thin'' so don't need the same treatment as a ``thick'' pen, but one should be able to vary the pressure with a copperplate pen to get a variation of thickness.
+% Specifying a copperplate pen is straightforward: it is a pen with no thickness.
+% 
+% \begin{center}
+% \begin{tikzpicture}[line width=2pt]
+% \pen (0,0);
+% \calligraphy (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \end{tikzpicture}
+% \end{center}
+% 
+% With a copperplate pen, the segments of a path are tapered.
+% Copperplate and normal pens can be mixed.
+% Any part of the pen specification that has no length is treated as a copperplate pen.
+% 
+% \begin{center}
+% \begin{tikzpicture}[line width=1pt]
+% \pen (-135:.125) -- (0,0) (45:.125);
+% \calligraphy (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \end{tikzpicture}
+% \end{center}
+% 
+% \section{Annotations}
+% 
+% As an addition, calligraphic paths can be annotated to show how they were constructed.
+% A path with an arrow is drawn at a set offset from the last part of the path.
+% 
+% \begin{center}
+% \begin{tikzpicture}[line width=1pt]
+% \pen (-135:.125) -- (0,0) (45:.125);
+% \calligraphy[annotate] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \end{tikzpicture}
+% \end{center}
+% 
+% \section{Style Options}
+% 
+% There are plenty of options for styling the paths and pens.
+% 
+% \subsection{Definition Options}
+% 
+% The \texttt{define pen} option is used to define a pen.
+% It can be given an argument which will be the name of the pen.
+% Pens are stored globally, and while they need a \texttt{tikz} or \texttt{tikzpicture} to be defined, they can be used in other pictures (it would also be possible to save the definitions to a file and load them in).
+% The \texttt{pen} command is a shortcut for a path with the \texttt{define pen} option set.
+% The name can also be specified by the \texttt{pen name} option.
+% 
+% To use a pen, we use the option \texttt{use pen}.
+% Technically, this works using a preaction, so the path itself should not be stroked or filled.
+% The \texttt{calligraphy} command is a shortcut for a path with the \texttt{use pen} option set.
+% The \texttt{pen name} can be used to specify a particular pen.
+% 
+% \subsection{Style Options}
+% 
+% Since calligraphic paths are sometimes filled and sometimes stroked, the \texttt{pen colour} option is provided to ensure that the colours are set correctly.
+% 
+% It is possible to style particular ``nibs'' (i.e., segments of the pen path) separately.
+% This is the \texttt{pen nib} option, which takes two arguments.
+% The first is the index of the part of the nib and the second is the style options to be applied.
+% 
+% It is also possible to style particular parts of the template path.
+% This is done by putting \texttt{[line style={}]} in the template path at the relevant part.
+% The style is saved and applied to that segment of the template path.
+% 
+% The tapering of copperplate paths can be controled by the \texttt{taper} option.
+% It takes arguments \texttt{none}, \texttt{both}, \texttt{start}, and \texttt{end}.
+% 
+% The style of the annotations is controlled by the options \texttt{annotation style} (for global style), \texttt{annotation shift} which controls how the annotation path is shifted from the final component of the calligraphic path, \texttt{annotation nodes style} for global style of the nodes, \texttt{annotation node style} for styling of particular nodes.
+% \begin{center}
+% \begin{tikzpicture}
+% \calligraphy[pen colour=green,pen nib={2}{color=red}] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \calligraphy[annotate,annotation node style={2}{circle,draw,fill=white}] (4,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (4,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \calligraphy[pen nib style={line width=1pt}] (0,-4) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-7) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \calligraphy[annotate,annotation style={dashed,->}] (4,-4) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (4,-7) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \end{tikzpicture}
+% \end{center}
+% 
 %
 % \StopEventually{}
 %
@@ -793,7 +982,6 @@
 % \begin{macro}{\spath@taper@lineto@out}
 %    \begin{macrocode}
 \def\spath@taper@lineto@out#1#2#3#4#5#6#7\relax{%
-%    \end{macrocode}
 % #1 is \pgfsyssoftpath@movetotoken
 % #2 is x-coord of starting point
 % #3 is y-coord of starting point
@@ -801,7 +989,6 @@
 % #5 is x-coord of ending point
 % #6 is y-coord of ending point
 % #7 shouldn't have anything in
-%    \begin{macrocode}
   \pgfmathsetmacro{\spath@sx}{.7 * #2 + .3 * #5}
   \pgfmathsetmacro{\spath@sy}{.7 * #3 + .3 * #6}
   \pgfmathsetmacro{\spath@ex}{.3 * #2 + .7 * #5}
@@ -825,7 +1012,6 @@
 % \begin{macro}{\spath@taper@lineto@in}
 %    \begin{macrocode}
 \def\spath@taper@lineto@in#1#2#3#4#5#6#7\relax{%
-%    \end{macrocode}
 % #1 is \pgfsyssoftpath@movetotoken
 % #2 is x-coord of starting point
 % #3 is y-coord of starting point
@@ -833,7 +1019,6 @@
 % #5 is x-coord of ending point
 % #6 is y-coord of ending point
 % #7 shouldn't have anything in
-%    \begin{macrocode}
   \pgfmathsetmacro{\spath@sx}{.7 * #2 + .3 * #5}
   \pgfmathsetmacro{\spath@sy}{.7 * #3 + .3 * #6}
   \pgfmathsetmacro{\spath@ex}{.3 * #2 + .7 * #5}
