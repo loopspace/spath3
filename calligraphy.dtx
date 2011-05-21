@@ -186,6 +186,20 @@ and the derived files           calligraphy.ins,
 % \end{center}
 % 
 % What is important to note about this is that the ``pen'' isn't \emph{actually} dragged along the path, it is merely a simulation.
+% This can be shown with the following simple example.
+% The first is a continuous path that goes past the angle of the pen and thus the upstroke would involve pushing the pen.
+% The second is how it is meant to be done, the second line is drawn from top to bottom.
+% However, as the direction of the path isn't important, the same effect can be obtained by ``lifting the nib'' between the lines.
+%
+% \begin{center}
+% \begin{tikzpicture}
+% \pen (-135:.125) -- (45:.125);
+% \calligraphy (0,0) -- (1,0) -- (1,1);
+% \calligraphy (2,0) -- (3,0) (3,1) -- (3,0);
+% \calligraphy (4,0) -- (5,0) +(0,0) -- (5,1);
+% \end{tikzpicture}
+% \end{center}
+%
 % However, it should work as expected providing the following golden rule is not violated:
 % 
 % \begin{quotation}
@@ -214,7 +228,8 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}[line width=2pt]
 % \pen (0,0);
-% \calligraphy (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \calligraphy[heavy] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
+% \calligraphy[light] (4,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (4,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \end{tikzpicture}
 % \end{center}
 % 
@@ -380,6 +395,24 @@ and the derived files           calligraphy.ins,
     \expandafter\def\csname calligraphy@annotation@style@#1\endcsname{#2}
   },
   pen nib style/.initial={},
+  weight/.is choice,
+  weight/heavy/.style={
+    line width=\pgfkeysvalueof{/pgf/calligraphy/heavy line width},
+    taper line width=\pgfkeysvalueof{/pgf/calligraphy/light line width},
+  },
+  weight/light/.style={
+    line width=\pgfkeysvalueof{/pgf/calligraphy/light line width},
+    taper line width=0pt,
+  },
+  heavy/.style={
+    weight=heavy
+  },
+  light/.style={
+    weight=light
+  },
+  heavy line width/.initial=2pt,
+  light line width/.initial=1pt,
+  taper line width/.initial=0pt,
   taper/.is choice,
   taper/none/.style={
     taper at start=false,
@@ -1061,21 +1094,40 @@ and the derived files           calligraphy.ins,
   \edef\spath@ey{#8}
   
 %    \end{macrocode}
-% Orthogonal vector
+% Orthogonal vector at end
 %    \begin{macrocode}
   \pgfmathsetmacro{\spath@ox}{-\spath@ey + \spath@dy}
   \pgfmathsetmacro{\spath@oy}{\spath@ex - \spath@dx}
+  
+%    \end{macrocode}
+% Orthogonal vector at start
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@sox}{\spath@sy - \spath@cy}
+  \pgfmathsetmacro{\spath@soy}{-\spath@sx + \spath@cx}
   
 %    \end{macrocode}
 % Adjust length to half the line width
 %    \begin{macrocode}
   \pgfmathsetmacro{\spath@oox}{.5*\spath@ox * \pgflinewidth / veclen(\spath@ox,\spath@oy)}
   \pgfmathsetmacro{\spath@ooy}{.5*\spath@oy * \pgflinewidth / veclen(\spath@ox,\spath@oy)}
+  
+%    \end{macrocode}
+% Adjust length to half the thinner line width
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@soox}{.5*\spath@sox * \pgfkeysvalueof{/pgf/calligraphy/taper line width} / veclen(\spath@sox,\spath@soy)}
+  \pgfmathsetmacro{\spath@sooy}{.5*\spath@soy * \pgfkeysvalueof{/pgf/calligraphy/taper line width} / veclen(\spath@sox,\spath@soy)}
 %    \end{macrocode}
 % Shift the end point and the control points
 %    \begin{macrocode}
   \pgfmathsetmacro{\spath@dx}{\spath@dx + \spath@oox}
   \pgfmathsetmacro{\spath@dy}{\spath@dy + \spath@ooy}
+%    \end{macrocode}
+% Shift the start point and the control points
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@cx}{\spath@cx + \spath@soox}
+  \pgfmathsetmacro{\spath@cy}{\spath@cy + \spath@sooy}
+  \pgfmathsetmacro{\spath@sx}{\spath@sx + \spath@soox}
+  \pgfmathsetmacro{\spath@sy}{\spath@sy + \spath@sooy}
 %    \end{macrocode}
 % End points are shifted slightly to overlap the next component
 %    \begin{macrocode}
@@ -1100,6 +1152,10 @@ and the derived files           calligraphy.ins,
   \pgfmathsetmacro{\spath@dy}{\spath@dy - 2*\spath@ooy}
   \pgfmathsetmacro{\spath@ex}{\spath@ex - 2*\spath@oox}
   \pgfmathsetmacro{\spath@ey}{\spath@ey - 2*\spath@ooy}
+  \pgfmathsetmacro{\spath@cx}{\spath@cx - 2*\spath@soox}
+  \pgfmathsetmacro{\spath@cy}{\spath@cy - 2*\spath@sooy}
+  \pgfmathsetmacro{\spath@sx}{\spath@sx - 2*\spath@soox}
+  \pgfmathsetmacro{\spath@sy}{\spath@sy - 2*\spath@sooy}
   \edef\spath@to@add{\noexpand\pgfsyssoftpath@linetotoken{\spath@ex pt}{\spath@ey pt}}
   \ge@addto@macro\spath@tapered@path\spath@to@add
   \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@dx pt}{\spath@dy pt}}
@@ -1109,7 +1165,7 @@ and the derived files           calligraphy.ins,
   \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetotoken{\spath@sx pt}{\spath@sy pt}}
   \ge@addto@macro\spath@tapered@path\spath@to@add
 %    \end{macrocode}
-% Close the path
+% Close the path, ought to make it rounded
 %    \begin{macrocode}
   \g@addto@macro{\spath@tapered@path}{\pgfsyssoftpath@closepath}
 }
@@ -1182,6 +1238,7 @@ and the derived files           calligraphy.ins,
   \fi
   \pgfsyssoftpath@setcurrentpath{\spath@rest@path}
   \pgfsyssoftpath@flushcurrentpath
+  \pgfsetlinewidth{\the\pgflinewidth}
   \pgfusepath{stroke}
 }
 %    \end{macrocode}
