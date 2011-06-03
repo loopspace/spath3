@@ -1,4 +1,4 @@
-% \iffalse meta-comment
+ % \iffalse meta-comment
 %<*internal>
 \iffalse
 %</internal>
@@ -153,7 +153,7 @@ and the derived files           calligraphy.ins,
 % 
 % \section{Introduction}
 % 
-% The \texttt{calligraphy} package is designed to enable calligraphic style drawings in TikZ.
+% The \Verb+calligraphy+ package is designed to enable calligraphic style drawings in TikZ.
 % The idea is to be able to ``stroke'' a line with a ``pen''.
 % As a simple example, compare the two lines in the following picture.
 % 
@@ -262,33 +262,33 @@ and the derived files           calligraphy.ins,
 % 
 % \subsection{Definition Options}
 % 
-% The \texttt{define pen} option is used to define a pen.
+% The \Verb+define pen+ option is used to define a pen.
 % It can be given an argument which will be the name of the pen.
-% Pens are stored globally, and while they need a \texttt{tikz} or \texttt{tikzpicture} to be defined, they can be used in other pictures (it would also be possible to save the definitions to a file and load them in).
-% The \texttt{pen} command is a shortcut for a path with the \texttt{define pen} option set.
-% The name can also be specified by the \texttt{pen name} option.
+% Pens are stored globally, and while they need a \Verb+tikz+ or \Verb+tikzpicture+ to be defined, they can be used in other pictures (it would also be possible to save the definitions to a file and load them in).
+% The \Verb+pen+ command is a shortcut for a path with the \Verb+define pen+ option set.
+% The name can also be specified by the \Verb+pen name+ option.
 % 
-% To use a pen, we use the option \texttt{use pen}.
+% To use a pen, we use the option \Verb+use pen+.
 % Technically, this works using a preaction, so the path itself should not be stroked or filled.
-% The \texttt{calligraphy} command is a shortcut for a path with the \texttt{use pen} option set.
-% The \texttt{pen name} can be used to specify a particular pen.
+% The \Verb+calligraphy+ command is a shortcut for a path with the \Verb+use pen+ option set.
+% The \Verb+pen name+ can be used to specify a particular pen.
 % 
 % \subsection{Style Options}
 % 
-% Since calligraphic paths are sometimes filled and sometimes stroked, the \texttt{pen colour} option is provided to ensure that the colours are set correctly.
+% Since calligraphic paths are sometimes filled and sometimes stroked, the \Verb+pen colour+ option is provided to ensure that the colours are set correctly.
 % 
 % It is possible to style particular ``nibs'' (i.e., segments of the pen path) separately.
-% This is the \texttt{pen nib} option, which takes two arguments.
+% This is the \Verb+pen nib+ option, which takes two arguments.
 % The first is the index of the part of the nib and the second is the style options to be applied.
 % 
 % It is also possible to style particular parts of the template path.
-% This is done by putting \texttt{[line style={}]} in the template path at the relevant part.
+% This is done by putting \Verb+[line style={}]+ in the template path at the relevant part.
 % The style is saved and applied to that segment of the template path.
 % 
-% The tapering of copperplate paths can be controled by the \texttt{taper} option.
-% It takes arguments \texttt{none}, \texttt{both}, \texttt{start}, and \texttt{end}.
+% The tapering of copperplate paths can be controled by the \Verb+taper+ option.
+% It takes arguments \Verb+none+, \Verb+both+, \Verb+start+, and \Verb+end+.
 % 
-% The style of the annotations is controlled by the options \texttt{annotation style} (for global style), \texttt{annotation shift} which controls how the annotation path is shifted from the final component of the calligraphic path, \texttt{annotation nodes style} for global style of the nodes, \texttt{annotation node style} for styling of particular nodes.
+% The style of the annotations is controlled by the options \Verb+annotation style+ (for global style), \Verb+annotation shift+ which controls how the annotation path is shifted from the final component of the calligraphic path, \Verb+annotation nodes style+ for global style of the nodes, \Verb+annotation node style+ for styling of particular nodes.
 % \begin{center}
 % \begin{tikzpicture}
 % \calligraphy[pen colour=green,pen nib={2}{color=red}] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
@@ -603,8 +603,9 @@ and the derived files           calligraphy.ins,
 %
 %
 % \begin{macro}{\cgrphy@annotatepath}
-% TODO: Use \tikz@scan@one@point to get coordinate
+% TODO: Use \Verb+\tikz@scan@one@point+ to get coordinate
 %    \begin{macrocode}
+\def\cgrphy@getpt#1{#1}
 \def\cgrphy@annotatepath#1#2{%
   \pgfsys@beginscope
   \spath@start{#2}
@@ -612,7 +613,7 @@ and the derived files           calligraphy.ins,
   \let\pen@sy=\spath@ylen
   \spath@translate{#1}{\pen@sx}{\pen@sy}%
   \let\spath@tmp@path=\spath@tr@path
-  \path[irrelevant for bounding box] \pgfkeysvalueof{/pgf/calligraphy/annotation shift};
+  \tikz@scan@one@point\cgrphy@getpt\pgfkeysvalueof{/pgf/calligraphy/annotation shift}
   \pgfgetlastxy{\pen@sx}{\pen@sy}
   \spath@translate{\spath@tmp@path}{\pen@sx}{\pen@sy}%
   \pgfkeysgetvalue{/pgf/calligraphy/annotation style}{\cgrphy@annotation@style}
