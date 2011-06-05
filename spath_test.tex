@@ -1,0 +1,51 @@
+\immediate\write18{tex spath.dtx}
+\documentclass{article}
+\usepackage{tikz}
+\usepackage{spath}
+
+\begin{document}
+\begin{tikzpicture}
+\draw[save path=\tmppath] (0,0) -- (1,1) (2,1) .. controls (3,1) and (4,2) .. (5,2);
+\makeatletter
+\show\tmppath
+\spath@translate\tmppath{1cm}{0cm}
+\show\spath@tmppath
+\spath@start\spath@tmppath
+\showthe\spath@sx
+\showthe\spath@sy
+\spath@length\tmppath
+\message{Length: \arabic{spath@length}}
+\spath@components\tmppath
+\message{Components: \arabic{spath@length}}
+\spath@reverse\tmppath
+\show\spath@tmppath
+\spath@start\tmppath
+\showthe\spath@sx
+\showthe\spath@sy
+\spath@end\tmppath
+\showthe\spath@ex
+\showthe\spath@ey
+\show\tmppath
+\spath@prepare\tmppath{path}
+\show\spath@array@path@length
+\expandafter\show\csname spath@array@path@1\endcsname
+\expandafter\show\csname spath@array@path@1@rev\endcsname
+\expandafter\show\csname spath@array@path@1@start\endcsname
+\expandafter\show\csname spath@array@path@1@end\endcsname
+\expandafter\show\csname spath@array@path@1@length\endcsname
+\expandafter\show\csname spath@array@path@1@first\endcsname
+\expandafter\show\csname spath@array@path@1@last\endcsname
+\expandafter\show\csname spath@array@path@2\endcsname
+\expandafter\show\csname spath@array@path@2@rev\endcsname
+\expandafter\show\csname spath@array@path@2@start\endcsname
+\expandafter\show\csname spath@array@path@2@end\endcsname
+\expandafter\show\csname spath@array@path@2@length\endcsname
+\expandafter\show\csname spath@array@path@2@first\endcsname
+\expandafter\show\csname spath@array@path@2@last\endcsname
+\makeatother
+\end{tikzpicture}
+\end{document}
+
+% Local Variables:
+% tex-output-type: "pdf18"
+% End:

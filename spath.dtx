@@ -1,0 +1,563 @@
+% \iffalse meta-comment
+%<*internal>
+\iffalse
+%</internal>
+%<*readme>
+----------------------------------------------------------------
+spath --- Functions for manipulating PGF soft paths
+E-mail: stacey@math.ntnu.no
+Released under the LaTeX Project Public License v1.3c or later
+See http://www.latex-project.org/lppl.txt
+----------------------------------------------------------------
+
+This package defines some functions used to manipulate PGFs soft paths.
+%</readme>
+%<*internal>
+\fi
+\def\nameofplainTeX{plain}
+\ifx\fmtname\nameofplainTeX\else
+  \expandafter\begingroup
+\fi
+%</internal>
+%<*install>
+\input docstrip.tex
+\keepsilent
+\askforoverwritefalse
+\preamble
+----------------------------------------------------------------
+spath --- Functions for manipulating PGF soft paths
+E-mail: stacey@math.ntnu.no
+Released under the LaTeX Project Public License v1.3c or later
+See http://www.latex-project.org/lppl.txt
+----------------------------------------------------------------
+
+\endpreamble
+\postamble
+
+Copyright (C) 2011 by Andrew Stacey <stacey@math.ntnu.no>
+
+This work may be distributed and/or modified under the
+conditions of the LaTeX Project Public License (LPPL), either
+version 1.3c of this license or (at your option) any later
+version.  The latest version of this license is in the file:
+
+http://www.latex-project.org/lppl.txt
+
+This work is "maintained" (as per LPPL maintenance status) by
+Andrew Stacey.
+
+This work consists of the file  spath.dtx
+and the derived files           spath.ins,
+                                spath.pdf, and
+                                spath.sty.
+
+\endpostamble
+\usedir{tex/latex/spath}
+\generate{
+  \file{\jobname.sty}{\from{\jobname.dtx}{package}}
+}
+%</install>
+%<install>\endbatchfile
+%<*internal>
+\usedir{source/latex/spath}
+\generate{
+  \file{\jobname.ins}{\from{\jobname.dtx}{install}}
+}
+\nopreamble\nopostamble
+\usedir{doc/latex/demopkg}
+\generate{
+  \file{README.txt}{\from{\jobname.dtx}{readme}}
+}
+\ifx\fmtname\nameofplainTeX
+  \expandafter\endbatchfile
+\else
+  \expandafter\endgroup
+\fi
+%</internal>
+%<*package>
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{spath}[2011/06/03 v1.0 Functions for manipulating PGF soft paths]
+%</package>
+%<*driver>
+\documentclass{ltxdoc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+%\usepackage{morefloats}
+\usepackage{tikz}
+\usepackage{\jobname}
+\usepackage[numbered]{hypdoc}
+\definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9} 
+ 
+\usepackage{listings}
+\lstloadlanguages{[LaTeX]TeX}
+\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+ 
+\usepackage{fancyvrb}
+
+\newenvironment{example}
+  {\VerbatimEnvironment
+   \begin{VerbatimOut}[gobble=2]{example.out}}
+  {\end{VerbatimOut}
+   \begin{center}
+%   \setlength{\parindent}{0pt}
+   \fbox{\begin{minipage}{.9\linewidth}
+     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
+     \lstinputlisting[]{example.out}
+   \end{minipage}}
+
+   \fbox{\begin{minipage}{.9\linewidth}
+     \input{example.out}
+   \end{minipage}}
+\end{center}
+}
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+%
+% \CharacterTable
+%  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+%   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+%   Digits        \0\1\2\3\4\5\6\7\8\9
+%   Exclamation   \!     Double quote  \"     Hash (number) \#
+%   Dollar        \$     Percent       \%     Ampersand     \&
+%   Acute accent  \'     Left paren    \(     Right paren   \)
+%   Asterisk      \*     Plus          \+     Comma         \,
+%   Minus         \-     Point         \.     Solidus       \/
+%   Colon         \:     Semicolon     \;     Less than     \<
+%   Equals        \=     Greater than  \>     Question mark \?
+%   Commercial at \@     Left bracket  \[     Backslash     \\
+%   Right bracket \]     Circumflex    \^     Underscore    \_
+%   Grave accent  \`     Left brace    \{     Vertical bar  \|
+%   Right brace   \}     Tilde         \~}
+%
+%
+% \changes{1.0}{2011/05/03}{Converted to DTX file}
+%
+% \DoNotIndex{\newcommand,\newenvironment}
+%
+% \providecommand*{\url}{\texttt}
+% \GetFileInfo{spath.dtx}
+% \title{The \textsf{spath} package}
+% \author{Andrew Stacey \\ \url{stacey@math.ntnu.no}}
+% \date{\fileversion~from \filedate}
+%
+%
+% \maketitle
+%
+% 
+% \section{Introduction}
+%
+% \StopEventually{}
+%
+% \section{Implementation}
+%
+% \iffalse
+%<*package>
+% \fi
+%
+% Set up tokens for comparision
+%    \begin{macrocode}
+\long\def\ge@addto@macro#1#2{%
+  \begingroup
+  \toks@\expandafter\expandafter\expandafter{\expandafter#1#2}%
+  \xdef#1{\the\toks@}%
+  \endgroup}
+
+\long\def\ge@addbefore@macro#1#2{%
+  \begingroup
+  \toks@\expandafter\expandafter\expandafter{\expandafter#2#1}%
+  \xdef#1{\the\toks@}%
+  \endgroup}
+
+\long\def\g@addbefore@macro#1#2{%
+  \def\@temp{#2}
+  \ge@addbefore@macro{#1}{\@temp}}
+
+\def\spath@define@transfer#1\relax{%
+  \expandafter\gdef\csname spath@tr@#1\endcsname##1##2{%
+    \pgf@xa=##1\relax
+    \pgf@ya=##2\relax
+    \advance\pgf@xa by \spath@trx
+    \advance\pgf@ya by \spath@try
+    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{\the\pgf@xa}{\the\pgf@ya}}
+    \ge@addto@macro\spath@tmppath\spath@tmp
+  }
+}
+
+\def\spath@define@length#1\relax{%
+  \expandafter\gdef\csname spath@len@#1\endcsname##1##2{%
+    \stepcounter{spath@length}
+  }
+}
+
+\def\spath@define@components#1\relax{%
+  \expandafter\gdef\csname spath@comp@#1\endcsname##1##2{%
+  }
+}
+
+\def\spath@define@reallength#1\relax{%
+  \expandafter\gdef\csname spath@rlen@#1\endcsname##1##2{%
+  }
+}
+
+\def\spath@define@reverse#1\relax{%
+  \expandafter\gdef\csname spath@rev@#1\endcsname##1##2{%
+    \edef\spath@tmp{{##1}{##2}\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname}
+    \ge@addbefore@macro\spath@tmppath\spath@tmp
+  }
+}
+
+\def\spath@define@start#1\relax{%
+  \expandafter\gdef\csname spath@start@#1\endcsname##1##2{%
+    \spath@sx=##1\relax
+    \spath@sy=##2\relax
+    \spath@start@reinit
+  }
+}
+
+\def\spath@define@end#1\relax{%
+  \expandafter\gdef\csname spath@end@#1\endcsname##1##2{%
+    \spath@ex=##1\relax
+    \spath@ey=##2\relax
+  }
+}
+
+\def\spath@define@array#1\relax{%
+  \expandafter\gdef\csname spath@array@#1\endcsname##1##2{%
+    \edef\spath@tmp{\expandafter\noexpand\csname       pgfsyssoftpath@#1token\endcsname{##1}{##2}}
+    \ge@addto@macro\spath@tmppath\spath@tmp
+  }
+}
+
+\def\spath@define@prepare#1\relax{%
+  \expandafter\gdef\csname spath@prepare@#1\endcsname##1##2{%
+    \edef\spath@tmp{\expandafter\noexpand\csname       pgfsyssoftpath@#1token\endcsname{##1}{##2}}
+    \ge@addto@macro\spath@tmppath\spath@tmp
+  }
+}
+
+\let\spath@translate@init=\pgfutil@empty
+\let\spath@length@init=\pgfutil@empty
+\let\spath@components@init=\pgfutil@empty
+\let\spath@reallength@init=\pgfutil@empty
+\let\spath@reverse@init=\pgfutil@empty
+\let\spath@start@init=\pgfutil@empty
+\let\spath@start@reinit=\pgfutil@empty
+\let\spath@end@init=\pgfutil@empty
+\let\spath@array@init=\pgfutil@empty
+\let\spath@prepare@init=\pgfutil@empty
+
+\foreach \spath@cpt in {
+  moveto,
+  lineto,
+  curvetosupporta,
+  curvetosupportb,
+  curveto,
+  rectcorner,
+  rectsize%
+} {
+% Save token names for comparision
+\expandafter\xdef\csname spath@\spath@cpt\endcsname{\expandafter\string\csname pgfsyssoftpath@\spath@cpt token\endcsname}
+
+% Translation
+\expandafter\spath@define@transfer\spath@cpt\relax
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@tr@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@translate@init\spath@tmp
+
+% Counting total length
+\expandafter\spath@define@length\spath@cpt\relax
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@len@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@length@init\spath@tmp
+
+% Counting components
+\expandafter\spath@define@components\spath@cpt\relax
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@comp@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@components@init\spath@tmp
+
+% Counting real length
+\expandafter\spath@define@reallength\spath@cpt\relax
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rlen@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@reallength@init\spath@tmp
+
+% Reversal
+\expandafter\spath@define@reverse\spath@cpt\relax
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rev@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@reverse@init\spath@tmp
+
+% Initial coordinates
+\expandafter\spath@define@start\spath@cpt\relax
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@start@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@start@init\spath@tmp
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\noexpand\@gobbletwo}
+
+\ge@addto@macro\spath@start@reinit\spath@tmp
+
+% Final coordinates
+\expandafter\spath@define@end\spath@cpt\relax
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@end@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@end@init\spath@tmp
+
+% Split in to array
+\expandafter\spath@define@array\spath@cpt\relax
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@array@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@array@init\spath@tmp
+
+% Prepare a path: split it, reverse the components, figure out endpoints
+% Actions are too complicated to specify a template so just create initialisation code
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@prepare@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@prepare@init\spath@tmp
+}
+
+% Correction for counting components: count movetos
+\def\spath@comp@moveto#1#2{%
+  \stepcounter{spath@length}
+}
+
+% Correction for counting real length: count linetos and curvetos
+\def\spath@rlen@lineto#1#2{%
+  \stepcounter{spath@length}
+}
+\def\spath@rlen@curveto#1#2{%
+  \stepcounter{spath@length}
+}
+
+% Correction for reversing curvetos
+\def\spath@rev@curvetosupporta#1#2{%
+  \edef\spath@tmp{{#1}{#2}\noexpand\pgfsyssoftpath@curvetotoken}
+  \ge@addbefore@macro\spath@tmppath\spath@tmp
+}
+\def\spath@rev@curvetosupportb#1#2{%
+  \edef\spath@tmp{{#1}{#2}\noexpand\pgfsyssoftpath@curvetosupportbtoken}
+  \ge@addbefore@macro\spath@tmppath\spath@tmp
+}
+\def\spath@rev@curveto#1#2{%
+  \edef\spath@tmp{{#1}{#2}\noexpand\pgfsyssoftpath@curvetosupportatoken}
+  \ge@addbefore@macro\spath@tmppath\spath@tmp
+}
+
+% Correction for splitting in to an array
+\def\spath@array@moveto#1#2{%
+  \ifx\spath@tmppath\pgfutil@empty
+  \else
+   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}\endcsname=\spath@tmppath
+   \def\spath@tmppath{\pgfsyssoftpath@movetotoken{#1}{#2}}
+  \fi
+  \stepcounter{spath@array}
+}
+
+% Preparing a path: splitting, reversing, endpoints
+\def\spath@prepare@moveto#1#2{%
+  \ifx\spath@tmppath\pgfutil@empty
+  \else
+   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}\endcsname=\spath@tmppath
+   \g@addbefore@macro\spath@tmppathrev{\pgfsyssoftpath@movetotoken}
+   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@rev\endcsname=\spath@tmppathrev
+   \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@end\endcsname{\noexpand\pgfqpoint{\the\spath@ex}{\the\spath@ey}}
+   \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@length\endcsname{\the\value{spath@length}}
+   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@first\endcsname=\spath@first
+   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@last\endcsname=\spath@last
+  \fi
+   \def\spath@tmppath{\pgfsyssoftpath@movetotoken{#1}{#2}}
+   \def\spath@tmppathrev{{#1}{#2}}
+   \let\spath@first=\pgfutil@empty
+   \let\spath@last=\pgfutil@empty
+  \stepcounter{spath@array}
+  \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@start\endcsname{\noexpand\pgfqpoint{#1}{#2}}
+  \spath@ex=#1\relax
+  \spath@ey=#2\relax
+  \setcounter{spath@length}{0}
+}
+
+\def\spath@prepare@lineto#1#2{%
+  \g@addto@macro\spath@tmppath{\pgfsyssoftpath@linetotoken{#1}{#2}}
+  \g@addbefore@macro\spath@tmppathrev{{#1}{#2}\pgfsyssoftpath@linetotoken}
+  \spath@ex=#1\relax
+  \spath@ey=#2\relax
+  \stepcounter{spath@length}
+  \def\spath@last{lineto}
+  \ifx\spath@first\pgfutil@empty
+  \def\spath@first{lineto}
+  \fi
+}
+
+\def\spath@prepare@curveto#1#2{%
+  \g@addto@macro\spath@tmppath{\pgfsyssoftpath@curvetotoken{#1}{#2}}
+  \g@addbefore@macro\spath@tmppathrev{{#1}{#2}\pgfsyssoftpath@curvetosupportatoken}
+  \spath@ex=#1\relax
+  \spath@ey=#2\relax
+  \stepcounter{spath@length}
+  \def\spath@last{curveto}
+  \ifx\spath@first\pgfutil@empty
+  \def\spath@first{curveto}
+  \fi
+}
+
+\def\spath@prepare@curvetosupporta#1#2{%
+  \g@addto@macro\spath@tmppath{\pgfsyssoftpath@curvetosupportatoken{#1}{#2}}
+  \g@addbefore@macro\spath@tmppathrev{{#1}{#2}\pgfsyssoftpath@curvetotoken}
+  \spath@ex=#1\relax
+  \spath@ey=#2\relax
+}
+
+\def\spath@prepare@curvetosupportb#1#2{%
+  \g@addto@macro\spath@tmppath{\pgfsyssoftpath@curvetosupportbtoken{#1}{#2}}
+  \g@addbefore@macro\spath@tmppathrev{{#1}{#2}\pgfsyssoftpath@curvetosupportbtoken}
+  \spath@ex=#1\relax
+  \spath@ey=#2\relax
+}
+
+% Also need to handle the closepath variants
+
+\newdimen\spath@trx
+\newdimen\spath@try
+\newdimen\spath@sx
+\newdimen\spath@sy
+\newdimen\spath@ex
+\newdimen\spath@ey
+\newcounter{spath@length}
+\newcounter{spath@array}
+
+\def\spath@translate#1#2#3{%
+  \let\spath@tmppath=\pgfutil@empty
+  \begingroup
+  \spath@trx=#2\relax
+  \spath@try=#3\relax
+  \spath@translate@init
+  #1
+  \endgroup
+}
+
+\def\spath@length#1{%
+  \setcounter{spath@length}{0}
+  \begingroup
+  \spath@length@init
+  #1
+  \endgroup
+}
+
+\def\spath@components#1{%
+  \setcounter{spath@length}{0}
+  \begingroup
+  \spath@components@init
+  #1
+  \endgroup
+}
+
+\def\spath@reallength#1{%
+  \setcounter{spath@length}{0}
+  \begingroup
+  \spath@reallength@init
+  #1
+  \endgroup
+}
+
+\def\spath@reverse#1{%
+  \let\spath@tmppath=\pgfutil@empty
+  \begingroup
+  \spath@reverse@init
+  #1
+  \g@addbefore@macro\spath@tmppath\pgfsyssoftpath@movetotoken
+  \expandafter\spath@trimlast\spath@tmppath\relax
+  \endgroup
+}
+
+\def\spath@trimlast#1\pgfsyssoftpath@movetotoken\relax{\gdef\spath@tmppath{#1}}
+
+\def\spath@start#1{%
+  \begingroup
+  \spath@start@init
+  #1
+  \global\spath@sx=\spath@sx
+  \global\spath@sy=\spath@sy
+  \endgroup
+}
+
+\def\spath@end#1{%
+  \begingroup
+  \spath@end@init
+  #1
+  \global\spath@ex=\spath@ex
+  \global\spath@ey=\spath@ey
+  \endgroup
+}
+
+\def\spath@cat#1#2{
+  \let\spath@tmppath=#1
+  \expandafter\spath@trimfirst#2\relax
+  \ge@addto@macro\spath@tmppath\spath@trimmed@path
+}
+
+\def\spath@trimfirst#1#2#3#4\relax{%
+  \edef\this@action{\string#1}%
+  \ifx\this@action\spath@moveto
+  \def\spath@trimmed@path{#4}%
+  \else
+  \def\spath@trimmed@path{#1{#2}{#3}#4}%
+  \fi
+}
+
+\def\spath@array#1#2{
+  \let\spath@tmppath=\pgfutil@empty
+  \begingroup
+  \setcounter{spath@array}{0}
+  \def\spath@path@name{#2}
+  \spath@array@init
+  #1
+  \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}\endcsname=\spath@tmppath
+  \expandafter\xdef\csname spath@array@\spath@path@name @length\endcsname{\the\value{spath@array}}
+  \endgroup
+}
+
+\def\spath@prepare#1#2{
+  \let\spath@tmppath=\pgfutil@empty
+  \let\spath@tmppathrev=\pgfutil@empty
+  \begingroup
+  \setcounter{spath@array}{0}
+  \setcounter{spath@length}{0}
+  \def\spath@path@name{#2}
+  \spath@prepare@init
+  #1
+   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}\endcsname=\spath@tmppath
+   \g@addbefore@macro\spath@tmppathrev\pgfsyssoftpath@movetotoken
+   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@rev\endcsname=\spath@tmppathrev
+   \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@end\endcsname{\noexpand\pgfqpoint{\the\spath@ex}{\the\spath@ey}}
+  \expandafter\xdef\csname spath@array@\spath@path@name @length\endcsname{\the\value{spath@array}}
+  \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@length\endcsname{\the\value{spath@length}}
+   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@first\endcsname=\spath@first
+   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@last\endcsname=\spath@last
+  \endgroup
+}
+
+%    \end{macrocode}
+% \iffalse
+%</package>
+% \fi
+%
+% \Finale
+
+\endinput
