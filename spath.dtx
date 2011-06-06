@@ -413,9 +413,9 @@ and the derived files           spath.ins,
   \spath@ex=#1\relax
   \spath@ey=#2\relax
   \stepcounter{spath@length}
-  \def\spath@last{lineto}
+  \let\spath@last\spath@lineto
   \ifx\spath@first\pgfutil@empty
-  \def\spath@first{lineto}
+  \let\spath@first\spath@lineto
   \fi
 }
 
@@ -425,9 +425,9 @@ and the derived files           spath.ins,
   \spath@ex=#1\relax
   \spath@ey=#2\relax
   \stepcounter{spath@length}
-  \def\spath@last{curveto}
+  \let\spath@last\spath@curveto
   \ifx\spath@first\pgfutil@empty
-  \def\spath@first{curveto}
+  \let\spath@first\spath@curveto
   \fi
 }
 
@@ -566,8 +566,438 @@ and the derived files           spath.ins,
    \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@last\endcsname=\spath@last
   \endgroup
 }
-
 %    \end{macrocode}
+%
+% Workflow for tapering: we get a path name and component number
+% Examine its real length; if less than three we need to split it
+% (This can modify the original path)
+% Next, if we are tapering we need to split in to pieces
+% (This shouldn't modify the original path)
+% Then taper the pieces
+% Lastly, return the middle section for ordinary drawing
+% So our return code should be *three* separate paths
+%
+% \begin{macro}{\spath@taper}
+%    \begin{macrocode}
+\newif\ifspath@taper@end
+\newif\ifspath@taper@start
+\def\spath@taper#1#2{%
+  \expandafter\ifx\csname spath@array@#1@#2\endcsname\relax
+  \else
+   \ifnum\csname spath@array@#1@#2@length\endcsname<3\relax
+    \spath@split{#1}{#2}%
+   \fi
+   \ifspath@taper@end
+    \expandafter\spath@separate@end\csname spath@array@#1@#2\endcsname
+    \spath@taper@in\spath@taper@path@end
+    \pgfsyssoftpath@setcurrentpath{\spath@taper@path@end}
+    \pgfsyssoftpath@flushcurrentpath
+    \pgfusepath{fill}
+   \else
+    \expandafter\let\spath@taper@path@middle\csname spath@array@#1@#2\endcsname
+   \fi
+   \ifspath@taper@start
+    \spath@separate@start\spath@taper@path@middle
+    \spath@taper@out\spath@taper@path@start
+    \pgfsyssoftpath@setcurrentpath{\spath@taper@path@start}
+    \pgfsyssoftpath@flushcurrentpath
+    \pgfusepath{fill}
+   \fi
+  \pgfsyssoftpath@setcurrentpath{\spath@taper@path@middle}
+  \pgfsyssoftpath@flushcurrentpath
+  \pgfsetlinewidth{\the\pgflinewidth}
+  \pgfusepath{stroke}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath@split}
+%    \begin{macrocode}
+\def\spath@split#1#2{
+  \ifnum\csname spath@array@#1@#2@length\endcsname=1\relax
+% Length 1
+   \expandafter\ifx\csname spath@array@#1@#2@start\endcsname\spath@lineto
+% lineto
+    \expandafter\expandafter\expandafter\spath@split@single@lineto\csname spath@array@#1@#2\endcsname\relax
+   \else
+% curveto
+    \expandafter\expandafter\expandafter\spath@split@single@curveto\csname spath@array@#1@#2\endcsname\relax
+   \fi
+% save split path to original path
+   \expandafter\global\expandafter\let\csname spath@array@#1@#2\endcsname\spath@tmppath
+% new path has length 3
+   \expandafter\gdef\csname spath@array@#1@#2@length\endcsname{3}%
+  \else
+% Length 2
+   \expandafter\ifx\csname spath@array@#1@#2@start\endcsname\spath@lineto
+% Starts with lineto
+    \expandafter\expandafter\expandafter\spath@split@first@lineto\csname spath@array@#1@#2\endcsname\relax
+   \else
+% Starts with curveto
+    \expandafter\expandafter\expandafter\spath@split@first@curveto\csname spath@array@#1@#2\endcsname\relax
+   \fi
+% Ends with lineto
+    \expandafter\spath@split@second@lineto\spath@split@path@end\relax
+   \else
+% Ends with curveto
+    \expandafter\spath@split@second@curveto\spath@split@path@end\relax
+   \fi
+% Save split path
+   \expandafter\global\expandafter\let\csname spath@array@#1@#2\endcsname\spath@split@path@start
+   \expandafter\ge@addto@macro\csname spath@array@#1@#2\endcsname\spath@split@path@end
+% Length is now 4
+   \expandafter\gdef\csname spath@array@#1@#2@length\endcsname{4}%
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath@separate@start}
+%    \begin{macrocode}
+\def\spath@separate@start\pgfsyssoftpath@movetotoken#1#2#3#4#5#6\relax{
+  \def\spath@taper@path@start{\pgfsyssoftpath@movetotoken{#1}{#2}#3{#4}{#5}}
+  \ifx#3\spath@curvetosupporta
+   \spath@separate@@start#6\relax
+  \else
+  \def\spath@taper@path@middle{#6}
+  \fi
+}
+\def\spath@separate@@start\pgfsyssoftpath@curvetosuportbtoken#1#2\pgfsyssoftpath@curvetotoken#3#4#5\relax{
+  \g@addto@macro\spath@taper@path@start{\pgfsyssoftpath@curvetosuportbtoken{#1}{#2}\pgfsyssoftpath@curvetotoken{#3}{#4}}
+  \def\spath@taper@path@middle{#5}
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\spath@taper@out}
+%    \begin{macrocode}
+\def\spath@taper@out#1{%
+  \expandafter\spath@find@taper@type#1\relax
+  \ifx\spath@taper@type\spath@lineto
+   \expandafter\spath@taper@lineto@out#1\relax
+  \else
+  \ifx\spath@taper@type\spath@curvetosupporta
+   \expandafter\spath@taper@curveto@out#1\relax
+  \fi
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@taper@in}
+%    \begin{macrocode}
+\def\spath@taper@in#1{%
+  \expandafter\spath@find@taper@type#1\relax
+  \ifx\spath@taper@type\spath@lineto
+   \expandafter\spath@taper@lineto@in#1\relax
+  \else
+  \ifx\spath@taper@type\spath@curvetosupporta
+   \expandafter\spath@taper@curveto@in#1\relax
+  \fi
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@find@taper@type}
+%    \begin{macrocode}
+\def\spath@find@taper@type#1#2#3#4#5#6#7\relax{%
+  \edef\spath@taper@type{\string#4}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@taper@lineto@out}
+%    \begin{macrocode}
+\def\spath@taper@lineto@out#1#2#3#4#5#6#7\relax{%
+% #1 is \pgfsyssoftpath@movetotoken
+% #2 is x-coord of starting point
+% #3 is y-coord of starting point
+% #4 is \pgfsyssoftpath@linetotoken
+% #5 is x-coord of ending point
+% #6 is y-coord of ending point
+% #7 shouldn't have anything in
+  \pgfmathsetmacro{\spath@sx}{.7 * #2 + .3 * #5}
+  \pgfmathsetmacro{\spath@sy}{.7 * #3 + .3 * #6}
+  \pgfmathsetmacro{\spath@ex}{.3 * #2 + .7 * #5}
+  \pgfmathsetmacro{\spath@ey}{.3 * #3 + .7 * #6}
+  \edef\spath@tmp{\noexpand\spath@taper@path{#2}{#3}{\spath@sx pt}{\spath@sy pt}{\spath@ex pt}{\spath@ey pt}{#5}{#6}}
+  \spath@tmp
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@taper@curveto@out}
+%    \begin{macrocode}
+\def\spath@taper@curveto@out\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
+  \spath@taper@path{#1}{#2}{#3}{#4}{#5}{#6}{#7}{#8}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@taper@lineto@in}
+%    \begin{macrocode}
+\def\spath@taper@lineto@in#1#2#3#4#5#6#7\relax{%
+% #1 is \pgfsyssoftpath@movetotoken
+% #2 is x-coord of starting point
+% #3 is y-coord of starting point
+% #4 is \pgfsyssoftpath@linetotoken
+% #5 is x-coord of ending point
+% #6 is y-coord of ending point
+% #7 shouldn't have anything in
+  \pgfmathsetmacro{\spath@sx}{.7 * #2 + .3 * #5}
+  \pgfmathsetmacro{\spath@sy}{.7 * #3 + .3 * #6}
+  \pgfmathsetmacro{\spath@ex}{.3 * #2 + .7 * #5}
+  \pgfmathsetmacro{\spath@ey}{.3 * #3 + .7 * #6}
+  \edef\spath@tmp{\noexpand\spath@taper@path{#5}{#6}{\spath@ex pt}{\spath@ey pt}{\spath@sx pt}{\spath@sy pt}{#2}{#3}}
+  \spath@tmp
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@taper@curveto@in}
+%    \begin{macrocode}
+\def\spath@taper@curveto@in\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
+  \spath@taper@path{#7}{#8}{#5}{#6}{#3}{#4}{#1}{#2}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@taper@path}
+%    \begin{macrocode}
+\def\spath@taper@path#1#2#3#4#5#6#7#8{
+% #1 is x-coord of starting point
+% #2 is y-coord of starting point
+% #3 is x-coord of first control point
+% #4 is y-coord of first control point
+% #5 is x-coord of second control point
+% #6 is y-coord of second control point
+% #7 is x-coord of ending point
+% #8 is y-coord of ending point
+%
+  \edef\spath@sx{#1}
+  \edef\spath@sy{#2}
+  \edef\spath@cx{#3}
+  \edef\spath@cy{#4}
+  \edef\spath@dx{#5}
+  \edef\spath@dy{#6}
+  \edef\spath@ex{#7}
+  \edef\spath@ey{#8}
+  
+%    \end{macrocode}
+% Orthogonal vector at end
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@ox}{-\spath@ey + \spath@dy}
+  \pgfmathsetmacro{\spath@oy}{\spath@ex - \spath@dx}
+  
+%    \end{macrocode}
+% Orthogonal vector at start
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@sox}{\spath@sy - \spath@cy}
+  \pgfmathsetmacro{\spath@soy}{-\spath@sx + \spath@cx}
+  
+%    \end{macrocode}
+% Adjust length to half the line width
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@oox}{.5*\spath@ox * \pgflinewidth / veclen(\spath@ox,\spath@oy)}
+  \pgfmathsetmacro{\spath@ooy}{.5*\spath@oy * \pgflinewidth / veclen(\spath@ox,\spath@oy)}
+  
+%    \end{macrocode}
+% Adjust length to half the thinner line width
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@soox}{.5*\spath@sox * \pgfkeysvalueof{/pgf/calligraphy/taper line width} / veclen(\spath@sox,\spath@soy)}
+  \pgfmathsetmacro{\spath@sooy}{.5*\spath@soy * \pgfkeysvalueof{/pgf/calligraphy/taper line width} / veclen(\spath@sox,\spath@soy)}
+%    \end{macrocode}
+% Shift the end point and the control points
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@dx}{\spath@dx + \spath@oox}
+  \pgfmathsetmacro{\spath@dy}{\spath@dy + \spath@ooy}
+%    \end{macrocode}
+% Shift the start point and the control points
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@cx}{\spath@cx + \spath@soox}
+  \pgfmathsetmacro{\spath@cy}{\spath@cy + \spath@sooy}
+  \pgfmathsetmacro{\spath@sx}{\spath@sx + \spath@soox}
+  \pgfmathsetmacro{\spath@sy}{\spath@sy + \spath@sooy}
+%    \end{macrocode}
+% End points are shifted slightly to overlap the next component
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@ex}{\spath@ex + \spath@oox + .1*\spath@ooy}
+  \pgfmathsetmacro{\spath@ey}{\spath@ey + \spath@ooy - .1*\spath@oox}
+%    \end{macrocode}
+% Add the first pieces
+%    \begin{macrocode}
+  \let\spath@tapered@path=\pgfutil@empty
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@movetotoken{\spath@sx pt}{\spath@sy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@cx pt}{\spath@cy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@dx pt}{\spath@dy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetotoken{\spath@ex pt}{\spath@ey pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+%    \end{macrocode}
+% Shift the end points and the control points again
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@dx}{\spath@dx - 2*\spath@oox}
+  \pgfmathsetmacro{\spath@dy}{\spath@dy - 2*\spath@ooy}
+  \pgfmathsetmacro{\spath@ex}{\spath@ex - 2*\spath@oox}
+  \pgfmathsetmacro{\spath@ey}{\spath@ey - 2*\spath@ooy}
+  \pgfmathsetmacro{\spath@cx}{\spath@cx - 2*\spath@soox}
+  \pgfmathsetmacro{\spath@cy}{\spath@cy - 2*\spath@sooy}
+  \pgfmathsetmacro{\spath@sx}{\spath@sx - 2*\spath@soox}
+  \pgfmathsetmacro{\spath@sy}{\spath@sy - 2*\spath@sooy}
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@linetotoken{\spath@ex pt}{\spath@ey pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@dx pt}{\spath@dy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@cx pt}{\spath@cy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetotoken{\spath@sx pt}{\spath@sy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+%    \end{macrocode}
+% Close the path, ought to make it rounded
+%    \begin{macrocode}
+  \g@addto@macro{\spath@tapered@path}{\pgfsyssoftpath@closepath}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% The following have been modified to fit the new routines
+%
+% \begin{macro}{\spath@single@split}
+%    \begin{macrocode}
+\def\spath@single@split{.3}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath@split@single@lineto}
+%    \begin{macrocode}
+\def\spath@split@single@lineto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@linetotoken#3#4#5\relax{%
+  \pgfmathsetmacro{\spath@sx}{(1-\spath@single@split)*#1 + \spath@single@split * #3}
+  \pgfmathsetmacro{\spath@sy}{(1-\spath@single@split)*#2 + \spath@single@split * #4}
+  \pgfmathsetmacro{\spath@ex}{(1-\spath@single@split)*#3 + \spath@single@split * #1}
+  \pgfmathsetmacro{\spath@ey}{(1-\spath@single@split)*#4 + \spath@single@split * #2}
+  \edef\spath@tmppath{\noexpand\pgfsyssoftpath@movetotoken{#1}{#2}\noexpand\pgfsyssoftpath@linetotoken{\spath@sx     pt}{\spath@sy pt}\noexpand\pgfsyssoftpath@linetotoken{\spath@ex pt}{\spath@ey pt}\noexpand\pgfsyssoftpath@linetotoken{#3}{#4}}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@split@single@curveto}
+%    \begin{macrocode}
+\def\spath@split@single@curveto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
+  \pgfmathsetmacro{\spath@cx}{(1 - \spath@single@split)*#1 + \spath@single@split * #3}
+  \pgfmathsetmacro{\spath@cy}{(1 - \spath@single@split)*#2 + \spath@single@split * #4}
+  \pgfmathsetmacro{\spath@dx}{(1 - \spath@single@split)^2 * #1 + 2*\spath@single@split * (1 - \spath@single@split) * #3 + \spath@single@split^2 * #5}
+  \pgfmathsetmacro{\spath@dy}{(1 - \spath@single@split)^2 * #2 + 2*\spath@single@split * (1 - \spath@single@split) * #4 + \spath@single@split^2 * #6}
+  \pgfmathsetmacro{\spath@ex}{(1 - \spath@single@split)^3 * #1 + 3*\spath@single@split * (1 - \spath@single@split)^2 * #3 + 3*\spath@single@split^2 * (1 - \spath@single@split) * #5 + \spath@single@split^3 * #7}
+  \pgfmathsetmacro{\spath@ey}{(1 - \spath@single@split)^3 * #2 + 3*\spath@single@split * (1 - \spath@single@split)^2 * #4 + 3*\spath@single@split^2 * (1 - \spath@single@split) * #6 + \spath@single@split^3 * #8}
+  \edef\spath@tmppath{\noexpand\pgfsyssoftpath@movetotoken{#1}{#2}\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@cx     pt}{\spath@cy pt}\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@dx pt}{\spath@dy pt}\noexpand\pgfsyssoftpath@curvetotoken{\spath@ex pt}{\spath@ey pt}}
+%    \end{macrocode}
+% Should be some sort of optimisation to do here
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@cx}{(1 - \spath@single@split)^2*\spath@single@split * #1 + (1 - 3 * \spath@single@split + 5 * \spath@single@split^2 - 3 * \spath@single@split^3) * #3 + (2 * \spath@single@split - 4 * \spath@single@split^2 + 3 * \spath@single@split^3) * #5 + \spath@single@split^2 * (1 - \spath@single@split) * #7}
+  \pgfmathsetmacro{\spath@cy}{(1 - \spath@single@split)^2*\spath@single@split * #2 + (1 - 3 * \spath@single@split + 5 * \spath@single@split^2 - 3 * \spath@single@split^3) * #4 + (2 * \spath@single@split - 4 * \spath@single@split^2 + 3 * \spath@single@split^3) * #6 + \spath@single@split^2 * (1 - \spath@single@split) * #8}
+  \pgfmathsetmacro{\spath@dx}{(1 - \spath@single@split)^2*\spath@single@split * #7 + (1 - 3 * \spath@single@split + 5 * \spath@single@split^2 - 3 * \spath@single@split^3) * #5 + (2 * \spath@single@split - 4 * \spath@single@split^2 + 3 * \spath@single@split^3) * #3 + \spath@single@split^2 * (1 - \spath@single@split) * #1}
+  \pgfmathsetmacro{\spath@dy}{(1 - \spath@single@split)^2*\spath@single@split * #8 + (1 - 3 * \spath@single@split + 5 * \spath@single@split^2 - 3 * \spath@single@split^3) * #6 + (2 * \spath@single@split - 4 * \spath@single@split^2 + 3 * \spath@single@split^3) * #4 + \spath@single@split^2 * (1 - \spath@single@split) * #2}
+  \pgfmathsetmacro{\spath@ex}{\spath@single@split^3 * #1 + 3 * \spath@single@split^2 * (1 - \spath@single@split) * #3 + 3 * \spath@single@split * (1 - \spath@single@split)^2 * #5 + (1 - \spath@single@split)^3 * #7}
+  \pgfmathsetmacro{\spath@ey}{\spath@single@split^3 * #2 + 3 * \spath@single@split^2 * (1 - \spath@single@split) * #4 + 3 * \spath@single@split * (1 - \spath@single@split)^2 * #6 + (1 - \spath@single@split)^3 * #8}
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@cx     pt}{\spath@cy pt}\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@dx pt}{\spath@dy pt}\noexpand\pgfsyssoftpath@curvetotoken{\spath@ex pt}{\spath@ey pt}}
+  \ge@addto@macro\spath@split@path\spath@to@add
+  \pgfmathsetmacro{\spath@dx}{(1 - \spath@single@split)*#7 + \spath@single@split * #5}
+  \pgfmathsetmacro{\spath@dy}{(1 - \spath@single@split)*#8 + \spath@single@split * #6}
+  \pgfmathsetmacro{\spath@cx}{(1 - \spath@single@split)^2 * #7 + 2*\spath@single@split * (1 - \spath@single@split) * #5 + \spath@single@split^2 * #3}
+  \pgfmathsetmacro{\spath@cy}{(1 - \spath@single@split)^2 * #8 + 2*\spath@single@split * (1 - \spath@single@split) * #6 + \spath@single@split^2 * #4}
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@cx     pt}{\spath@cy pt}\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@dx pt}{\spath@dy pt}\noexpand\pgfsyssoftpath@curvetotoken{#7}{#8}}
+  \ge@addto@macro\spath@tmppath\spath@to@add
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@double@split}
+%    \begin{macrocode}
+\def\spath@double@split{.5}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@split@first@lineto}
+%    \begin{macrocode}
+\def\spath@split@first@lineto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@linetotoken#3#4#5\relax{%
+  \pgfmathsetmacro{\spath@sx}{(1-\spath@single@split)*#1 + \spath@single@split * #3}
+  \pgfmathsetmacro{\spath@sy}{(1-\spath@single@split)*#2 + \spath@single@split * #4}
+  \edef\spath@split@path@start{\noexpand\pgfsyssoftpath@movetotoken{#1}{#2}\noexpand\pgfsyssoftpath@linetotoken{\spath@sx     pt}{\spath@sy pt}\noexpand\pgfsyssoftpath@linetotoken{#3}{#4}}
+  \edef\spath@split@path@end{\noexpand\pgfsyssoftpath@movetotoken{#3}{#4}}
+  \g@addto@macro\spath@split@path@end{#5}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@split@second@lineto}
+%    \begin{macrocode}
+\def\spath@split@second@lineto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@linetotoken#3#4#5\relax{%
+  \pgfmathsetmacro{\spath@sx}{(1-\spath@single@split)*#1 + \spath@single@split * #3}
+  \pgfmathsetmacro{\spath@sy}{(1-\spath@single@split)*#2 + \spath@single@split * #4}
+  \edef\spath@split@path@end{\noexpand\pgfsyssoftpath@linetotoken{\spath@sx pt}{\spath@sy pt}\noexpand\pgfsyssoftpath@linetotoken{#3}{#4}}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@split@first@curveto}
+%    \begin{macrocode}
+\def\spath@split@first@curveto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
+  \pgfmathsetmacro{\spath@cx}{(1 - \spath@double@split)*#1 + \spath@double@split * #3}
+  \pgfmathsetmacro{\spath@cy}{(1 - \spath@double@split)*#2 + \spath@double@split * #4}
+  \pgfmathsetmacro{\spath@dx}{(1 - \spath@double@split)^2 * #1 + 2*\spath@double@split * (1 - \spath@double@split) * #3 + \spath@double@split^2 * #5}
+  \pgfmathsetmacro{\spath@dy}{(1 - \spath@double@split)^2 * #2 + 2*\spath@double@split * (1 - \spath@double@split) * #4 + \spath@double@split^2 * #6}
+  \pgfmathsetmacro{\spath@ex}{(1 - \spath@double@split)^3 * #1 + 3*\spath@double@split * (1 - \spath@double@split)^2 * #3 + 3*\spath@double@split^2 * (1 - \spath@double@split) * #5 + \spath@double@split^3 * #7}
+  \pgfmathsetmacro{\spath@ey}{(1 - \spath@double@split)^3 * #2 + 3*\spath@double@split * (1 - \spath@double@split)^2 * #4 + 3*\spath@double@split^2 * (1 - \spath@double@split) * #6 + \spath@double@split^3 * #8}
+  \edef\spath@split@path@start{\noexpand\pgfsyssoftpath@movetotoken{#1}{#2}\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@cx     pt}{\spath@cy pt}\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@dx pt}{\spath@dy pt}\noexpand\pgfsyssoftpath@curvetotoken{\spath@ex pt}{\spath@ey pt}}
+  \pgfmathsetmacro{\spath@dx}{(1 - \spath@double@split)*#5 + \spath@double@split * #7}
+  \pgfmathsetmacro{\spath@dy}{(1 - \spath@double@split)*#6 + \spath@double@split * #8}
+  \pgfmathsetmacro{\spath@cx}{(1 - \spath@double@split)^2 * #3 + 2*\spath@double@split * (1 - \spath@double@split) * #5 + \spath@double@split^2 * #7}
+  \pgfmathsetmacro{\spath@cy}{(1 - \spath@double@split)^2 * #4 + 2*\spath@double@split * (1 - \spath@double@split) * #6 + \spath@double@split^2 * #8}
+  
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@cx     pt}{\spath@cy pt}\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@dx pt}{\spath@dy pt}\noexpand\pgfsyssoftpath@curvetotoken{#7}{#8}}
+  \ge@addto@macro\spath@split@path@start\spath@to@add
+  \edef\spath@split@path@end{\noexpand\pgfsyssoftpath@movetotoken{#7}{#8}}
+  \g@addto@macro\spath@split@path@end{#9}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\spath@split@second@curveto}
+%    \begin{macrocode}
+\def\spath@split@second@curveto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
+  \pgfmathsetmacro{\spath@cx}{(1 - \spath@double@split)*#1 + \spath@double@split * #3}
+  \pgfmathsetmacro{\spath@cy}{(1 - \spath@double@split)*#2 + \spath@double@split * #4}
+  \pgfmathsetmacro{\spath@dx}{(1 - \spath@double@split)^2 * #1 + 2*\spath@double@split * (1 - \spath@double@split) * #3 + \spath@double@split^2 * #5}
+  \pgfmathsetmacro{\spath@dy}{(1 - \spath@double@split)^2 * #2 + 2*\spath@double@split * (1 - \spath@double@split) * #4 + \spath@double@split^2 * #6}
+  \pgfmathsetmacro{\spath@ex}{(1 - \spath@double@split)^3 * #1 + 3*\spath@double@split * (1 - \spath@double@split)^2 * #3 + 3*\spath@double@split^2 * (1 - \spath@double@split) * #5 + \spath@double@split^3 * #7}
+  \pgfmathsetmacro{\spath@ey}{(1 - \spath@double@split)^3 * #2 + 3*\spath@double@split * (1 - \spath@double@split)^2 * #4 + 3*\spath@double@split^2 * (1 - \spath@double@split) * #6 + \spath@double@split^3 * #8}
+  \edef\spath@split@path@end{\noexpand\pgfsyssoftpath@movetotoken{#1}{#2}\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@cx     pt}{\spath@cy pt}\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@dx pt}{\spath@dy pt}\noexpand\pgfsyssoftpath@curvetotoken{\spath@ex pt}{\spath@ey pt}}
+  \ge@addto@macro\spath@split@path\spath@to@add
+  \pgfmathsetmacro{\spath@dx}{(1 - \spath@double@split)*#5 + \spath@double@split * #7}
+  \pgfmathsetmacro{\spath@dy}{(1 - \spath@double@split)*#6 + \spath@double@split * #8}
+  \pgfmathsetmacro{\spath@cx}{(1 - \spath@double@split)^2 * #3 + 2*\spath@double@split * (1 - \spath@double@split) * #5 + \spath@double@split^2 * #7}
+  \pgfmathsetmacro{\spath@cy}{(1 - \spath@double@split)^2 * #4 + 2*\spath@double@split * (1 - \spath@double@split) * #6 + \spath@double@split^2 * #8}
+  
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@cx     pt}{\spath@cy pt}\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@dx pt}{\spath@dy pt}\noexpand\pgfsyssoftpath@curvetotoken{#7}{#8}}
+  \ge@addto@macro\spath@split@path@end\spath@to@add
+}
+%    \end{macrocode}
+% \end{macro}
 % \iffalse
 %</package>
 % \fi
