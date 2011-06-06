@@ -253,6 +253,8 @@ and the derived files           spath.ins,
 \let\spath@array@init=\pgfutil@empty
 \let\spath@prepare@init=\pgfutil@empty
 
+\def\spath@closepath{closepath}
+
 \foreach \spath@cpt in {
   moveto,
   lineto,
@@ -260,75 +262,81 @@ and the derived files           spath.ins,
   curvetosupportb,
   curveto,
   rectcorner,
-  rectsize%
+  rectsize,
+  closepath%
 } {
+  \ifx\spath@cpt\spath@closepath
+  \let\spath@cptfull\spath@cpt
+  \else
+  \edef\spath@cptfull{\spath@cpt token}
+  \fi
 % Save token names for comparision
-\expandafter\xdef\csname spath@\spath@cpt\endcsname{\expandafter\string\csname pgfsyssoftpath@\spath@cpt token\endcsname}
+\expandafter\xdef\csname spath@\spath@cpt\endcsname{\expandafter\string\csname pgfsyssoftpath@\spath@cptfull\endcsname}
 
 % Translation
 \expandafter\spath@define@transfer\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@tr@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@tr@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@translate@init\spath@tmp
 
 % Counting total length
 \expandafter\spath@define@length\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@len@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@len@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@length@init\spath@tmp
 
 % Counting components
 \expandafter\spath@define@components\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@comp@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@comp@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@components@init\spath@tmp
 
 % Counting real length
 \expandafter\spath@define@reallength\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rlen@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@rlen@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@reallength@init\spath@tmp
 
 % Reversal
 \expandafter\spath@define@reverse\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rev@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@rev@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@reverse@init\spath@tmp
 
 % Initial coordinates
 \expandafter\spath@define@start\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@start@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@start@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@start@init\spath@tmp
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\noexpand\@gobbletwo}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\noexpand\@gobbletwo}
 
 \ge@addto@macro\spath@start@reinit\spath@tmp
 
 % Final coordinates
 \expandafter\spath@define@end\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@end@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@end@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@end@init\spath@tmp
 
 % Split in to array
 \expandafter\spath@define@array\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@array@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@array@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@array@init\spath@tmp
 
 % Prepare a path: split it, reverse the components, figure out endpoints
 % Actions are too complicated to specify a template so just create initialisation code
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@prepare@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@prepare@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@prepare@init\spath@tmp
 }
@@ -358,6 +366,12 @@ and the derived files           spath.ins,
 \def\spath@rev@curveto#1#2{%
   \edef\spath@tmp{{#1}{#2}\noexpand\pgfsyssoftpath@curvetosupportatoken}
   \ge@addbefore@macro\spath@tmppath\spath@tmp
+}
+
+% Correction for reversing closepaths
+\def\spath@rev@closepath#1#2{%
+  \edef\spath@tmp{\noexpand\pgfsyssoftpath@closepath{#1}{#2}}
+  \ge@addto@macro\spath@tmppath\spath@tmp
 }
 
 % Correction for splitting in to an array
