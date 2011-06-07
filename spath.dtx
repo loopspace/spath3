@@ -197,61 +197,109 @@ and the derived files           spath.ins,
 
 % Store the given path
   \method spath(#1) {
-    \pgfoolet{path}{#1}
+    \let\spath@temp=#1\relax
+    \ifx\spath@temp\relax
+    \else
+     \pgfoolet{path}{#1}
+    \fi
   }
 
-  \method get path() {%
-    \pgfoovalueof{path}%
+% Generic attribute handling
+
+  \method value(#1) {
+    \pgfoovalueof{#1}
   }
 
-  \method get reverse path() {%
-    \pgfoovalueof{reverse path}%
+  \method set(#1,#2) {
+    \pgfooset{#1}{#2}
   }
 
-  \method get path to macro(#1) {%
-    \pgfooget{path}{#1}%
+  \method let(#1,#2) {
+    \pgfoolet{#1}{#2}
   }
 
-  \method get reverse path to macro(#1) {%
-    \pgfooget{reverse path}{#1}%
+  \method get(#1,#2) {
+    \pgfooget{#1}{#2}
+  }
+
+  \method show(#1) {
+    \pgfooget{#1}{\@temp}
+    \show\@temp
+  }
+
+  \method clone(#1) {
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \else
+     \pgfoonew \spath@newpath =new spath()
+     \foreach \attribute in {
+      path,
+      length,
+      real length,
+      number of components,
+      initial point,
+      final point,
+      reverse path,
+      first action,
+      last action,
+      prepared,
+      taper line width%
+     } {
+      \pgfooget{\attribute}{\spath@temp}
+      \spath@newpath.let(\attribute,\spath@temp)
+    }
+    \let#1=\spath@newpath
+    \fi
   }
 
 % Translate the path by #2 in x and #3 in y, if #1 is given then it
 % should be a macro and it will be an object with the translated path,
 % otherwise the current object is modified
 
-  \method translate(#1,#2,#3) {
-    \let\spath@tmppath=\pgfutil@empty
-    \begingroup
-    \spath@trx=#2\relax
-    \spath@try=#3\relax
-    \spath@translate@init
-    \pgfoovalueof{path}
-    \endgroup
+  \method translate path(#1,#2,#3) {
     \let\spath@newpath=#1\relax
     \ifx\spath@newpath\relax
-    \pgfoolet{path}{\spath@tmppath}
-    \else
-    \pgfoonew #1 =new spath(\spath@tmppath)
-    \fi
-    \let\spath@tmppath=\pgfutil@empty
-  }
-
-  \method translate reverse path(#1,#2,#3) {
     \let\spath@tmppath=\pgfutil@empty
     \begingroup
-    \spath@trx=#2\relax
-    \spath@try=#3\relax
-    \spath@translate@init
-    \pgfoovalueof{reverse path}
+     \spath@trx=#2\relax
+     \spath@try=#3\relax
+     \spath@translate@init
+     \pgfoovalueof{path}
+     \pgfoolet{path}{\spath@tmppath}
+     \let\spath@tmppath=\pgfutil@empty
+     \pgfooget{reverse path}{\spath@tmppath}
+     \ifx\spath@tmppath\pgfutil@empty
+     \else
+      \spath@tmppath
+      \pgfoolet{reverse path}{\spath@tmppath}
+     \fi
+     \pgfooget{initial point}{\spath@temp}
+     \ifx\spath@temp\pgfutil@empty
+     \else
+      \spath@temp
+      \advance\pgf@x by \spath@trx\relax
+      \advance\pgf@y by \spath@try\relax
+      \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@x}{\the\pgf@y}}
+      \pgfoolet{initial point}{\spath@temp}
+     \fi
+     \pgfooget{final point}{\spath@temp}
+     \ifx\spath@temp\pgfutil@empty
+     \else
+      \spath@temp
+      \advance\pgf@x by \spath@trx\relax
+      \advance\pgf@y by \spath@try\relax
+      \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@x}{\the\pgf@y}}
+      \pgfoolet{final point}{\spath@temp}
+     \fi
     \endgroup
-    \let\spath@newpath=#1\relax
-    \ifx\spath@newpath\relax
-    \pgfoolet{path}{\spath@tmppath}
-    \else
-    \pgfoonew #1 =new spath(\spath@tmppath)
-    \fi
     \let\spath@tmppath=\pgfutil@empty
+   \else
+    \pgfoothis.clone(\spath@newpath)
+    \begingroup
+    \spath@newpath.translate path(,#2,#3)
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
   }
 
 % Get the length of the path (number of pieces)
@@ -489,29 +537,139 @@ and the derived files           spath.ins,
     \pgfusepath{#1}
   }
 
-  \method concatenate(#1,#2) {
-    \let\spath@other=#1\relax
-    \ifx\spath@other\relax
-    \else
-     \spath@other.get path to macro(\spath@tmppath)
-     \spath@other.initial point()
-    \pgf@xa=\pgf@x
-    \pgf@ya=\pgf@y
-     \pgfoothis.final point()
-    \ifdim\pgf@x=\pgf@xa\relax
-    \ifdim\pgf@y=\pgf@ya\relax
-     \expandafter\spath@trimfirst\spath@tmppath\relax
-     \fi
-     \fi
-     \pgfooget{path}{\spath@tmppatha}
-     \ge@addto@macro\spath@tmppatha\spath@tmppath
-     \pgfoonew #2 =new spath(\spath@tmppatha)
-    \fi
+  \method use path with tikz(#1) {
+    \begingroup
+    \let\spath@save@cmd=\tikz@scan@next@command
+    \let\tikz@scan@next@command=\relax
+    \tikz@@command@path
+    \let\tikz@scan@next@command=\spath@save@cmd
+    \tikzset{#1}
+    \pgfooget{path}{\spath@tmp}
+    \pgfsyssoftpath@setcurrentpath{\spath@tmp}
+    \tikz@finish
+    \endgroup
   }
 
-  \method show attribute(#1) {
-    \pgfooget{#1}{\@temp}
-    \show\@temp
+  \method use reverse path with tikz(#1) {
+    \begingroup
+    \let\spath@save@cmd=\tikz@scan@next@command
+    \let\tikz@scan@next@command=\relax
+    \tikz@@command@path
+    \let\tikz@scan@next@command=\spath@save@cmd
+    \tikzset{#1}
+    \pgfooget{reverse path}{\spath@tmp}
+    \pgfsyssoftpath@setcurrentpath{\spath@tmp}
+    \tikz@finish
+    \endgroup
+  }
+
+  \method concatenate(#1,#2) {
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+     \let\spath@other=#2\relax
+     \ifx\spath@other\relax
+     \else
+      \spath@other.get(path,\spath@tmppath)
+      \pgfooget{path}{\spath@tmppatha}
+      \ge@addto@macro\spath@tmppatha\spath@tmppath
+      \pgfoolet{path}{\spath@tmppatha}
+      \spath@other.get(reverse path,\spath@tmppath)
+      \pgfooget{reverse path}{\spath@tmppatha}
+      \ge@addto@macro\spath@tmppath\spath@tmppatha
+      \pgfoolet{reverse path}{\spath@tmppath}
+      \spath@other.get(final point,\spath@temp)
+      \pgfoolet{final point}{\spath@temp}
+      \spath@other.get(last action,\spath@temp)
+      \pgfoolet{last action}{\spath@temp}
+      \foreach \attribute in {
+        length,
+        real length,
+        number of components%
+      } {
+        \spath@other.get(\attribute,\spath@temp)
+        \pgfooget{\attribute}{\spath@tempa}
+        \ifx\spath@temp\pgfutil@empty
+        \else
+        \ifx\spath@tempa\pgfutil@empty
+        \else
+         \pgfmathsetmacro{\spath@tempa}{\spath@temp + \spath@tempa}
+         \pgfoolet{\attribute}{\spath@tempa}
+        \fi
+        \fi
+      }
+    \fi
+   \else
+    \pgfoothis.clone(\spath@newpath)
+    \begingroup
+    \spath@newpath.concatenate(,#2)
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+  }
+
+% Welding is like concatenation except that the paths are brought
+% together and the intervening moveto is removed
+
+  \method weld(#1,#2) {
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+     \let\spath@other=#2\relax
+     \ifx\spath@other\relax
+     \else
+      \pgfoothis.final point()
+      \pgf@xa=\pgf@x
+      \pgf@ya=\pgf@y
+      \spath@other.initial point()
+      \advance\pgf@xa by -\pgf@x
+      \advance\pgf@ya by -\pgf@y
+      \spath@other.translate path(\spath@tempo,\the\pgf@xa,\the\pgf@ya)
+%
+      \spath@tempo.get(path,\spath@tmppath)
+      \expandafter\spath@trimfirst\spath@tmppath\relax
+      \pgfooget{path}{\spath@tmppatha}
+      \ge@addto@macro\spath@tmppatha\spath@tmppath
+      \pgfoolet{path}{\spath@tmppatha}
+%
+      \spath@tempo.get(reverse path,\spath@tmppatha)
+      \pgfooget{reverse path}{\spath@tmppath}
+      \ifx\spath@tmppatha\pgfutil@empty
+      \else
+      \ifx\spath@tmppath\pgfutil@empty
+      \else
+      \expandafter\spath@trimfirst\spath@tmppath\relax
+      \ge@addto@macro\spath@tmppatha\spath@tmppath
+      \pgfoolet{reverse path}{\spath@tmppatha}
+      \fi
+      \fi
+%
+      \spath@tempo.get(final point,\spath@temp)
+      \pgfoolet{final point}{\spath@temp}
+      \spath@tempo.get(last action,\spath@temp)
+      \pgfoolet{last action}{\spath@temp}
+      \foreach \attribute in {
+        length,
+        real length,
+        number of components%
+      } {
+        \spath@tempo.get(\attribute,\spath@temp)
+        \pgfooget{\attribute}{\spath@tempa}
+        \ifx\spath@temp\pgfutil@empty
+        \else
+         \ifx\spath@tempa\pgfutil@empty
+         \else
+          \pgfmathsetmacro{\spath@tempa}{\spath@temp + \spath@tempa}
+          \pgfoolet{\attribute}{\spath@tempa}
+         \fi
+        \fi
+      }
+     \fi
+    \else
+     \pgfoothis.clone(\spath@newpath)
+     \begingroup
+      \spath@newpath.weld(,#2)
+     \endgroup
+     \let#1=\spath@newpath
+    \fi
   }
 
 }
@@ -838,9 +996,9 @@ and the derived files           spath.ins,
 \def\spath@trimfirst#1#2#3#4\relax{%
   \edef\spath@this@action{\string#1}%
   \ifx\spath@this@action\spath@moveto
-  \def\spath@tmppath{#4}%
+   \def\spath@tmppath{#4}%
   \else
-  \def\spath@tmppath{#1{#2}{#3}#4}%
+   \def\spath@tmppath{#1{#2}{#3}#4}%
   \fi
 }
 

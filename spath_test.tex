@@ -8,17 +8,24 @@
 \path[save path=\tmppath] (0,0) -- (1,1) (2,1) .. controls (3,1) and (4,2) .. (5,2);
 \show\tmppath
 \pgfoonew \mypath =new spath(\tmppath)
-\mypath.show attribute(path)
+\mypath.show(path)
 \mypath.length()
 \mypath.initial point()
-\mypath.show attribute(initial point)
+\mypath.show(initial point)
 \mypath.final point()
-\mypath.show attribute(final point)
-\mypath.show attribute(length)
-\mypath.translate(,1cm,1cm)
-\mypath.show attribute(path)
-\mypath.reverse()
-\mypath.show attribute(path)
+\mypath.show(final point)
+\mypath.show(length)
+\mypath.translate path(\trpath,1cm,1cm)
+\mypath.show(path)
+\trpath.show(path)
+\mypath.concatenate(\catpath,\trpath)
+\catpath.show(path)
+\mypath.weld(,\trpath)
+\mypath.show(path)
+\mypath.use path with tikz(draw,red,line width=.5cm)
+\mypath.use path(stroke)
+\end{tikzpicture}
+\end{document}
 \show\tmppath
 \spathsplit\mysplitpath\tmppath
 \mysplitpath.get path(\firstpath)
