@@ -161,8 +161,10 @@ and the derived files           spath.ins,
 %<*package>
 % \fi
 %
-% Set up tokens for comparision
+% Set up tokens for comparison
 %    \begin{macrocode}
+\usepgfmodule{oo}
+
 \long\def\ge@addto@macro#1#2{%
   \begingroup
   \toks@\expandafter\expandafter\expandafter{\expandafter#1#2}%
@@ -179,7 +181,398 @@ and the derived files           spath.ins,
   \def\@temp{#2}
   \ge@addbefore@macro{#1}{\@temp}}
 
-\def\spath@define@transfer#1\relax{%
+\pgfooclass{spath}{
+
+  \attribute path;
+  \attribute length;
+  \attribute real length;
+  \attribute number of components;
+  \attribute initial point;
+  \attribute final point;
+  \attribute reverse path;
+  \attribute first action;
+  \attribute last action;
+  \attribute prepared;
+  \attribute taper line width;
+
+% Store the given path
+  \method spath(#1) {
+    \pgfoolet{path}{#1}
+  }
+
+  \method get path() {%
+    \pgfoovalueof{path}%
+  }
+
+  \method get reverse path() {%
+    \pgfoovalueof{reverse path}%
+  }
+
+  \method get path to macro(#1) {%
+    \pgfooget{path}{#1}%
+  }
+
+  \method get reverse path to macro(#1) {%
+    \pgfooget{reverse path}{#1}%
+  }
+
+% Translate the path by #2 in x and #3 in y, if #1 is given then it
+% should be a macro and it will be an object with the translated path,
+% otherwise the current object is modified
+
+  \method translate(#1,#2,#3) {
+    \let\spath@tmppath=\pgfutil@empty
+    \begingroup
+    \spath@trx=#2\relax
+    \spath@try=#3\relax
+    \spath@translate@init
+    \pgfoovalueof{path}
+    \endgroup
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \pgfoolet{path}{\spath@tmppath}
+    \else
+    \pgfoonew #1 =new spath(\spath@tmppath)
+    \fi
+    \let\spath@tmppath=\pgfutil@empty
+  }
+
+  \method translate reverse path(#1,#2,#3) {
+    \let\spath@tmppath=\pgfutil@empty
+    \begingroup
+    \spath@trx=#2\relax
+    \spath@try=#3\relax
+    \spath@translate@init
+    \pgfoovalueof{reverse path}
+    \endgroup
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \pgfoolet{path}{\spath@tmppath}
+    \else
+    \pgfoonew #1 =new spath(\spath@tmppath)
+    \fi
+    \let\spath@tmppath=\pgfutil@empty
+  }
+
+% Get the length of the path (number of pieces)
+
+  \method length() {
+    \pgfooget{length}{\spath@temp}
+    \ifx\spath@temp\pgfutil@empty
+    \setcounter{spath@length}{0}
+    \begingroup
+    \spath@length@init
+    \pgfoovalueof{path}
+    \endgroup
+     \edef\spath@temp{\the\value{spath@length}}
+     \pgfoolet{length}{\spath@temp}
+    \fi
+    \spath@temp
+  }
+
+% Get the real length of the path (number of components that draw)
+
+  \method real length() {
+    \pgfooget{real length}{\spath@temp}
+    \ifx\spath@temp\pgfutil@empty
+    \setcounter{spath@length}{0}
+    \begingroup
+    \spath@reallength@init
+    \pgfoovalueof{path}
+    \endgroup
+     \edef\spath@temp{\the\value{spath@length}}
+     \pgfoolet{real length}{\spath@temp}
+    \fi
+    \spath@temp
+  }
+
+% Get the number of components of the path
+
+  \method number of components() {
+    \pgfooget{number of components}{\spath@temp}
+    \ifx\spath@temp\pgfutil@empty
+    \setcounter{spath@length}{0}
+    \begingroup
+    \spath@components@init
+    \pgfoovalueof{path}
+    \endgroup
+     \edef\spath@temp{\the\value{spath@length}}
+     \pgfoolet{real length}{\spath@temp}
+    \fi
+    \spath@temp
+  }
+
+% Get the initial point of the path
+
+  \method initial point() {
+    \pgfooget{initial point}{\spath@temp}
+    \ifx\spath@temp\pgfutil@empty
+    \begingroup
+    \spath@start@init
+    \pgfoovalueof{path}
+    \edef\spath@temp{\noexpand\pgfpoint{\spath@sx}{\spath@sy}}
+    \pgfoolet{initial point}{\spath@temp}
+    \endgroup
+    \pgfooget{initial point}{\spath@temp}
+    \fi
+    \spath@temp
+  }
+
+% Get the final point of the path
+
+  \method final point() {
+    \pgfooget{final point}{\spath@temp}
+    \ifx\spath@temp\pgfutil@empty
+    \begingroup
+    \spath@end@init
+    \pgfoovalueof{path}
+    \edef\spath@temp{\noexpand\pgfpoint{\spath@ex}{\spath@ey}}
+    \pgfoolet{final point}{\spath@temp}
+    \endgroup
+    \pgfooget{final point}{\spath@temp}
+    \fi
+    \spath@temp
+  }
+
+% Compute the reversed path
+
+  \method compute reverse() {
+    \pgfooget{reverse path}{\spath@tmppath}
+    \ifx\spath@tmppath\pgfutil@empty
+     \begingroup
+     \spath@reverse@init
+     \pgfoovalueof{path}
+     \g@addbefore@macro\spath@tmppath\pgfsyssoftpath@movetotoken
+     \endgroup
+     \pgfoolet{reverse path}{\spath@tmppath}
+    \fi
+    \let\spath@tmppath\pgfutil@empty
+  }
+
+% Reverse the path
+
+  \method reverse() {
+    \pgfoothis.prepare()
+    \pgfooget{path}{\spath@tmppath}
+    \pgfooget{reverse path}{\spath@tmppatha}
+    \pgfoolet{reverse path}{\spath@tmppath}
+    \pgfoolet{path}{\spath@tmppatha}
+    \pgfooget{initial point}{\spath@temp}
+    \pgfooget{final point}{\spath@tempa}
+    \pgfoolet{final point}{\spath@temp}
+    \pgfoolet{initial point}{\spath@tempa}
+    \pgfooget{first action}{\spath@temp}
+    \pgfooget{last action}{\spath@tempa}
+    \pgfoolet{last action}{\spath@temp}
+    \pgfoolet{first action}{\spath@tempa}
+  }
+
+% Prepare the path, filling out all the attributes
+
+  \method prepare() {
+    \pgfooget{prepared}{\spath@temp}
+    \ifx\spath@temp\pgfutil@empty
+    \let\spath@tmppath=\pgfutil@empty
+    \begingroup
+    \setcounter{spath@reallength}{0}
+    \setcounter{spath@components}{0}
+    \setcounter{spath@length}{0}
+    \spath@prepare@init
+    \pgfoovalueof{path}
+    \g@addbefore@macro\spath@tmppath\pgfsyssoftpath@movetotoken
+    \pgfoolet{reverse path}{\spath@tmppath}
+    \edef\spath@temp{\the\value{spath@components}}
+    \pgfoolet{number of components}{\spath@temp}
+    \edef\spath@temp{\the\value{spath@length}}
+    \pgfoolet{length}{\spath@temp}
+    \edef\spath@temp{\the\value{spath@reallength}}
+    \pgfoolet{real length}{\spath@temp}
+    \edef\spath@temp{\noexpand\pgfpoint{\spath@sx}{\spath@sy}}
+    \pgfoolet{initial point}{\spath@temp}
+    \edef\spath@temp{\noexpand\pgfpoint{\spath@ex}{\spath@ey}}
+    \pgfoolet{final point}{\spath@temp}
+    \pgfoolet{first action}{\spath@first}
+    \pgfoolet{last action}{\spath@last}
+    \pgfoolet{prepared}{1}
+    \endgroup
+    \fi
+  }
+
+% Ensure that the path has at least 3 components
+
+  \method at least three() {
+    \pgfoothis.prepare()
+    \pgfooget{real length}{\spath@temp}
+    \pgfooget{path}{\spath@tmppath}
+    \ifnum\spath@temp=1\relax
+     \pgfooget{first action}{\spath@temp}
+     \ifx\spath@temp\spath@lineto
+      \expandafter\spath@split@single@lineto\spath@tmppath\relax
+     \else
+      \expandafter\spath@split@single@curveto\spath@tmppath\relax
+     \fi
+     \pgfoolet{path}{\spath@tmppath}
+     \pgfooset{real length}{3}
+     \pgfooset{length}{4}
+    \else
+     \ifnum\spath@temp=2\relax
+      \pgfooget{first action}{\spath@temp}
+      \ifx\spath@temp\spath@lineto
+       \expandafter\spath@split@first@lineto\spath@tmppath\relax
+      \else
+       \expandafter\spath@split@first@curveto\spath@tmppath\relax
+      \fi
+      \pgfooget{last action}{\spath@temp}
+      \ifx\spath@temp\spath@lineto
+       \expandafter\spath@split@second@lineto\spath@split@path@end\relax
+      \else
+       \expandafter\spath@split@second@curveto\spath@split@path@end\relax
+      \fi
+      \let\spath@tmppath=\spath@split@path@start
+      \ge@addto@macro\spath@tmppath\spath@split@path@end
+      \pgfoolet{path}{\spath@tmppath}
+      \pgfooset{real length}{4}
+      \pgfooset{length}{5}
+     \fi
+    \fi
+  }
+
+  \method set taper line width(#1) {
+    \pgfooset{taper line width}{#1}
+  }
+
+  \method taper start(#1,#2) {
+    \pgfoothis.prepare()
+    \pgfooget{first action}{\spath@temp}
+    \pgfooget{path}{\spath@tmppath}
+    \pgfooget{taper line width}{\taper@line@width}
+    \ifx\taper@line@width\pgfutil@empty
+     \pgfmathsetmacro{\taper@line@width}{.5*\pgflinewidth}
+    \fi
+    \ifx\spath@temp\spath@lineto
+     \expandafter\spath@taper@lineto@out\spath@tmppath\relax
+    \else
+     \expandafter\spath@taper@curveto@out\spath@tmppath\relax
+    \fi
+    \pgfoonew #1 =new spath(\spath@tapered@path)
+    \pgfoonew #2 =new spath(\spath@taper@middle@path)
+  }
+
+  \method taper end(#1,#2) {
+    \pgfoothis.prepare()
+    \pgfooget{last action}{\spath@temp}
+    \pgfooget{reverse path}{\spath@tmppath}
+    \pgfooget{taper line width}{\taper@line@width}
+    \ifx\taper@line@width\pgfutil@empty
+     \pgfmathsetmacro{\taper@line@width}{.5*\pgflinewidth}
+    \fi
+    \ifx\spath@temp\spath@lineto
+     \expandafter\spath@taper@lineto@out\spath@tmppath\relax
+    \else
+     \expandafter\spath@taper@curveto@out\spath@tmppath\relax
+    \fi
+    \pgfoonew #1 =new spath(\spath@tapered@path)
+    \pgfoonew #2 =new spath(\spath@taper@middle@path)
+  }
+
+  \method use path(#1) {
+    \pgfooget{path}{\spath@tmppath}
+    \pgfsyssoftpath@setcurrentpath{\spath@tmppath}
+    \pgfsyssoftpath@flushcurrentpath
+    \pgfusepath{#1}
+  }
+
+  \method use reverse path(#1) {
+    \pgfooget{reverse path}{\spath@tmppath}
+    \pgfsyssoftpath@setcurrentpath{\spath@tmppath}
+    \pgfsyssoftpath@flushcurrentpath
+    \pgfusepath{#1}
+  }
+
+  \method concatenate(#1,#2) {
+    \let\spath@other=#1\relax
+    \ifx\spath@other\relax
+    \else
+     \spath@other.get path to macro(\spath@tmppath)
+     \spath@other.initial point()
+    \pgf@xa=\pgf@x
+    \pgf@ya=\pgf@y
+     \pgfoothis.final point()
+    \ifdim\pgf@x=\pgf@xa\relax
+    \ifdim\pgf@y=\pgf@ya\relax
+     \expandafter\spath@trimfirst\spath@tmppath\relax
+     \fi
+     \fi
+     \pgfooget{path}{\spath@tmppatha}
+     \ge@addto@macro\spath@tmppatha\spath@tmppath
+     \pgfoonew #2 =new spath(\spath@tmppatha)
+    \fi
+  }
+
+  \method show attribute(#1) {
+    \pgfooget{#1}{\@temp}
+    \show\@temp
+  }
+
+}
+
+\pgfooclass{spath component}{
+  \attribute path;
+  \attribute next component;
+  \attribute previous component;
+
+  \method spath component(#1) {
+    \pgfoolet{previous component}{#1}
+  }
+
+  \method set next component(#1) {
+    \pgfoolet{next component}{#1}
+  }
+
+  \method get next component(#1) {
+    \pgfooget{next component}{#1}
+  }
+
+  \method get previous component(#1) {
+    \pgfooget{previous component}{#1}
+  }
+
+  \method set path(#1) {
+    \pgfoonew \spath@tempa =new spath(#1)
+    \pgfoolet{path}{\spath@tempa}
+  }
+
+  \method get path(#1) {
+    \pgfooget{path}{#1}
+  }
+}
+
+\def\spathsplit#1#2{%
+  \pgfoonew #1 =new spath component({});
+  \let\spath@this@component=#1
+  \expandafter\spath@split@#2\relax
+}
+
+\def\spath@split@\pgfsyssoftpath@movetotoken#1\relax{%
+  \spath@split@@#1\pgfsyssoftpath@movetotoken\relax
+}
+
+\def\spath@split@@#1\pgfsyssoftpath@movetotoken#2\relax{%
+  \def\spath@tmppath{\pgfsyssoftpath@movetotoken#1}
+  \spath@this@component.set path(\spath@tmppath)
+  \pgfoonew \spath@next@component =new spath component(\spath@this@component)
+  \spath@this@component.set next component(\spath@next@component)
+  \let\spath@this@component=\spath@next@component
+  \def\spath@tmppath{#2}
+  \ifx\spath@tmppath\pgfutil@empty
+  \else
+   \spath@split@@#2\relax
+  \fi
+}
+
+% These are all our helper macros
+
+\def\spath@define@translate#1\relax{%
   \expandafter\gdef\csname spath@tr@#1\endcsname##1##2{%
     \pgf@xa=##1\relax
     \pgf@ya=##2\relax
@@ -215,28 +608,21 @@ and the derived files           spath.ins,
 
 \def\spath@define@start#1\relax{%
   \expandafter\gdef\csname spath@start@#1\endcsname##1##2{%
-    \spath@sx=##1\relax
-    \spath@sy=##2\relax
+    \edef\spath@sx{##1}
+    \edef\spath@sy{##2}
     \spath@start@reinit
   }
 }
 
 \def\spath@define@end#1\relax{%
   \expandafter\gdef\csname spath@end@#1\endcsname##1##2{%
-    \spath@ex=##1\relax
-    \spath@ey=##2\relax
+    \edef\spath@ex{##1}
+    \edef\spath@ey{##2}
   }
 }
 
 \def\spath@define@array#1\relax{%
   \expandafter\gdef\csname spath@array@#1\endcsname##1##2{%
-    \edef\spath@tmp{\expandafter\noexpand\csname       pgfsyssoftpath@#1token\endcsname{##1}{##2}}
-    \ge@addto@macro\spath@tmppath\spath@tmp
-  }
-}
-
-\def\spath@define@prepare#1\relax{%
-  \expandafter\gdef\csname spath@prepare@#1\endcsname##1##2{%
     \edef\spath@tmp{\expandafter\noexpand\csname       pgfsyssoftpath@#1token\endcsname{##1}{##2}}
     \ge@addto@macro\spath@tmppath\spath@tmp
   }
@@ -274,7 +660,7 @@ and the derived files           spath.ins,
 \expandafter\xdef\csname spath@\spath@cpt\endcsname{\expandafter\string\csname pgfsyssoftpath@\spath@cptfull\endcsname}
 
 % Translation
-\expandafter\spath@define@transfer\spath@cpt\relax
+\expandafter\spath@define@translate\spath@cpt\relax
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@tr@\spath@cpt \endcsname}
 
@@ -333,8 +719,9 @@ and the derived files           spath.ins,
 
 \ge@addto@macro\spath@array@init\spath@tmp
 
-% Prepare a path: split it, reverse the components, figure out endpoints
-% Actions are too complicated to specify a template so just create initialisation code
+% Prepare a path: reverse the components, figure out endpoints
+% Actions are too complicated to specify a template so just create
+% initialisation code
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@prepare@\spath@cpt \endcsname}
 
@@ -352,6 +739,16 @@ and the derived files           spath.ins,
 }
 \def\spath@rlen@curveto#1#2{%
   \stepcounter{spath@length}
+}
+
+% Correction for reversing initial moveto
+\def\spath@rev@moveto#1#2{
+  \ifx\spath@tmppath\pgfutil@empty
+  \edef\spath@tmp{{#1}{#2}}
+  \else
+  \edef\spath@tmp{{#1}{#2}\noexpand\pgfsyssoftpath@movetotoken}
+  \fi
+  \ge@addbefore@macro\spath@tmppath\spath@tmp
 }
 
 % Correction for reversing curvetos
@@ -384,35 +781,30 @@ and the derived files           spath.ins,
   \stepcounter{spath@array}
 }
 
-% Preparing a path: splitting, reversing, endpoints
 \def\spath@prepare@moveto#1#2{%
   \ifx\spath@tmppath\pgfutil@empty
+  \g@addbefore@macro\spath@tmppath{{#1}{#2}}
+  \edef\spath@sx{#1}
+  \edef\spath@sy{#2}
   \else
-   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}\endcsname=\spath@tmppath
-   \g@addbefore@macro\spath@tmppathrev{\pgfsyssoftpath@movetotoken}
-   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@rev\endcsname=\spath@tmppathrev
-   \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@end\endcsname{\noexpand\pgfqpoint{\the\spath@ex}{\the\spath@ey}}
-   \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@length\endcsname{\the\value{spath@length}}
-   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@first\endcsname=\spath@first
-   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@last\endcsname=\spath@last
+  \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@movetotoken}
   \fi
-   \def\spath@tmppath{\pgfsyssoftpath@movetotoken{#1}{#2}}
-   \def\spath@tmppathrev{{#1}{#2}}
-   \let\spath@first=\pgfutil@empty
-   \let\spath@last=\pgfutil@empty
-  \stepcounter{spath@array}
-  \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@start\endcsname{\noexpand\pgfqpoint{#1}{#2}}
-  \spath@ex=#1\relax
-  \spath@ey=#2\relax
-  \setcounter{spath@length}{0}
+  \edef\spath@ex{#1}
+  \edef\spath@ey{#2}
+  \stepcounter{spath@length}
+  \stepcounter{spath@components}
+  \let\spath@last\spath@moveto
+  \ifx\spath@first\pgfutil@empty
+  \let\spath@first\spath@moveto
+  \fi
 }
 
 \def\spath@prepare@lineto#1#2{%
-  \g@addto@macro\spath@tmppath{\pgfsyssoftpath@linetotoken{#1}{#2}}
-  \g@addbefore@macro\spath@tmppathrev{{#1}{#2}\pgfsyssoftpath@linetotoken}
-  \spath@ex=#1\relax
-  \spath@ey=#2\relax
+  \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@linetotoken}
+  \edef\spath@ex{#1}
+  \edef\spath@ey{#2}
   \stepcounter{spath@length}
+  \stepcounter{spath@reallength}
   \let\spath@last\spath@lineto
   \ifx\spath@first\pgfutil@empty
   \let\spath@first\spath@lineto
@@ -420,11 +812,11 @@ and the derived files           spath.ins,
 }
 
 \def\spath@prepare@curveto#1#2{%
-  \g@addto@macro\spath@tmppath{\pgfsyssoftpath@curvetotoken{#1}{#2}}
-  \g@addbefore@macro\spath@tmppathrev{{#1}{#2}\pgfsyssoftpath@curvetosupportatoken}
-  \spath@ex=#1\relax
-  \spath@ey=#2\relax
+  \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@curvetosupportatoken}
+  \edef\spath@ex{#1}
+  \edef\spath@ey{#2}
   \stepcounter{spath@length}
+  \stepcounter{spath@reallength}
   \let\spath@last\spath@curveto
   \ifx\spath@first\pgfutil@empty
   \let\spath@first\spath@curveto
@@ -432,282 +824,33 @@ and the derived files           spath.ins,
 }
 
 \def\spath@prepare@curvetosupporta#1#2{%
-  \g@addto@macro\spath@tmppath{\pgfsyssoftpath@curvetosupportatoken{#1}{#2}}
-  \g@addbefore@macro\spath@tmppathrev{{#1}{#2}\pgfsyssoftpath@curvetotoken}
-  \spath@ex=#1\relax
-  \spath@ey=#2\relax
+  \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@curvetotoken}
+  \stepcounter{spath@length}
 }
 
 \def\spath@prepare@curvetosupportb#1#2{%
-  \g@addto@macro\spath@tmppath{\pgfsyssoftpath@curvetosupportbtoken{#1}{#2}}
-  \g@addbefore@macro\spath@tmppathrev{{#1}{#2}\pgfsyssoftpath@curvetosupportbtoken}
-  \spath@ex=#1\relax
-  \spath@ey=#2\relax
+  \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@curvetosupportbtoken}
+  \stepcounter{spath@length}
 }
 
 % Also need to handle the closepath variants
 
+\def\spath@trimfirst#1#2#3#4\relax{%
+  \edef\spath@this@action{\string#1}%
+  \ifx\spath@this@action\spath@moveto
+  \def\spath@tmppath{#4}%
+  \else
+  \def\spath@tmppath{#1{#2}{#3}#4}%
+  \fi
+}
+
 \newdimen\spath@trx
 \newdimen\spath@try
-\newdimen\spath@sx
-\newdimen\spath@sy
-\newdimen\spath@ex
-\newdimen\spath@ey
 \newcounter{spath@length}
+\newcounter{spath@reallength}
+\newcounter{spath@components}
 \newcounter{spath@array}
-
-\def\spath@translate#1#2#3{%
-  \let\spath@tmppath=\pgfutil@empty
-  \begingroup
-  \spath@trx=#2\relax
-  \spath@try=#3\relax
-  \spath@translate@init
-  #1
-  \endgroup
-}
-
-\def\spath@length#1{%
-  \setcounter{spath@length}{0}
-  \begingroup
-  \spath@length@init
-  #1
-  \endgroup
-}
-
-\def\spath@components#1{%
-  \setcounter{spath@length}{0}
-  \begingroup
-  \spath@components@init
-  #1
-  \endgroup
-}
-
-\def\spath@reallength#1{%
-  \setcounter{spath@length}{0}
-  \begingroup
-  \spath@reallength@init
-  #1
-  \endgroup
-}
-
-\def\spath@reverse#1{%
-  \let\spath@tmppath=\pgfutil@empty
-  \begingroup
-  \spath@reverse@init
-  #1
-  \g@addbefore@macro\spath@tmppath\pgfsyssoftpath@movetotoken
-  \expandafter\spath@trimlast\spath@tmppath\relax
-  \endgroup
-}
-
-\def\spath@trimlast#1\pgfsyssoftpath@movetotoken\relax{\gdef\spath@tmppath{#1}}
-
-\def\spath@start#1{%
-  \begingroup
-  \spath@start@init
-  #1
-  \global\spath@sx=\spath@sx
-  \global\spath@sy=\spath@sy
-  \endgroup
-}
-
-\def\spath@end#1{%
-  \begingroup
-  \spath@end@init
-  #1
-  \global\spath@ex=\spath@ex
-  \global\spath@ey=\spath@ey
-  \endgroup
-}
-
-\def\spath@cat#1#2{
-  \let\spath@tmppath=#1
-  \expandafter\spath@trimfirst#2\relax
-  \ge@addto@macro\spath@tmppath\spath@trimmed@path
-}
-
-\def\spath@trimfirst#1#2#3#4\relax{%
-  \edef\this@action{\string#1}%
-  \ifx\this@action\spath@moveto
-  \def\spath@trimmed@path{#4}%
-  \else
-  \def\spath@trimmed@path{#1{#2}{#3}#4}%
-  \fi
-}
-
-\def\spath@array#1#2{
-  \let\spath@tmppath=\pgfutil@empty
-  \begingroup
-  \setcounter{spath@array}{0}
-  \def\spath@path@name{#2}
-  \spath@array@init
-  #1
-  \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}\endcsname=\spath@tmppath
-  \expandafter\xdef\csname spath@array@\spath@path@name @length\endcsname{\the\value{spath@array}}
-  \endgroup
-}
-
-\def\spath@prepare#1#2{
-  \let\spath@tmppath=\pgfutil@empty
-  \let\spath@tmppathrev=\pgfutil@empty
-  \begingroup
-  \setcounter{spath@array}{0}
-  \setcounter{spath@length}{0}
-  \def\spath@path@name{#2}
-  \spath@prepare@init
-  #1
-   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}\endcsname=\spath@tmppath
-   \g@addbefore@macro\spath@tmppathrev\pgfsyssoftpath@movetotoken
-   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@rev\endcsname=\spath@tmppathrev
-   \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@end\endcsname{\noexpand\pgfqpoint{\the\spath@ex}{\the\spath@ey}}
-  \expandafter\xdef\csname spath@array@\spath@path@name @length\endcsname{\the\value{spath@array}}
-  \expandafter\xdef\csname spath@array@\spath@path@name @\the\value{spath@array}@length\endcsname{\the\value{spath@length}}
-   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@first\endcsname=\spath@first
-   \expandafter\global\expandafter\let\csname spath@array@\spath@path@name @\the\value{spath@array}@last\endcsname=\spath@last
-  \endgroup
-}
 %    \end{macrocode}
-%
-% Workflow for tapering: we get a path name and component number
-% Examine its real length; if less than three we need to split it
-% (This can modify the original path)
-% Next, if we are tapering we need to split in to pieces
-% (This shouldn't modify the original path)
-% Then taper the pieces
-% Lastly, return the middle section for ordinary drawing
-% So our return code should be *three* separate paths
-%
-% \begin{macro}{\spath@taper}
-%    \begin{macrocode}
-\newif\ifspath@taper@end
-\newif\ifspath@taper@start
-\def\spath@taper#1#2{%
-  \expandafter\ifx\csname spath@array@#1@#2\endcsname\relax
-  \else
-   \ifnum\csname spath@array@#1@#2@length\endcsname<3\relax
-    \spath@split{#1}{#2}%
-   \fi
-   \ifspath@taper@end
-    \expandafter\spath@separate@end\csname spath@array@#1@#2\endcsname
-    \spath@taper@in\spath@taper@path@end
-    \pgfsyssoftpath@setcurrentpath{\spath@taper@path@end}
-    \pgfsyssoftpath@flushcurrentpath
-    \pgfusepath{fill}
-   \else
-    \expandafter\let\spath@taper@path@middle\csname spath@array@#1@#2\endcsname
-   \fi
-   \ifspath@taper@start
-    \spath@separate@start\spath@taper@path@middle
-    \spath@taper@out\spath@taper@path@start
-    \pgfsyssoftpath@setcurrentpath{\spath@taper@path@start}
-    \pgfsyssoftpath@flushcurrentpath
-    \pgfusepath{fill}
-   \fi
-  \pgfsyssoftpath@setcurrentpath{\spath@taper@path@middle}
-  \pgfsyssoftpath@flushcurrentpath
-  \pgfsetlinewidth{\the\pgflinewidth}
-  \pgfusepath{stroke}
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\spath@split}
-%    \begin{macrocode}
-\def\spath@split#1#2{
-  \ifnum\csname spath@array@#1@#2@length\endcsname=1\relax
-% Length 1
-   \expandafter\ifx\csname spath@array@#1@#2@start\endcsname\spath@lineto
-% lineto
-    \expandafter\expandafter\expandafter\spath@split@single@lineto\csname spath@array@#1@#2\endcsname\relax
-   \else
-% curveto
-    \expandafter\expandafter\expandafter\spath@split@single@curveto\csname spath@array@#1@#2\endcsname\relax
-   \fi
-% save split path to original path
-   \expandafter\global\expandafter\let\csname spath@array@#1@#2\endcsname\spath@tmppath
-% new path has length 3
-   \expandafter\gdef\csname spath@array@#1@#2@length\endcsname{3}%
-  \else
-% Length 2
-   \expandafter\ifx\csname spath@array@#1@#2@start\endcsname\spath@lineto
-% Starts with lineto
-    \expandafter\expandafter\expandafter\spath@split@first@lineto\csname spath@array@#1@#2\endcsname\relax
-   \else
-% Starts with curveto
-    \expandafter\expandafter\expandafter\spath@split@first@curveto\csname spath@array@#1@#2\endcsname\relax
-   \fi
-% Ends with lineto
-    \expandafter\spath@split@second@lineto\spath@split@path@end\relax
-   \else
-% Ends with curveto
-    \expandafter\spath@split@second@curveto\spath@split@path@end\relax
-   \fi
-% Save split path
-   \expandafter\global\expandafter\let\csname spath@array@#1@#2\endcsname\spath@split@path@start
-   \expandafter\ge@addto@macro\csname spath@array@#1@#2\endcsname\spath@split@path@end
-% Length is now 4
-   \expandafter\gdef\csname spath@array@#1@#2@length\endcsname{4}%
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\spath@separate@start}
-%    \begin{macrocode}
-\def\spath@separate@start\pgfsyssoftpath@movetotoken#1#2#3#4#5#6\relax{
-  \def\spath@taper@path@start{\pgfsyssoftpath@movetotoken{#1}{#2}#3{#4}{#5}}
-  \ifx#3\spath@curvetosupporta
-   \spath@separate@@start#6\relax
-  \else
-  \def\spath@taper@path@middle{#6}
-  \fi
-}
-\def\spath@separate@@start\pgfsyssoftpath@curvetosuportbtoken#1#2\pgfsyssoftpath@curvetotoken#3#4#5\relax{
-  \g@addto@macro\spath@taper@path@start{\pgfsyssoftpath@curvetosuportbtoken{#1}{#2}\pgfsyssoftpath@curvetotoken{#3}{#4}}
-  \def\spath@taper@path@middle{#5}
-}
-%    \end{macrocode}
-% \end{macro}
-% \begin{macro}{\spath@taper@out}
-%    \begin{macrocode}
-\def\spath@taper@out#1{%
-  \expandafter\spath@find@taper@type#1\relax
-  \ifx\spath@taper@type\spath@lineto
-   \expandafter\spath@taper@lineto@out#1\relax
-  \else
-  \ifx\spath@taper@type\spath@curvetosupporta
-   \expandafter\spath@taper@curveto@out#1\relax
-  \fi
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\spath@taper@in}
-%    \begin{macrocode}
-\def\spath@taper@in#1{%
-  \expandafter\spath@find@taper@type#1\relax
-  \ifx\spath@taper@type\spath@lineto
-   \expandafter\spath@taper@lineto@in#1\relax
-  \else
-  \ifx\spath@taper@type\spath@curvetosupporta
-   \expandafter\spath@taper@curveto@in#1\relax
-  \fi
-  \fi
-}
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\spath@find@taper@type}
-%    \begin{macrocode}
-\def\spath@find@taper@type#1#2#3#4#5#6#7\relax{%
-  \edef\spath@taper@type{\string#4}%
-}
-%    \end{macrocode}
-% \end{macro}
-%
 %
 % \begin{macro}{\spath@taper@lineto@out}
 %    \begin{macrocode}
@@ -725,6 +868,7 @@ and the derived files           spath.ins,
   \pgfmathsetmacro{\spath@ey}{.3 * #3 + .7 * #6}
   \edef\spath@tmp{\noexpand\spath@taper@path{#2}{#3}{\spath@sx pt}{\spath@sy pt}{\spath@ex pt}{\spath@ey pt}{#5}{#6}}
   \spath@tmp
+  \def\spath@taper@middle@path{\pgfsyssoftpath@movetotoken{#5}{#6}#7}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -734,36 +878,7 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \def\spath@taper@curveto@out\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
   \spath@taper@path{#1}{#2}{#3}{#4}{#5}{#6}{#7}{#8}
-}
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\spath@taper@lineto@in}
-%    \begin{macrocode}
-\def\spath@taper@lineto@in#1#2#3#4#5#6#7\relax{%
-% #1 is \pgfsyssoftpath@movetotoken
-% #2 is x-coord of starting point
-% #3 is y-coord of starting point
-% #4 is \pgfsyssoftpath@linetotoken
-% #5 is x-coord of ending point
-% #6 is y-coord of ending point
-% #7 shouldn't have anything in
-  \pgfmathsetmacro{\spath@sx}{.7 * #2 + .3 * #5}
-  \pgfmathsetmacro{\spath@sy}{.7 * #3 + .3 * #6}
-  \pgfmathsetmacro{\spath@ex}{.3 * #2 + .7 * #5}
-  \pgfmathsetmacro{\spath@ey}{.3 * #3 + .7 * #6}
-  \edef\spath@tmp{\noexpand\spath@taper@path{#5}{#6}{\spath@ex pt}{\spath@ey pt}{\spath@sx pt}{\spath@sy pt}{#2}{#3}}
-  \spath@tmp
-}
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\spath@taper@curveto@in}
-%    \begin{macrocode}
-\def\spath@taper@curveto@in\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
-  \spath@taper@path{#7}{#8}{#5}{#6}{#3}{#4}{#1}{#2}
+  \def\spath@taper@middle@path{\pgfsyssoftpath@movetotoken{#7}{#8}#9}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -811,25 +926,19 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 % Adjust length to half the thinner line width
 %    \begin{macrocode}
-  \pgfmathsetmacro{\spath@soox}{.5*\spath@sox * \pgfkeysvalueof{/pgf/calligraphy/taper line width} / veclen(\spath@sox,\spath@soy)}
-  \pgfmathsetmacro{\spath@sooy}{.5*\spath@soy * \pgfkeysvalueof{/pgf/calligraphy/taper line width} / veclen(\spath@sox,\spath@soy)}
+  \pgfmathsetmacro{\spath@soox}{.5*\spath@sox * \taper@line@width / veclen(\spath@sox,\spath@soy)}
+  \pgfmathsetmacro{\spath@sooy}{.5*\spath@soy * \taper@line@width / veclen(\spath@sox,\spath@soy)}
 %    \end{macrocode}
-% Shift the end point and the control points
+% Shift the start point, the control points, and the end points
 %    \begin{macrocode}
-  \pgfmathsetmacro{\spath@dx}{\spath@dx + \spath@oox}
-  \pgfmathsetmacro{\spath@dy}{\spath@dy + \spath@ooy}
-%    \end{macrocode}
-% Shift the start point and the control points
-%    \begin{macrocode}
-  \pgfmathsetmacro{\spath@cx}{\spath@cx + \spath@soox}
-  \pgfmathsetmacro{\spath@cy}{\spath@cy + \spath@sooy}
   \pgfmathsetmacro{\spath@sx}{\spath@sx + \spath@soox}
   \pgfmathsetmacro{\spath@sy}{\spath@sy + \spath@sooy}
-%    \end{macrocode}
-% End points are shifted slightly to overlap the next component
-%    \begin{macrocode}
-  \pgfmathsetmacro{\spath@ex}{\spath@ex + \spath@oox + .1*\spath@ooy}
-  \pgfmathsetmacro{\spath@ey}{\spath@ey + \spath@ooy - .1*\spath@oox}
+  \pgfmathsetmacro{\spath@cx}{\spath@cx + \spath@soox}
+  \pgfmathsetmacro{\spath@cy}{\spath@cy + \spath@sooy}
+  \pgfmathsetmacro{\spath@dx}{\spath@dx + \spath@oox}
+  \pgfmathsetmacro{\spath@dy}{\spath@dy + \spath@ooy}
+  \pgfmathsetmacro{\spath@ex}{\spath@ex + \spath@oox}
+  \pgfmathsetmacro{\spath@ey}{\spath@ey + \spath@ooy}
 %    \end{macrocode}
 % Add the first pieces
 %    \begin{macrocode}
@@ -843,8 +952,17 @@ and the derived files           spath.ins,
   \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetotoken{\spath@ex pt}{\spath@ey pt}}
   \ge@addto@macro\spath@tapered@path\spath@to@add
 %    \end{macrocode}
+% Make the end roughly round
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@fx}{\spath@ex + 1.32*\spath@ooy}
+  \pgfmathsetmacro{\spath@fy}{\spath@ey - 1.32*\spath@oox}
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@fx pt}{\spath@fy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+%    \end{macrocode}
 % Shift the end points and the control points again
 %    \begin{macrocode}
+  \pgfmathsetmacro{\spath@fx}{\spath@fx - 2*\spath@oox}
+  \pgfmathsetmacro{\spath@fy}{\spath@fy - 2*\spath@ooy}
   \pgfmathsetmacro{\spath@dx}{\spath@dx - 2*\spath@oox}
   \pgfmathsetmacro{\spath@dy}{\spath@dy - 2*\spath@ooy}
   \pgfmathsetmacro{\spath@ex}{\spath@ex - 2*\spath@oox}
@@ -853,7 +971,9 @@ and the derived files           spath.ins,
   \pgfmathsetmacro{\spath@cy}{\spath@cy - 2*\spath@sooy}
   \pgfmathsetmacro{\spath@sx}{\spath@sx - 2*\spath@soox}
   \pgfmathsetmacro{\spath@sy}{\spath@sy - 2*\spath@sooy}
-  \edef\spath@to@add{\noexpand\pgfsyssoftpath@linetotoken{\spath@ex pt}{\spath@ey pt}}
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@fx pt}{\spath@fy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetotoken{\spath@ex pt}{\spath@ey pt}}
   \ge@addto@macro\spath@tapered@path\spath@to@add
   \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@dx pt}{\spath@dy pt}}
   \ge@addto@macro\spath@tapered@path\spath@to@add
@@ -862,9 +982,24 @@ and the derived files           spath.ins,
   \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetotoken{\spath@sx pt}{\spath@sy pt}}
   \ge@addto@macro\spath@tapered@path\spath@to@add
 %    \end{macrocode}
+% Make the end roughly round
+%    \begin{macrocode}
+  \pgfmathsetmacro{\spath@fx}{\spath@sx - 1.32*\spath@sooy}
+  \pgfmathsetmacro{\spath@fy}{\spath@sy + 1.32*\spath@soox}
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@fx pt}{\spath@fy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+  \pgfmathsetmacro{\spath@fx}{\spath@fx + 2*\spath@soox}
+  \pgfmathsetmacro{\spath@fy}{\spath@fy + 2*\spath@sooy}
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@fx pt}{\spath@fy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+  \pgfmathsetmacro{\spath@sx}{\spath@sx + 2*\spath@soox}
+  \pgfmathsetmacro{\spath@sy}{\spath@sy + 2*\spath@sooy}
+  \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetotoken{\spath@sx pt}{\spath@sy pt}}
+  \ge@addto@macro\spath@tapered@path\spath@to@add
+%    \end{macrocode}
 % Close the path, ought to make it rounded
 %    \begin{macrocode}
-  \g@addto@macro{\spath@tapered@path}{\pgfsyssoftpath@closepath}
+%  \g@addto@macro{\spath@tapered@path}{\pgfsyssoftpath@closepath}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -910,7 +1045,7 @@ and the derived files           spath.ins,
   \pgfmathsetmacro{\spath@ex}{\spath@single@split^3 * #1 + 3 * \spath@single@split^2 * (1 - \spath@single@split) * #3 + 3 * \spath@single@split * (1 - \spath@single@split)^2 * #5 + (1 - \spath@single@split)^3 * #7}
   \pgfmathsetmacro{\spath@ey}{\spath@single@split^3 * #2 + 3 * \spath@single@split^2 * (1 - \spath@single@split) * #4 + 3 * \spath@single@split * (1 - \spath@single@split)^2 * #6 + (1 - \spath@single@split)^3 * #8}
   \edef\spath@to@add{\noexpand\pgfsyssoftpath@curvetosupportatoken{\spath@cx     pt}{\spath@cy pt}\noexpand\pgfsyssoftpath@curvetosupportbtoken{\spath@dx pt}{\spath@dy pt}\noexpand\pgfsyssoftpath@curvetotoken{\spath@ex pt}{\spath@ey pt}}
-  \ge@addto@macro\spath@split@path\spath@to@add
+  \ge@addto@macro\spath@tmppath\spath@to@add
   \pgfmathsetmacro{\spath@dx}{(1 - \spath@single@split)*#7 + \spath@single@split * #5}
   \pgfmathsetmacro{\spath@dy}{(1 - \spath@single@split)*#8 + \spath@single@split * #6}
   \pgfmathsetmacro{\spath@cx}{(1 - \spath@single@split)^2 * #7 + 2*\spath@single@split * (1 - \spath@single@split) * #5 + \spath@single@split^2 * #3}

@@ -5,6 +5,58 @@
 
 \begin{document}
 \begin{tikzpicture}
+\path[save path=\tmppath] (0,0) -- (1,1) (2,1) .. controls (3,1) and (4,2) .. (5,2);
+\show\tmppath
+\pgfoonew \mypath =new spath(\tmppath)
+\mypath.show attribute(path)
+\mypath.length()
+\mypath.initial point()
+\mypath.show attribute(initial point)
+\mypath.final point()
+\mypath.show attribute(final point)
+\mypath.show attribute(length)
+\mypath.translate(,1cm,1cm)
+\mypath.show attribute(path)
+\mypath.reverse()
+\mypath.show attribute(path)
+\show\tmppath
+\spathsplit\mysplitpath\tmppath
+\mysplitpath.get path(\firstpath)
+\firstpath.show attribute(path)
+\mysplitpath.get next component(\mynextbit)
+\mynextbit.get path(\otherpath)
+\otherpath.translate(,-1cm,0pt)
+\firstpath.concatenate(\otherpath,\catpath)
+\otherpath.show attribute(path)
+\firstpath.show attribute(path)
+\catpath.show attribute(path)
+\pgfsetstrokecolor{red}
+%\otherpath.use path(stroke)
+\mynextbit.get path(\otherpath)
+\otherpath.show attribute(reverse)
+\otherpath.prepare()
+\otherpath.show attribute(reverse)
+\otherpath.show attribute(path)
+\pgfsetstrokecolor{blue}
+\otherpath.use path(stroke)
+%\otherpath.use path(stroke)
+\otherpath.at least three()
+\otherpath.show attribute(path)
+\otherpath.translate(,0pt,1cm)
+\pgfsetstrokecolor{red}
+\pgfsetfillcolor{red}
+\pgfsetlinewidth{.1cm}
+\otherpath.taper start(\taperpath,\restpath)
+\taperpath.show attribute(path)
+\taperpath.use path(fill)
+\restpath.taper end(\taperendpath,\morepath)
+\taperendpath.use path(fill)
+\morepath.use path(stroke)
+\end{tikzpicture}
+\end{document}
+
+\begin{document}
+\begin{tikzpicture}
 \draw[save path=\tmppath] (0,0) -- (1,1) (2,1) .. controls (3,1) and (4,2) .. (5,2);
 \makeatletter
 \show\tmppath
