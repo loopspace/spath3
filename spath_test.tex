@@ -24,6 +24,19 @@
 \mypath.show(path)
 \mypath.use path with tikz(draw,red,line width=.5cm)
 \mypath.use path(stroke)
+\pgfsetlinewidth{5pt}
+\mypath.show(length)
+\mypath.set(taper line width,2pt)
+\mypath.translate path(,0pt,-1cm)
+\mypath.prepare()
+\mypath.show(first action)
+\mypath.taper start(\taperpath,\restpath)
+\taperpath.show(path)
+\taperpath.use path(fill)
+\restpath.taper end(\taperendpath,\morepath)
+\taperendpath.use path(fill)
+\morepath.use path(stroke)
+\mypath.show(path)
 \end{tikzpicture}
 \end{document}
 \show\tmppath
