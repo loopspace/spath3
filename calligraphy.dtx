@@ -469,18 +469,18 @@ and the derived files           calligraphy.ins,
 
 \def\cgrphy@@thickenpath{%
   \pgfsys@beginscope
+  \let\cgrphy@path@style=\pgfutil@empty
   \let\tikz@options=\pgfutil@empty
   \expandafter\let\expandafter\calligraphy@nib@style\csname calligraphy@nib@style@\the\value{cgrphy@nib}\endcsname
   \ifx\calligraphy@nib@style\relax
   \else
-   \expandafter\calligraphystyle\expandafter{\calligraphy@nib@style}
+   \ge@addto@macro\cgrphy@path@style\calligraphy@nib@style
   \fi
   \expandafter\let\expandafter\calligraphy@part@style\csname calligraphy@part@style@\the\value{cgrphy@path@parts}\endcsname
   \ifx\calligraphy@part@style\relax
   \else
-   \expandafter\calligraphystyle\expandafter{\calligraphy@part@style}
+   \ge@addto@macro\cgrphy@path@style\calligraphy@part@style
   \fi
-  \tikz@options
   \cgrphy@path.get(path,\cgrphy@this@path)%
   \cgrphy@this@path.prepare()%
   \cgrphy@pen@path.get(path,\cgrphy@this@nib)%
@@ -494,20 +494,20 @@ and the derived files           calligraphy.ins,
   \cgrphy@tr@path.let(taper line width,\cgrphy@temp)%
    \ifcgrphy@taper@start
     \cgrphy@tr@path.taper start(\cgrphy@tapered@path,\cgrphy@rest@path)%
-    \cgrphy@tapered@path.use path(fill)%
+    \cgrphy@tapered@path.use path with tikz(\cgrphy@path@style,fill,draw=none)%
    \else
     \let\cgrphy@rest@path=\cgrphy@tr@path
    \fi
    \ifcgrphy@taper@end
     \cgrphy@rest@path.taper end(\cgrphy@tapered@path,\cgrphy@rest@path)%
-    \cgrphy@tapered@path.use path(fill)%
+    \cgrphy@tapered@path.use path with tikz(\cgrphy@path@style,fill,draw=none)%
    \fi
-   \cgrphy@rest@path.use path(stroke)%
+    \cgrphy@rest@path.use path with tikz(\cgrphy@path@style,fill=none,draw)%
   \else
   \cgrphy@tr@path.weld(,\cgrphy@this@nib)%
   \cgrphy@tr@path.weld reverse(,\cgrphy@this@path)%
   \cgrphy@tr@path.weld reverse(,\cgrphy@this@nib)%
-  \cgrphy@tr@path.use path(fill)%
+  \cgrphy@tr@path.use path with tikz(\cgrphy@path@style,fill,draw=none)%
   \fi
   \pgfsys@endscope
   \let\cgrphy@next=\cgrphy@@thickenpath
