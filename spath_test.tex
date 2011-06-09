@@ -5,6 +5,21 @@
 
 \begin{document}
 \begin{tikzpicture}
+%\path[save path=\tmppath] (-1,0) -- (0,0) .. controls +(1,0) and +(1,0) .. (1,1);
+\path[save path=\tmppath] (-1,0) .. controls +(.1,0) and +(-.1,0) .. (0,0) .. controls +(.1,0) and +(-.1,0) .. (1,0);
+\show\tmppath
+\pgfoonew \mypath=new spath(\tmppath)
+\mypath.prepare()
+\mypath.at least three()
+\mypath.show(reverse path)
+\mypath.split path by length(\fpath,\epath,4)
+\fpath.show(reverse path)
+\epath.show(reverse path)
+\end{tikzpicture}
+\end{document}
+
+
+\begin{tikzpicture}
 \path[save path=\tmppath] (0,0) -- (1,1) (2,1) .. controls (3,1) and (4,2) .. (5,2);
 \show\tmppath
 \pgfoonew \mypath =new spath(\tmppath)
