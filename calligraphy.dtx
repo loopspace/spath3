@@ -160,6 +160,7 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}
 % \pen (-135:.25) -- (45:.25);
+% \processpen
 % \draw[line width=.5cm] (0,0) .. controls +(45:1) and +(-135:1) .. ++(3,0);
 % \calligraphy (0,-1) .. controls +(45:1) and +(-135:1) .. ++(3,0);
 % \end{tikzpicture}
@@ -194,6 +195,7 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}
 % \pen (-135:.125) -- (45:.125);
+% \processpen
 % \calligraphy (0,0) -- (1,0) -- (1,1);
 % \calligraphy (2,0) -- (3,0) (3,1) -- (3,0);
 % \calligraphy (4,0) -- (5,0) +(0,0) -- (5,1);
@@ -215,6 +217,7 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}
 % \pen (-135:.25) -- (-135:.125) (45:.125) -- (45:.25);
+% \processpen
 % \calligraphy (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-4)  (0,-4) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \end{tikzpicture}
 % \end{center}
@@ -228,6 +231,7 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}[line width=2pt]
 % \pen (0,0);
+% \processpen
 % \calligraphy[heavy] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \calligraphy[light] (4,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (4,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \end{tikzpicture}
@@ -240,6 +244,7 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}[line width=1pt]
 % \pen (-135:.125) -- (0,0) (45:.125);
+% \processpen
 % \calligraphy (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \end{tikzpicture}
 % \end{center}
@@ -252,6 +257,7 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}[line width=1pt]
 % \pen (-135:.125) -- (0,0) (45:.125);
+% \processpen
 % \calligraphy[annotate] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \end{tikzpicture}
 % \end{center}
@@ -290,6 +296,7 @@ and the derived files           calligraphy.ins,
 % 
 % The style of the annotations is controlled by the options \Verb+annotation style+ (for global style), \Verb+annotation shift+ which controls how the annotation path is shifted from the final component of the calligraphic path, \Verb+annotation nodes style+ for global style of the nodes, \Verb+annotation node style+ for styling of particular nodes.
 % \begin{center}
+% \processpen
 % \begin{tikzpicture}
 % \calligraphy[pen colour=green,pen nib={2}{color=red}] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \calligraphy[annotate,annotation node style={2}{circle,draw,fill=white}] (4,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (4,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
@@ -328,12 +335,18 @@ and the derived files           calligraphy.ins,
   /tikz/calligraphy/.style={
     /pgf/calligraphy/.cd
   },
-  /pgf/calligraphy/.search also={/pgf,/tikz},
+  /pgf/calligraphy/.unknown/.code={%
+    \let\tqft@searchname=\pgfkeyscurrentname%
+    \pgfkeysalso{%
+      /tikz/\tqft@searchname=#1
+    }
+  },
   /pgf/calligraphy/.cd,
   define pen/.style={
     /tikz/irrelevant for bounding box,
     save pen,
     pen name=#1,
+    process pen,
   },
   pen name/.initial=default,
   save pen/.code={
@@ -341,18 +354,20 @@ and the derived files           calligraphy.ins,
     \expandafter\global\expandafter\let\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}@path\endcsname=\calligraphy@pen@default}
   },
   process pen/.code={%
-    \expandafter\let\expandafter\cgrphy@tmp@path\csname calligraphy@pen@#1@path\endcsname
-    \expandafter\spathsplit\csname calligraphy@pen@#1\endcsname\cgrphy@tmp@path
-    \expandafter\let\expandafter\cgrphy@temp\csname calligraphy@pen@#1\endcsname
-    \cgrphy@temp.apply to paths(prepare,)%
+    \tikz@addmode{\expandafter\let\expandafter\cgrphy@tmp@path\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}@path\endcsname
+    \expandafter\spathsplit\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}\endcsname\cgrphy@tmp@path
+    \expandafter\let\expandafter\cgrphy@temp\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}\endcsname
+    \cgrphy@temp.apply to paths(prepare,)}%
   },
   use pen/.default=default,
   use pen/.style={
-    /tikz/preaction={/tikz/save path=\calligraphy@main@path},
-    /tikz/preaction={/pgf/calligraphy/stroke with calligraphy pen=#1}
+    /tikz/save path=\calligraphy@main@path,
+    /pgf/calligraphy/stroke with calligraphy pen=#1
   },
-  stroke with calligraphy pen/.code={
-    \cgrphy@thickenpath{\calligraphy@main@path}{#1}
+  stroke with calligraphy pen/.code={%
+    \let\pgfpathmoveto=\cgrphy@pathmoveto
+    \setcounter{cgrphy@path@parts}{0}%
+    \tikz@addmode{\cgrphy@thickenpath{\calligraphy@main@path}{#1}}%
   },
   pen colour/.initial=black,
   annotate if/.is if=calligraphy@annotate,
@@ -361,7 +376,7 @@ and the derived files           calligraphy.ins,
     annotate reset
   },
   annotate reset/.code={
-    \setcounter{calligraphy@label}{0}
+    \setcounter{cgrphy@label}{0}
   },
   annotation style/.initial={->},
   annotation shift/.initial={(0,1ex)},
@@ -390,6 +405,7 @@ and the derived files           calligraphy.ins,
   },
   heavy line width/.initial=2pt,
   light line width/.initial=1pt,
+  line width/.initial=1pt,
   taper line width/.initial=0pt,
   taper/.is choice,
   taper/none/.style={
@@ -411,9 +427,7 @@ and the derived files           calligraphy.ins,
   taper at start/.is if=cgrphy@taper@start,
   taper at end/.is if=cgrphy@taper@end,
   line style/.code={
-    \pgfsyssoftpath@getcurrentpath\spath@tmp@path
-    \spath@num@components\spath@tmp@path
-    \expandafter\def\csname calligraphy@part@style@\arabic{spath@length}\endcsname{#1}
+    \expandafter\def\csname calligraphy@part@style@\the\value{cgrphy@path@parts}\endcsname{#1}%
   },
 }
 %    \end{macrocode}
@@ -447,43 +461,64 @@ and the derived files           calligraphy.ins,
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\processpen}
+%    \begin{macrocode}
+\newcommand{\processpen}[1][default]{%
+\expandafter\let\expandafter\cgrphy@tmp@path\csname calligraphy@pen@#1@path\endcsname
+    \expandafter\spathsplit\csname calligraphy@pen@#1\endcsname\cgrphy@tmp@path
+    \expandafter\let\expandafter\cgrphy@temp\csname calligraphy@pen@#1\endcsname
+    \cgrphy@temp.apply to paths(prepare,)}
+%    \end{macrocode}
+% \end{macro}
+%
 % Calligraphy commands
 %
 % Thicken a piece of the path with the pen
 % So we step through the pen path, thickening
 %
 %    \begin{macrocode}
+\let\cgrphy@orig@pathmoveto=\pgfpathmoveto
+
+\def\cgrphy@pathmoveto#1{%
+  \stepcounter{cgrphy@path@parts}%
+  \cgrphy@orig@pathmoveto{#1}%
+}
+
 \def\cgrphy@thickenpath#1#2{%
   \spathsplit\cgrphy@path#1
   \expandafter\let\expandafter\cgrphy@pen@path\csname calligraphy@pen@#2\endcsname
   \let\cgrphy@pen@path@start=\cgrphy@pen@path
-  \setcounter{cgrphy@path@parts}{0}%
-  \setcounter{cgrphy@nib}{0}%
+  \setcounter{cgrphy@path@parts}{1}%
+  \setcounter{cgrphy@nib}{1}%
+  \setcounter{cgrphy@label}{0}%
   \pgfsys@beginscope
-  \pgfsetstrokecolor{\pgfkeysvalueof{/pgf/calligraphy/pen colour}}
-  \pgfsetfillcolor{\pgfkeysvalueof{/pgf/calligraphy/pen colour}}
-  \pgfsetlinewidth{\the\pgflinewidth}
+  \pgfsys@beginscope
+\begingroup
+  \expandafter\let\expandafter\cgrphy@style\csname calligraphy@part@style@\the\value{cgrphy@path@parts}\endcsname
+  \ifx\cgrphy@style\relax
+  \else
+  \expandafter\calligraphystyle\expandafter{\cgrphy@style}%
+  \fi
   \cgrphy@@thickenpath
+\endgroup
+  \pgfsys@endscope
   \pgfsys@endscope
 }
 
 \def\cgrphy@@thickenpath{%
   \pgfsys@beginscope
-  \let\cgrphy@path@style=\pgfutil@empty
-  \let\tikz@options=\pgfutil@empty
-  \expandafter\let\expandafter\calligraphy@nib@style\csname calligraphy@nib@style@\the\value{cgrphy@nib}\endcsname
-  \ifx\calligraphy@nib@style\relax
+  \cgrphy@pen@path.get(path,\cgrphy@this@nib)%
+\begingroup
+  \expandafter\let\expandafter\cgrphy@style\csname calligraphy@nib@style@\the\value{cgrphy@nib}\endcsname
+  \ifx\cgrphy@style\relax
   \else
-   \ge@addto@macro\cgrphy@path@style\calligraphy@nib@style
+  \expandafter\calligraphystyle\expandafter{\cgrphy@style}%
   \fi
-  \expandafter\let\expandafter\calligraphy@part@style\csname calligraphy@part@style@\the\value{cgrphy@path@parts}\endcsname
-  \ifx\calligraphy@part@style\relax
-  \else
-   \ge@addto@macro\cgrphy@path@style\calligraphy@part@style
-  \fi
+  \pgfsetstrokecolor{\pgfkeysvalueof{/pgf/calligraphy/pen colour}}%
+  \pgfsetfillcolor{\pgfkeysvalueof{/pgf/calligraphy/pen colour}}%
+  \pgfsetlinewidth{\pgfkeysvalueof{/pgf/calligraphy/line width}}%
   \cgrphy@path.get(path,\cgrphy@this@path)%
   \cgrphy@this@path.prepare()%
-  \cgrphy@pen@path.get(path,\cgrphy@this@nib)%
   \cgrphy@this@nib.get(length,\cgrphy@nib@length)%
   \cgrphy@this@nib.get(initial point,\cgrphy@pt)%
   \cgrphy@pt
@@ -493,181 +528,57 @@ and the derived files           calligraphy.ins,
 \edef\cgrphy@temp{\pgfkeysvalueof{/pgf/calligraphy/taper line width}}%
   \cgrphy@tr@path.let(taper line width,\cgrphy@temp)%
    \ifcgrphy@taper@start
-    \cgrphy@tr@path.taper start(\cgrphy@tapered@path,\cgrphy@rest@path)%
-    \cgrphy@tapered@path.use path with tikz(\cgrphy@path@style,fill,draw=none)%
+    \cgrphy@tr@path.split path by real length(\cgrphy@st@path,\cgrphy@rest@path,1)%
+    \cgrphy@st@path.taper out()%
+    \cgrphy@st@path.use path(fill)%
    \else
     \let\cgrphy@rest@path=\cgrphy@tr@path
    \fi
    \ifcgrphy@taper@end
-    \cgrphy@rest@path.taper end(\cgrphy@tapered@path,\cgrphy@rest@path)%
-    \cgrphy@tapered@path.use path with tikz(\cgrphy@path@style,fill,draw=none)%
+    \cgrphy@rest@path.split path by real length(\cgrphy@rest@path,\cgrphy@end@path,-1)%
+    \cgrphy@end@path.taper in()%
+    \cgrphy@end@path.use path(fill)%
    \fi
-    \cgrphy@rest@path.use path with tikz(\cgrphy@path@style,fill=none,draw)%
+    \cgrphy@rest@path.use path(stroke)%
   \else
   \cgrphy@tr@path.weld(,\cgrphy@this@nib)%
   \cgrphy@tr@path.weld reverse(,\cgrphy@this@path)%
   \cgrphy@tr@path.weld reverse(,\cgrphy@this@nib)%
-  \cgrphy@tr@path.use path with tikz(\cgrphy@path@style,fill,draw=none)%
+    \cgrphy@tr@path.use path(fill)%
   \fi
+\endgroup
   \pgfsys@endscope
   \let\cgrphy@next=\cgrphy@@thickenpath
   \cgrphy@pen@path.get(next component,\cgrphy@pen@path)%
   \stepcounter{cgrphy@nib}%
   \ifx\cgrphy@pen@path\pgfutil@empty
+  \ifcalligraphy@annotate
+  \cgrphy@annotatepath
+  \fi
+\endgroup
+   \pgfsys@endscope
+   \pgfsys@beginscope
+  \let\cgrphy@next=\cgrphy@@thickenpath
    \let\cgrphy@pen@path=\cgrphy@pen@path@start
-   \setcounter{cgrphy@nib}{0}%
+   \setcounter{cgrphy@nib}{1}%
    \cgrphy@path.get(next component,\cgrphy@path)%
    \stepcounter{cgrphy@path@parts}%
+\begingroup
+  \expandafter\let\expandafter\cgrphy@style\csname calligraphy@part@style@\the\value{cgrphy@path@parts}\endcsname
+  \ifx\cgrphy@style\relax
+  \else
+  \expandafter\calligraphystyle\expandafter{\cgrphy@style}%
+  \fi
    \ifx\cgrphy@path\pgfutil@empty
     \let\cgrphy@next=\relax
    \fi
   \fi
   \cgrphy@next
 }
-%    \end{macrocode}
-%
-%
-% \begin{macro}{\cgrphy@thickenpartialpath}
-%    \begin{macrocode}
-\def\cgrphy@thickenpartialpath#1#2{%
+
+\def\cgrphy@annotatepath{%
   \pgfsys@beginscope
-  \def\thick@path{}%
-  \setcounter{calligraphy@nib}{0}
-  \def\thick@action##1##2##3{%
-    \edef\this@action{\string##1}%
-    \ifx\this@action\spath@moveto
-    \ifx\thick@path\@empty
-    \else
-    \stepcounter{calligraphy@nib}
-     \spath@length{\thick@path}
-     \ifnum\value{spath@length}=1\relax
-      \cgrphy@thickenpartialpathwithstroke{#1}{\thick@path}
-     \else
-      \cgrphy@thickenpartialpathwithfill{#1}{\thick@path}
-     \fi
-     \def\thick@path{}%
-    \fi
-    \fi
-    \def\spath@to@add{##1{##2}{##3}}
-  }
-  \let\thick@append=\ge@addto@macro
-  \def\@temp{\spath@walk\thick@path\thick@action\thick@append}
-  \expandafter\@temp#2\relax
-    \stepcounter{calligraphy@nib}
-  \spath@length{\thick@path}
-  \ifnum\value{spath@length}=1\relax
-  \cgrphy@thickenpartialpathwithstroke{#1}{\thick@path}
-  \else
-  \cgrphy@thickenpartialpathwithfill{#1}{\thick@path}
-  \fi
-  \ifcalligraphy@annotate
-  \cgrphy@annotatepath{#1}{\thick@path}
-  \fi
-  \pgfsys@endscope
-}
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\cgrphy@thickenpartialpathwithfill}
-%    \begin{macrocode}
-\def\cgrphy@thickenpartialpathwithfill#1#2{%
-  \pgfsys@beginscope
-  \let\tikz@options=\pgfutil@empty
-  \expandafter\let\expandafter\calligraphy@nib@style\csname calligraphy@nib@style@\arabic{calligraphy@nib}\endcsname
-  \ifx\calligraphy@nib@style\relax
-  \else
-   \expandafter\calligraphystyle\expandafter{\calligraphy@nib@style}
-  \fi
-  \expandafter\let\expandafter\calligraphy@part@style\csname calligraphy@part@style@\arabic{calligraphy@path@parts}\endcsname
-  \ifx\calligraphy@part@style\relax
-  \else
-   \expandafter\calligraphystyle\expandafter{\calligraphy@part@style}
-  \fi
-  \tikz@options
-  \spath@start{#2}
-  \let\pen@sx=\spath@xlen
-  \let\pen@sy=\spath@ylen
-  \spath@end{#2}
-  \let\pen@ex=\spath@xlen
-  \let\pen@ey=\spath@ylen
-  \spath@start{#1}
-  \let\path@sx=\spath@xlen
-  \let\path@sy=\spath@ylen
-  \spath@end{#1}
-  \let\path@ex=\spath@xlen
-  \let\path@ey=\spath@ylen
-  \spath@translate{#1}{\pen@sx}{\pen@sy}%
-  \let\lower@path=\spath@tr@path
-  \spath@translate{#2}{\path@ex}{\path@ey}
-  \let\right@path=\spath@tr@path
-  \spath@reverse{#1}
-  \spath@translate{\spath@re@path}{\pen@ex}{\pen@ey}
-  \let\upper@path=\spath@tr@path
-  \spath@reverse{#2}
-  \spath@translate{\spath@re@path}{\path@sx}{\path@sy}
-  \let\left@path=\spath@tr@path
-  \spath@cat{\lower@path}{\right@path}
-  \spath@cat{\spath@catpath}{\upper@path}
-  \spath@cat{\spath@catpath}{\left@path}
-  \def\spath@to@add{\pgfsyssoftpath@closepath{0pt}{0pt}}
-  \ge@addto@macro\spath@catpath\spath@to@add
-  \pgfsyssoftpath@setcurrentpath{\spath@catpath}
-  \pgfsyssoftpath@flushcurrentpath
-  \pgfusepath{fill}
-  \pgfsys@endscope
-}
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\cgrphy@thickenpartialpathwithstroke}
-%    \begin{macrocode}
-\def\cgrphy@thickenpartialpathwithstroke#1#2{%
-  \pgfsys@beginscope
-  \let\tikz@options=\pgfutil@empty
-  \pgfkeysgetvalue{/pgf/calligraphy/pen nib style}{\calligraphy@nib@style}
-  \ifx\calligraphy@nib@style\relax
-  \else
-   \expandafter\calligraphystyle\expandafter{\calligraphy@nib@style}
-  \fi
-  \expandafter\let\expandafter\calligraphy@nib@style\csname calligraphy@nib@style@\arabic{calligraphy@nib}\endcsname
-  \ifx\calligraphy@nib@style\relax
-  \else
-   \expandafter\calligraphystyle\expandafter{\calligraphy@nib@style}
-  \fi
-  \expandafter\let\expandafter\calligraphy@part@style\csname calligraphy@part@style@\arabic{calligraphy@path@parts}\endcsname
-  \ifx\calligraphy@part@style\relax
-  \else
-   \expandafter\calligraphystyle\expandafter{\calligraphy@part@style}
-  \fi
-  \tikz@options
-  \spath@start{#2}
-  \let\pen@sx=\spath@xlen
-  \let\pen@sy=\spath@ylen
-  \spath@translate{#1}{\pen@sx}{\pen@sy}%
-  \spath@split\spath@tr@path
-  \spath@taper\spath@split@path
-  \pgfsys@endscope
-}
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\cgrphy@annotatepath}
-% TODO: Use \Verb+\tikz@scan@one@point+ to get coordinate
-%    \begin{macrocode}
-\def\cgrphy@getpt#1{#1}
-\def\cgrphy@annotatepath#1#2{%
-  \pgfsys@beginscope
-  \spath@start{#2}
-  \let\pen@sx=\spath@xlen
-  \let\pen@sy=\spath@ylen
-  \spath@translate{#1}{\pen@sx}{\pen@sy}%
-  \let\spath@tmp@path=\spath@tr@path
-  \tikz@scan@one@point\cgrphy@getpt\pgfkeysvalueof{/pgf/calligraphy/annotation shift}
-  \pgfgetlastxy{\pen@sx}{\pen@sy}
-  \spath@translate{\spath@tmp@path}{\pen@sx}{\pen@sy}%
+\begingroup
   \pgfkeysgetvalue{/pgf/calligraphy/annotation style}{\cgrphy@annotation@style}
   \let\tikz@options=\pgfutil@empty
   \ifx\cgrphy@annotation@style\relax
@@ -675,59 +586,42 @@ and the derived files           calligraphy.ins,
    \expandafter\calligraphystyle\expandafter{\cgrphy@annotation@style}
   \fi
   \tikz@options
-  \spath@reprocess{\spath@tr@path}
-  \spath@rep@path
-  \pgfusepath{stroke}
-  \stepcounter{calligraphy@label}
-  \spath@end{\spath@tr@path}
-  \pgfkeysgetvalue{/pgf/calligraphy/annotation nodes style}{\cgrphy@node@options}
+  \cgrphy@path.get(path,\cgrphy@this@path)%
+  \cgrphy@this@path.prepare()%
+  \tikz@scan@one@point\cgrphy@getpt\pgfkeysvalueof{/pgf/calligraphy/annotation shift}%
+  \cgrphy@this@path.translate path(\cgrphy@tr@path,\the\pgf@x,\the\pgf@y)%
+\cgrphy@this@nib.final point()%
+  \cgrphy@tr@path.translate path(,\the\pgf@x,\the\pgf@y)%
+  \cgrphy@tr@path.reprocess()%
+  \def\cgrphy@temp{\cgrphy@tr@path.use path with tikz(}%
+\ge@addto@macro\cgrphy@temp\cgrphy@annotation@style
+\g@addto@macro\cgrphy@temp{,draw)}%
+\cgrphy@temp
+  \stepcounter{cgrphy@label}%
+  \cgrphy@tr@path.get(final point,\cgrphy@pt)%
+  \pgfkeysgetvalue{/pgf/calligraphy/annotation nodes style}{\cgrphy@node@options}%
   \ifx\cgrphy@node@options\relax
   \else
-   \g@addto@macro\cgrphy@node@options{,}
+   \g@addto@macro\cgrphy@node@options{,}%
   \fi
-  \expandafter\let\expandafter\cgrphy@node@style\csname calligraphy@annotation@style@\arabic{calligraphy@label}\endcsname
+  \expandafter\let\expandafter\cgrphy@node@style\csname calligraphy@annotation@style@\the\value{cgrphy@label}\endcsname
   \ifx\cgrphy@node@style\relax
   \else
-   \ge@addto@macro{\cgrphy@node@options}{\cgrphy@node@style}
+   \ge@addto@macro{\cgrphy@node@options}{\cgrphy@node@style}%
   \fi
   \ifx\cgrphy@node@options\relax
   \let\cgrphy@node@options=\pgfutil@empty
   \fi
-  \expandafter\node\expandafter[\cgrphy@node@options] at (\spath@xlen,\spath@ylen) {\arabic{calligraphy@label}};
+\cgrphy@pt
+  \expandafter\node\expandafter[\cgrphy@node@options] at (\the\pgf@x,\the\pgf@y) {\arabic{cgrphy@label}};
+\endgroup
   \pgfsys@endscope
 }
 %    \end{macrocode}
-% \end{macro}
 %
-%
-% \begin{macro}{\cgrphy@thickenpath}
 %    \begin{macrocode}
-\def\cgrphy@thickenpath@old#1#2{%
-  \pgfsys@beginscope
-  \pgfsetstrokecolor{\pgfkeysvalueof{/pgf/calligraphy/pen colour}}
-  \pgfsetfillcolor{\pgfkeysvalueof{/pgf/calligraphy/pen colour}}
-  \def\th@path{}%
-  \setcounter{calligraphy@path@parts}{-1}
-  \def\th@action##1##2##3{%
-    \edef\this@action{\string##1}
-    \ifx\this@action\spath@moveto
-     \ifx\th@path\@empty
-    \else
-      \cgrphy@thickenpartialpath\th@path{#2}
-     \fi
-     \stepcounter{calligraphy@path@parts}
-    \def\th@path{}
-    \fi
-    \def\spath@to@add{##1{##2}{##3}}
-  }
-  \let\th@append=\ge@addto@macro
-  \def\@temp{\spath@walk\th@path\th@action\th@append}
-  \expandafter\@temp#1\relax
-  \cgrphy@thickenpartialpath\th@path{#2}
-  \pgfsys@endscope
-}
+\def\cgrphy@getpt#1{#1}
 %    \end{macrocode}
-% \end{macro}
 %
 % \iffalse
 %</package>

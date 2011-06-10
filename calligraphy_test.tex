@@ -6,11 +6,6 @@
 \usetikzlibrary{decorations.pathreplacing,matrix}
 
 \begin{document}
-
-\begin{tikzpicture}[thick]
-\draw[red,ultra thin,preaction={draw,blue}] (0,0) -- (3,0);
-\end{tikzpicture}
-
 \begin{tikzpicture}[line width=2pt]
 \pen (0,0) -- ++(.5,.5) ++(.5,.5);
 \end{tikzpicture}
@@ -18,7 +13,7 @@
 
 \begin{tikzpicture}
 \useasboundingbox (-3,-1) rectangle (3,2);
-\calligraphy[heavy,pen colour=red] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
+\calligraphy[annotate,annotation style={dashed,->,thin},annotation node style={2}{circle,draw,fill=white},heavy,pen colour=red,pen nib={1}{pen colour=green}] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) [calligraphy,line style={light,pen nib={1}{pen colour=yellow}}] ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3) [calligraphy,line style={heavy}]  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0) [calligraphy,line style={light}];
 \end{tikzpicture}
 
 \begin{tikzpicture}

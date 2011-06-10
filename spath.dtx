@@ -524,7 +524,7 @@ and the derived files           spath.ins,
     \fi
   }
 
-  \method taper start(#1,#2) {%
+  \method taper out() {%
     \pgfoothis.prepare()%
     \pgfooget{first action}{\spath@temp}%
     \pgfooget{path}{\spath@tmppath}%
@@ -537,13 +537,12 @@ and the derived files           spath.ins,
     \else
      \expandafter\spath@taper@curveto@out\spath@tmppath\relax
     \fi
-    \pgfoonew #1 =new spath(\spath@tapered@path)%
-    \pgfoonew #2 =new spath(\spath@taper@middle@path)%
+    \pgfoolet{path}{\spath@tapered@path}%
   }
 
-  \method taper end(#1,#2) {%
+  \method taper in() {%
     \pgfoothis.prepare()%
-    \pgfooget{last action}{\spath@temp}%
+    \pgfooget{first action}{\spath@temp}%
     \pgfooget{reverse path}{\spath@tmppath}%
     \pgfooget{taper line width}{\taper@line@width}%
     \ifx\taper@line@width\pgfutil@empty
@@ -554,11 +553,8 @@ and the derived files           spath.ins,
     \else
      \expandafter\spath@taper@curveto@out\spath@tmppath\relax
     \fi
-    \pgfoonew #1 =new spath(\spath@tapered@path)%
-    \pgfoonew #2 =new spath(\spath@taper@middle@path)%
+    \pgfoolet{path}{\spath@tapered@path}%
   }
-
-% These could do with splitting everything, not just the path
 
   \method split path by length(#1,#2,#3) {%
     \pgfoothis.prepare()%
@@ -582,7 +578,7 @@ and the derived files           spath.ins,
   }
 
   \method split(#1,#2,#3) {%
-    \pgfmathsetmacro{\spath@splitat}{#3 < 0 ? \spath@length - #3: #3}%
+    \pgfmathsetmacro{\spath@splitat}{#3 < 0 ? \spath@length + #3: #3}%
     \pgfooget{path}{\spath@tmppath}%
     \let\spath@tmppatha=\pgfutil@empty
     \setcounter{spath@length}{0}%
@@ -629,6 +625,17 @@ and the derived files           spath.ins,
     #2.let(reverse path,\spath@tmppatha)%
     #1.let(prepared,1)%
     #2.let(prepared,1)%
+  }
+
+  \method reprocess path() {%
+    \begingroup
+    \spath@reprocess@init
+    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}%
+    \pgfoovalueof{path}%
+    \pgfsyssoftpath@getcurrenpath{\spath@tmppath}%
+    \pgfoolet{path}{\spath@tmppath}%
+    \endgroup
+    \let\spath@tmppath\pgfutil@empty
   }
 
   \method use path(#1) {%
@@ -977,6 +984,10 @@ and the derived files           spath.ins,
   }
 }
 
+\def\spath@define@reprocess#1#2{%
+  \expandafter\global\expandafter\let\csname spath@rep@#1\expandafter\endcsname\csname pgfsyssoftpath@#2\endcsname
+}
+
 \let\spath@translate@init=\pgfutil@empty
 \let\spath@length@init=\pgfutil@empty
 \let\spath@components@init=\pgfutil@empty
@@ -987,6 +998,7 @@ and the derived files           spath.ins,
 \let\spath@end@init=\pgfutil@empty
 \let\spath@array@init=\pgfutil@empty
 \let\spath@prepare@init=\pgfutil@empty
+\let\spath@reprocess@init=\pgfutil@empty
 
 \def\spath@closepath{closepath}
 
@@ -1075,6 +1087,13 @@ and the derived files           spath.ins,
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@prepare@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@prepare@init\spath@tmp
+
+% Reprocess a path
+\spath@define@reprocess\spath@cpt\spath@cptfull
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@rep@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@reprocess@init\spath@tmp
 }
 
 % Correction for counting components: count movetos
@@ -1205,7 +1224,10 @@ and the derived files           spath.ins,
   \g@addto@macro\spath@tmppatha{#1{#2}{#3}}%
   \ifnum\spath@test=\spath@splitat\relax
    \def\spath@tmppath{\pgfsyssoftpath@movetotoken{#2}{#3}}%
-   \def\spath@last{\string#1}%
+   \edef\spath@last{\string#1}%
+  \ifx\spath@last\spath@curvetosupporta
+  \let\spath@last=\spath@curveto
+  \fi
    \edef\spath@ex{#2}%
    \edef\spath@ey{#3}%
    \let\spath@next=\spath@lastgobble
@@ -1216,28 +1238,12 @@ and the derived files           spath.ins,
 }
 \def\spath@lastgobble#1#2#3#4\relax{%
   \g@addto@macro\spath@tmppath{#1{#2}{#3}#4}%
-   \def\spath@first{\string#1}%
+   \edef\spath@first{\string#1}%
+  \ifx\spath@first\spath@curvetosupporta
+  \let\spath@first=\spath@curveto
+  \fi
    \edef\spath@sx{#2}%
    \edef\spath@sy{#3}%
-}
-
-\def\spath@gobblecpt#1#2#3{%
-  \edef\spath@this@action{\string#1}%
-  \show\spath@this@action
-  \ifx\spath@this@action\spath@lineto
-   \stepcounter{spath@length}%
-  \fi
-  \ifx\spath@this@action\spath@curveto
-   \stepcounter{spath@length}%
-  \fi
-  \g@addto@macro\spath@tmppatha{#1{#2}{#3}}%
-  \ifnum\the\value{spath@length}=\spath@splitat\relax
-   \def\spath@tmppath{\pgfsyssoftpath@movetotoken{#2}{#3}}%
-   \let\spath@next=\spath@lastgobble
-  \else
-   \let\spath@next=\spath@gobblecpt
-  \fi
-  \spath@next
 }
 
 \newdimen\spath@trx
@@ -1264,7 +1270,6 @@ and the derived files           spath.ins,
   \pgfmathsetmacro{\spath@ey}{.3 * #3 + .7 * #6}
   \edef\spath@tmp{\noexpand\spath@taper@path{#2}{#3}{\spath@sx pt}{\spath@sy pt}{\spath@ex pt}{\spath@ey pt}{#5}{#6}}
   \spath@tmp
-  \def\spath@taper@middle@path{\pgfsyssoftpath@movetotoken{#5}{#6}#7}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1274,7 +1279,6 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \def\spath@taper@curveto@out\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
   \spath@taper@path{#1}{#2}{#3}{#4}{#5}{#6}{#7}{#8}
-  \def\spath@taper@middle@path{\pgfsyssoftpath@movetotoken{#7}{#8}#9}
 }
 %    \end{macrocode}
 % \end{macro}
