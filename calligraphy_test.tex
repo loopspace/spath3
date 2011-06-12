@@ -6,10 +6,21 @@
 \usetikzlibrary{decorations.pathreplacing,matrix}
 
 \begin{document}
+
 \begin{tikzpicture}[line width=2pt]
 \pen (0,0) -- ++(.5,.5) ++(.5,.5);
 \end{tikzpicture}
-\calligraphystyle{process pen=default}
+\processpen
+
+\begin{tikzpicture}
+\pen[define pen=cplate] (0,0);
+\processpen[cplate]
+\calligraphy[pen name=cplate] (0,0) .. controls +(1,1) and +(-1,-1) .. ++(5,0);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw[decorate,decoration={calligraphic brace,amplitude=2mm},ultra thick] (0,0) -- (8,0);
+\end{tikzpicture}
 
 \begin{tikzpicture}
 \useasboundingbox (-3,-1) rectangle (3,2);
@@ -18,7 +29,7 @@
 
 \begin{tikzpicture}
 \pen (0,0);
-\calligraphystyle{process pen=default}
+\processpen
 \calligraphy[heavy] (0,0) .. controls +(-135:.05) and +(0,.3) .. ++(-.2,-.4) -- ++(0,-4.2) .. controls +(0,-.3) and +(45:.05) .. ++(-.2,-.4) ++(0,0) .. controls  +(-45:.05) and +(0,.3) .. ++(.2,-.4) -- ++(0,-4.2) .. controls +(0,-.3) and +(135:.05) .. ++(.2,-.4);
 \draw[line width=2pt,decorate,decoration={brace,amplitude=10}] (1,-10) -- ++(0,10);
 \node[anchor=north west,text height=10cm,outer sep=0pt,left delimiter=\{] (a) at (2,0) {};
