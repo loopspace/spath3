@@ -84,6 +84,7 @@ and the derived files           calligraphy.ins,
 \usepackage{lmodern}
 %\usepackage{morefloats}
 \usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing,matrix}
 \usepackage{\jobname}
 \usepackage[numbered]{hypdoc}
 \definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9} 
@@ -213,6 +214,7 @@ and the derived files           calligraphy.ins,
 % \end{quotation}
 % 
 % This is good advice for ordinary calligraphy as well, so a path that is realisable as an honest calligraphic path should be fine with this package.
+% Actually since, as remarked above, the direction of the path isn't important, a more accurate golden rule would be that one should never swap from pushing to pulling or vice versa without lifting the pen off the paper; but that isn't as succinct.
 % 
 % The paths for both pens and templates can be reasonably complicated.
 % They can contain gaps, but should not contain closed paths, nor rectangles.
@@ -280,33 +282,92 @@ and the derived files           calligraphy.ins,
 % 
 % \subsection{Definition Options}
 % 
-% The \Verb+define pen+ option is used to define a pen.
-% It can be given an argument which will be the name of the pen.
-% Pens are stored globally, and while they need a \Verb+tikz+ or \Verb+tikzpicture+ to be defined, they can be used in other pictures (it would also be possible to save the definitions to a file and load them in).
-% The \Verb+pen+ command is a shortcut for a path with the \Verb+define pen+ option set.
-% The name can also be specified by the \Verb+pen name+ option.
-% 
-% To use a pen, we use the option \Verb+use pen+.
-% Technically, this works using a preaction, so the path itself should not be stroked or filled.
-% The \Verb+calligraphy+ command is a shortcut for a path with the \Verb+use pen+ option set.
-% The \Verb+pen name+ can be used to specify a particular pen.
+% Defining a pen is a two-step process.
+% First a pen has to be \emph{defined} and then \emph{processed}.
+% The reason that it has to be done in two steps is due to the internals of the package.
+% To define a pen, the user has to specify a path.
+% That path is stored in a global macro and so can be accessed in throughout the document.
+% However, before being used, the pen has to be processed.
+% At this stage, the pen is converted from a macro in to a special object.
+% These special objects are local and cannot (at present) be made global.
+% Thus whilst a pen can be \emph{defined} inside a group, the \emph{processing} stage has to happen in the outermost group in which the pen is going to be used.
+% As the TikZ path construction system takes place inside a group, this means that it is not easily possible to combine the two stages in to one.
+%
+% The following macros and keys are used to set up and use a pen.
+% All the keys are in the \Verb+/pgf/calligraphy+ family.
+%
+% \begin{itemize}
+% \item \DescribeMacro{define pen}If the \Verb+define pen+ key is specified on a path then that path will be used to define a pen.
+% It can take one option which will be the pen name, if not specified then \Verb+default+ is assumed.
+% The resulting path will not be counted for bounding box considerations.
+% When the pen is used, the origin will correspond to the path along which it is dragged.
+%
+% \item \DescribeMacro{pen name}The key \Verb+pen name=name+ sets the name for the current pen.
+% This can be used either when defining or using a pen.
+%
+% \item \DescribeMacro{\pen}\DescribeMacro{\definepen}The macros \Verb+\pen+ and \Verb+\definepen+ are equivalent to the TikZ commands \Verb+\draw+ or \Verb+\fill+ in that it acts like a path command but stores the path as a pen.
+% (The two macros are the same.)
+% These macros also change the ``key family'' to \Verb+/pgf/calligraphy+ so that any further options do not need their full path.
+%
+% \item \DescribeMacro{\processpen}The macro \Verb+\processpen+ processes a pen so that it is set up for using later on.
+% As remarked earlier, it has to be given at least at the outermost grouping of where it will be used.
+% It takes an optional argument which is the pen name.
+%
+% \item \DescribeMacro{use pen}The key \Verb+use pen=name+ on a path means that that path should be ``stroked'' with the pen (\Verb+default+ if no name is given, or none specified via the \Verb+pen name+ key).
+%
+% \item \DescribeMacro{\calligraphy}The macro \Verb+\calligraphy+ is a shortcut for specifying a path with the key \Verb+use pen+ already set.
+% This macro also changes the ``key family'' to \Verb+/pgf/calligraphy+ so that any further options do not need their full path.
+% \end{itemize}
 % 
 % \subsection{Style Options}
 % 
-% Since calligraphic paths are sometimes filled and sometimes stroked, the \Verb+pen colour+ option is provided to ensure that the colours are set correctly.
+% There are various options available for styling the calligraphic paths.
+% All of these are in the \Verb+/pgf/calligraphy+ key family, but the \Verb+\calligraphy+ command automatically switches to that family so the key path is not needed.
+% Any unknown keys are processed as follows:
+%
+% \begin{enumerate}
+% \item A check is made to see if a pen of that name has been defined.
+% If so, that pen is used.
+% This is similar to the \Verb+\node[shape]+ syntax
+%
+% \item A check is made to see if the unknown key corresponds to a colour.
+% If so, that colour is installed as the pen colour.
+% This is similar to the colour handling of TikZ paths.
+% (In fact, it uses the same code.)
+%
+% \item All other unknown options are passed on to TikZ.
+% \end{enumerate}
+%
+% The style options are as follows.
+%
+% \begin{itemize}
+% \item \DescribeMacro{pen colour}The \Verb+pen colour+ style defines the default colour to be used.
+% Since calligraphic paths are sometimes filled and sometimes stroked, this ensures that the colour is used correctly.
 % 
-% It is possible to style particular ``nibs'' (i.e., segments of the pen path) separately.
+% \item \DescribeMacro{pen nib}It is possible to style particular ``nibs'' (i.e., segments of the pen path) separately.
 % This is the \Verb+pen nib+ option, which takes two arguments.
 % The first is the index of the part of the nib and the second is the style options to be applied.
 % 
-% It is also possible to style particular parts of the template path.
+% \item \DescribeMacro{line style}It is also possible to style particular parts of the template path.
 % This is done by putting \Verb+[line style={}]+ in the template path at the relevant part.
 % The style is saved and applied to that segment of the template path.
 % 
-% The tapering of copperplate paths can be controled by the \Verb+taper+ option.
+% \item \DescribeMacro{taper}The tapering of copperplate paths can be controled by the \Verb+taper+ option.
 % It takes arguments \Verb+none+, \Verb+both+, \Verb+start+, and \Verb+end+.
 % 
-% The style of the annotations is controlled by the options \Verb+annotation style+ (for global style), \Verb+annotation shift+ which controls how the annotation path is shifted from the final component of the calligraphic path, \Verb+annotation nodes style+ for global style of the nodes, \Verb+annotation node style+ for styling of particular nodes.
+% \item \DescribeMacro{weight}\DescribeMacro{heavy}\DescribeMacro{light}Copperplate paths come in two ``weights'': \emph{heavy} and \emph{light}.
+% The weight also affects the tapering: by default a light path is tapered to nothing whilst a heavy path is tapered to the width of a light path.
+% Weights can be specified by either \Verb+weight=weight+ or just \Verb+heavy+ and \Verb+light+.
+% It is possible to change the weight for different components of a path using the \Verb+line style+ key.
+% With tapering, this means that one can easily vary from a light stroke to a heavy one.
+% The relevant widths are controlled by the keys \DescribeMacro{heavy line width}\Verb+heavy line width+ and the \DescribeMacro{light line width}\Verb+light line width+.
+% The \DescribeMacro{taper line width}\Verb+taper line width+, is set automatically by the weight but can be altered afterwards using the \Verb+taper line width+ key.
+% 
+% \item \DescribeMacro{annotate}The key \Verb+annotate+ switches on annotations.
+% The style of the annotations is controlled by the keys \DescribeMacro{annotation style}\Verb+annotation style+, \DescribeMacro{annotation shift}\Verb+annotation shift+ which controls how the annotation path is shifted from the final component of the calligraphic path, \DescribeMacro{annotation nodes style}\Verb+annotation nodes style+ for global style of the nodes, \DescribeMacro{annotation node style}\Verb+annotation node style+ for styling of particular nodes.
+% This latter takes two options: the node number and the style to be applied.
+% The annotation path and annotation node styles take ordinary TikZ styling options.
+% \end{itemize}
 %
 % \begin{example}
 % \begin{center}
@@ -320,6 +381,32 @@ and the derived files           calligraphy.ins,
 % \end{center}
 % \end{example}
 % 
+% \section{Decorations}
+%
+% If a TikZ/PGF decorations library is loaded, then the \Verb+calligraphy+ package defines some decorations that use the calligraphic paths, specifically with the copperplate nib.
+% The current decorations are:
+%
+% \begin{itemize}
+% \item \DescribeMacro{calligraphic brace}\Verb+calligraphic brace+ for a brace.
+% \item \DescribeMacro{calligraphic straight parenthesis}\Verb+calligraphic straight parenthesis+ for a parenthesis with straight middle component.
+% \item \DescribeMacro{calligraphic curved parenthesis}\Verb+calligraphic curved parenthesis+ for a parenthesis with a curved middle component.
+% \end{itemize}
+%
+% All the above use the \Verb+amplitude+ option to specify their size.
+% The following is an example of their use, together with the standard \Verb+brace+ and the \Verb+delimiter+ key from the \Verb+matrix+ library for comparison.
+%
+% \begin{example}
+% \begin{center}
+% \begin{tikzpicture}
+% \draw[decorate,decoration={calligraphic brace,amplitude=4mm},ultra thick] (0,0) -- (0,8);
+% \draw[line width=2pt,decorate,decoration={brace,amplitude=10},line cap=round] (1,0) -- ++(0,8);
+% \node[anchor=south west,minimum height=8cm,outer sep=0pt,left delimiter=\{] (a) at (2,0) {};
+% \draw[decorate,decoration={calligraphic straight parenthesis,amplitude=4mm},ultra thick] (3,0) -- ++(0,8);
+% \draw[decorate,decoration={calligraphic curved parenthesis,amplitude=4mm},ultra thick] (4,0) -- ++(0,8);
+% \node[anchor=south west,minimum height=8cm,outer sep=0pt,left delimiter=(] (a) at (5,0) {};
+% \end{tikzpicture}
+% \end{center}
+% \end{example}
 %
 % \StopEventually{}
 %
@@ -332,7 +419,6 @@ and the derived files           calligraphy.ins,
 %    \begin{macrocode}
 \ProvidesPackage{calligraphy}
 \RequirePackage{spath}
-\usepgfmodule{decorations}
 %    \end{macrocode}
 %
 %    \begin{macrocode}
@@ -352,35 +438,46 @@ and the derived files           calligraphy.ins,
     /pgf/calligraphy/.cd
   },
   /pgf/calligraphy/.unknown/.code={%
-    \let\tqft@searchname=\pgfkeyscurrentname%
-    \pgfkeysalso{%
-      /tikz/\tqft@searchname=#1
-    }
+    \let\cgrphy@key=\pgfkeyscurrentname%
+    % Is it a pen name?
+    \expandafter\ifx\csname calligraphy@pen@\cgrphy@key\endcsname\relax
+    % No, is it a colour?
+    \expandafter\pgfutil@in@\expandafter!\expandafter{\cgrphy@key}%
+    \ifpgfutil@in@%
+      % Yes, it is a colour
+\message{It is a colour: \cgrphy@key}%
+      \pgfkeyslet{/pgf/calligraphy/pen colour}{\cgrphy@key}%
+    \else
+    \pgfutil@doifcolorelse{\cgrphy@key}
+{
+  \pgfkeyslet{/pgf/calligraphy/pen colour}{\cgrphy@key}%
+}{
+    % Pass it on to TikZ to see if that can make use of it
+     \pgfkeysalso{%
+       /tikz/\cgrphy@key={#1}%
+     }
+}
+    \fi
+    \else
+    % Is a pen name, install it
+      \pgfkeyslet{/pgf/calligraphy/pen name}{\cgrphy@key}%
+    \fi
   },
   /pgf/calligraphy/.cd,
   define pen/.style={
     /tikz/irrelevant for bounding box,
     save pen,
     pen name=#1,
-    process pen,
   },
   pen name/.initial=default,
   save pen/.code={
     \tikz@addmode{\pgfsyssoftpath@getcurrentpath\calligraphy@pen@default
     \expandafter\global\expandafter\let\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}@path\endcsname=\calligraphy@pen@default}
   },
-  process pen/.code={%
-    \tikz@addmode{\expandafter\let\expandafter\cgrphy@tmp@path\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}@path\endcsname
-    \expandafter\spathsplit\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}\endcsname\cgrphy@tmp@path
-    \expandafter\let\expandafter\cgrphy@temp\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}\endcsname
-    \cgrphy@temp.apply to paths(prepare,)}%
-  },
   use pen/.default=default,
-  use pen/.style={
-    /tikz/save path=\calligraphy@main@path,
-    /pgf/calligraphy/stroke with calligraphy pen
-  },
-  stroke with calligraphy pen/.code={%
+  use pen/.code={
+    \tikz@addmode{\pgfsyssoftpath@getcurrentpath\calligraphy@main@path
+      \global\let\calligraphy@main@path=\calligraphy@main@path}
     \let\pgfpathmoveto=\cgrphy@pathmoveto
     \setcounter{cgrphy@path@parts}{0}%
     \tikz@addmode{\cgrphy@thickenpath{\calligraphy@main@path}{\pgfkeysvalueof{/pgf/calligraphy/pen       name}}}%
@@ -643,13 +740,16 @@ and the derived files           calligraphy.ins,
 \def\cgrphy@getpt#1{#1}
 %    \end{macrocode}
 %
-%
+% Some default pens: copperplate
 %    \begin{macrocode}
 \def\calligraphy@pen@copperplate@path{\pgfsyssoftpath@movetotoken{0pt}{0pt}}%
 \processpen[copperplate]%
 %    \end{macrocode}
 %
 %    \begin{macrocode}
+% If the pgfdecoration module is loaded.
+\expandafter\ifx\csname pgfdeclaredecoration\endcsname\relax
+\else
 \pgfdeclaredecoration{calligraphic brace}{brace}
 {
   \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]
@@ -681,16 +781,87 @@ and the derived files           calligraphy.ins,
       {\pgfqpoint{-.15\pgfdecorationsegmentamplitude}{.3\pgfdecorationsegmentamplitude}}
       {\pgfqpoint{0pt}{0pt}}
     }
-  }
-  \state{final}
-  {%
     \pgfkeys{
       /pgf/calligraphy/line width=\pgflinewidth,
       /pgf/calligraphy/taper line width=.5\pgflinewidth
     }%
     \pgfsyssoftpath@getcurrentpath{\cgrphy@tmppath}%
-    \cgrphy@thickenpath{\cgrphy@tmppath}{copperplate}}
+    \cgrphy@thickenpath{\cgrphy@tmppath}{copperplate}%
+  }
+  \state{final}{}
 }
+
+\pgfdeclaredecoration{calligraphic straight parenthesis}{brace}
+{
+  \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]
+  {
+    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}
+    \pgfpathmoveto{\pgfpointorigin}
+    \pgfpathcurveto
+    {\pgfqpoint{.15\pgfdecorationsegmentamplitude}{.3\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
+    {
+      \pgftransformxshift{+\pgfdecoratedremainingdistance}
+      \pgfpathlineto{\pgfqpoint{-\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
+      \pgfpathcurveto
+      {\pgfqpoint{-.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
+      {\pgfqpoint{-.15\pgfdecorationsegmentamplitude}{.3\pgfdecorationsegmentamplitude}}
+      {\pgfqpoint{0pt}{0pt}}
+    }
+    \pgfkeys{
+      /pgf/calligraphy/line width=\pgflinewidth,
+      /pgf/calligraphy/taper line width=.5\pgflinewidth
+    }%
+    \pgfsyssoftpath@getcurrentpath{\cgrphy@tmppath}%
+    \cgrphy@thickenpath{\cgrphy@tmppath}{copperplate}%
+  }
+  \state{final}{}%
+}
+
+\pgfdeclaredecoration{calligraphic curved parenthesis}{brace}
+{
+  \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]
+  {
+    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}
+    \pgfpathmoveto{\pgfpointorigin}
+    \pgfpathcurveto
+    {\pgfqpoint{.1\pgfdecorationsegmentamplitude}{.2\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{.25\pgfdecorationsegmentamplitude}{.375\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
+    \pgf@xa=\pgfdecoratedremainingdistance\relax
+    \advance\pgf@xa by -2\pgfdecorationsegmentamplitude\relax
+    \pgf@xb=\pgfdecoratedremainingdistance\relax
+    \advance\pgf@xb by -.5\pgfdecorationsegmentamplitude\relax
+    \edef\cgrphy@xa{\the\pgf@xa}
+    \edef\cgrphy@xb{\the\pgf@xb}
+    \pgfpathcurveto
+    {\pgfqpoint{2\pgfdecorationsegmentamplitude}{1.2\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{\cgrphy@xa}{1.2\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{\cgrphy@xb}{.5\pgfdecorationsegmentamplitude}}
+    \pgf@xa=\pgfdecoratedremainingdistance\relax
+    \advance\pgf@xa by -.25\pgfdecorationsegmentamplitude\relax
+    \pgf@xb=\pgfdecoratedremainingdistance\relax
+    \advance\pgf@xb by -.1\pgfdecorationsegmentamplitude\relax
+    \pgf@xc=\pgfdecoratedremainingdistance\relax
+    \edef\cgrphy@xa{\the\pgf@xa}
+    \edef\cgrphy@xb{\the\pgf@xb}
+    \edef\cgrphy@xc{\the\pgf@xc}
+    \pgfpathcurveto
+    {\pgfqpoint{\cgrphy@xa}{.375\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{\cgrphy@xb}{.2\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{\cgrphy@xc}{0pt}}
+    \pgfkeys{
+      /pgf/calligraphy/line width=\pgflinewidth,
+      /pgf/calligraphy/taper line width=.5\pgflinewidth
+    }%
+    \pgfsyssoftpath@getcurrentpath{\cgrphy@tmppath}%
+    \cgrphy@thickenpath{\cgrphy@tmppath}{copperplate}%
+  }
+  \state{final}{}%
+}
+% End if pgfdecoration module is loaded
+\fi
 %    \end{macrocode}
 %
 % \iffalse

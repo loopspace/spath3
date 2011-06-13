@@ -13,31 +13,28 @@
 \processpen
 
 \begin{tikzpicture}
-\pen[define pen=cplate] (0,0);
+\pen[pen name=cplate] (0,0);
 \processpen[cplate]
-\calligraphy[pen name=cplate] (0,0) .. controls +(1,1) and +(-1,-1) .. ++(5,0);
+\calligraphy[cplate,red] (0,0) .. controls +(1,1) and +(-1,-1) .. ++(5,0);
 \end{tikzpicture}
 
 \begin{tikzpicture}
-\draw[decorate,decoration={calligraphic brace,amplitude=2mm},ultra thick] (0,0) -- (8,0);
+\draw[decorate,decoration={calligraphic brace,amplitude=4mm},ultra thick] (0,0) -- (0,8);
+\draw[decorate,decoration={calligraphic straight parenthesis,amplitude=4mm},ultra thick] (1,0) -- (1,8);
+\draw[decorate,decoration={calligraphic curved parenthesis,amplitude=4mm},ultra thick] (2,0) -- (2,8);
+\draw[line width=2pt,decorate,decoration={brace,amplitude=10},line cap=round] (3,0) -- ++(0,8);
+\node[anchor=south west,minimum height=8cm,outer sep=0pt,left delimiter=\{] (a) at (4,0) {};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-\useasboundingbox (-3,-1) rectangle (3,2);
+%\useasboundingbox (-3,-1) rectangle (3,2);
 \calligraphy[annotate,annotation style={dashed,->,thin},annotation node style={2}{circle,draw,fill=white},heavy,pen colour=red,pen nib={1}{pen colour=green}] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) [calligraphy,line style={light,pen nib={1}{pen colour=yellow}}] ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3) [calligraphy,line style={heavy}]  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0) [calligraphy,line style={light}];
 \end{tikzpicture}
 
 \begin{tikzpicture}
 \pen (0,0);
 \processpen
-\calligraphy[heavy] (0,0) .. controls +(-135:.05) and +(0,.3) .. ++(-.2,-.4) -- ++(0,-4.2) .. controls +(0,-.3) and +(45:.05) .. ++(-.2,-.4) ++(0,0) .. controls  +(-45:.05) and +(0,.3) .. ++(.2,-.4) -- ++(0,-4.2) .. controls +(0,-.3) and +(135:.05) .. ++(.2,-.4);
-\draw[line width=2pt,decorate,decoration={brace,amplitude=10}] (1,-10) -- ++(0,10);
-\node[anchor=north west,text height=10cm,outer sep=0pt,left delimiter=\{] (a) at (2,0) {};
-\end{tikzpicture}
-
-\begin{tikzpicture}
-\pen (0,0);
-\calligraphystyle{process pen=default,heavy line width=3mm}
+\calligraphystyle{heavy line width=3mm}
 \calligraphy[heavy, taper=end] (0,0) -- +(10,0);
 \calligraphy[heavy, taper=start] (0,-1) -- +(10,0);
 \end{tikzpicture}
