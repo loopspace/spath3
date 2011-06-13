@@ -162,7 +162,6 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}
 % \pen (-135:.25) -- (45:.25);
-% \processpen
 % \draw[line width=.5cm] (0,0) .. controls +(45:1) and +(-135:1) .. ++(3,0);
 % \calligraphy (0,-1) .. controls +(45:1) and +(-135:1) .. ++(3,0);
 % \end{tikzpicture}
@@ -199,7 +198,6 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}
 % \pen (-135:.125) -- (45:.125);
-% \processpen
 % \calligraphy (0,0) -- (1,0) -- (1,1);
 % \calligraphy (2,0) -- (3,0) (3,1) -- (3,0);
 % \calligraphy (4,0) -- (5,0) +(0,0) -- (5,1);
@@ -224,7 +222,6 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}
 % \pen (-135:.25) -- (-135:.125) (45:.125) -- (45:.25);
-% \processpen
 % \calligraphy (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-4)  (0,-4) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \end{tikzpicture}
 % \end{center}
@@ -240,7 +237,6 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}[line width=2pt]
 % \pen (0,0);
-% \processpen
 % \calligraphy[heavy] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \calligraphy[light] (4,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (4,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \end{tikzpicture}
@@ -255,7 +251,6 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}[line width=1pt]
 % \pen (-135:.125) -- (0,0) (45:.125);
-% \processpen
 % \calligraphy (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \end{tikzpicture}
 % \end{center}
@@ -270,7 +265,6 @@ and the derived files           calligraphy.ins,
 % \begin{center}
 % \begin{tikzpicture}[line width=1pt]
 % \pen (-135:.125) -- (0,0) (45:.125);
-% \processpen
 % \calligraphy[annotate] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3)  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0);
 % \end{tikzpicture}
 % \end{center}
@@ -282,16 +276,16 @@ and the derived files           calligraphy.ins,
 % 
 % \subsection{Definition Options}
 % 
-% Defining a pen is a two-step process.
+% Internally, making a pen is a two-step process.
 % First a pen has to be \emph{defined} and then \emph{processed}.
-% The reason that it has to be done in two steps is due to the internals of the package.
 % To define a pen, the user has to specify a path.
 % That path is stored in a global macro and so can be accessed in throughout the document.
 % However, before being used, the pen has to be processed.
 % At this stage, the pen is converted from a macro in to a special object.
 % These special objects are local and cannot (at present) be made global.
 % Thus whilst a pen can be \emph{defined} inside a group, the \emph{processing} stage has to happen in the outermost group in which the pen is going to be used.
-% As the TikZ path construction system takes place inside a group, this means that it is not easily possible to combine the two stages in to one.
+% There is a shortcut command that (via a bit of suspicious hackery) does all this within a \Verb+tikzpicture+ group.
+% However, if a pen is to be used in several different pictures, it must be processed outside the group in which it is defined.
 %
 % The following macros and keys are used to set up and use a pen.
 % All the keys are in the \Verb+/pgf/calligraphy+ family.
@@ -305,13 +299,14 @@ and the derived files           calligraphy.ins,
 % \item \DescribeMacro{pen name}The key \Verb+pen name=name+ sets the name for the current pen.
 % This can be used either when defining or using a pen.
 %
-% \item \DescribeMacro{\pen}\DescribeMacro{\definepen}The macros \Verb+\pen+ and \Verb+\definepen+ are equivalent to the TikZ commands \Verb+\draw+ or \Verb+\fill+ in that it acts like a path command but stores the path as a pen.
+% \item \DescribeMacro{\pen}\DescribeMacro{\definepen}The macros \Verb+\pen+ and \Verb+\definepen+ are analogous to the TikZ commands \Verb+\draw+ or \Verb+\fill+ in that it acts like a path command but stores the path as a pen.
 % (The two macros are the same.)
 % These macros also change the ``key family'' to \Verb+/pgf/calligraphy+ so that any further options do not need their full path.
 %
 % \item \DescribeMacro{\processpen}The macro \Verb+\processpen+ processes a pen so that it is set up for using later on.
 % As remarked earlier, it has to be given at least at the outermost grouping of where it will be used.
 % It takes an optional argument which is the pen name.
+% This is only needed if the pen will be used in a group other than the one in which it is defined (or if the hackery that means this isn't needed with the \Verb+\pen+ command fails for some unknown reason).
 %
 % \item \DescribeMacro{use pen}The key \Verb+use pen=name+ on a path means that that path should be ``stroked'' with the pen (\Verb+default+ if no name is given, or none specified via the \Verb+pen name+ key).
 %
@@ -383,7 +378,7 @@ and the derived files           calligraphy.ins,
 % 
 % \section{Decorations}
 %
-% If a TikZ/PGF decorations library is loaded, then the \Verb+calligraphy+ package defines some decorations that use the calligraphic paths, specifically with the copperplate nib.
+% If a TikZ/PGF decorations library is loaded prior to this package, then the \Verb+calligraphy+ package defines some decorations that use the calligraphic paths, specifically with the copperplate nib.
 % The current decorations are:
 %
 % \begin{itemize}
@@ -407,6 +402,21 @@ and the derived files           calligraphy.ins,
 % \end{tikzpicture}
 % \end{center}
 % \end{example}
+%
+% \section{Pre-Defined Pens}
+%
+% The following pens are predefined:
+%
+% \begin{itemize}
+% \item \DescribeMacro{copperplate}\Verb+copperplate+:
+%
+% \begin{example}
+% \begin{center}
+% \tikz \calligraphy[copperplate] (0,0) .. controls +(1,-1) and +(-1,1) .. ++(3,0) [calligraphy,line style={light,taper=start}] +(0,0) .. controls +(1,-1) and +(-1,1) .. ++(3,0) [calligraphy,line style={heavy}];
+% \end{center}
+% \end{example}
+%
+% \end{itemize}
 %
 % \StopEventually{}
 %
@@ -466,13 +476,21 @@ and the derived files           calligraphy.ins,
   /pgf/calligraphy/.cd,
   define pen/.style={
     /tikz/irrelevant for bounding box,
-    save pen,
     pen name=#1,
+    save pen,
   },
   pen name/.initial=default,
   save pen/.code={
     \tikz@addmode{\pgfsyssoftpath@getcurrentpath\calligraphy@pen@default
-    \expandafter\global\expandafter\let\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}@path\endcsname=\calligraphy@pen@default}
+    \expandafter\global\expandafter\let\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}@path\endcsname=\calligraphy@pen@default%
+    \pgfkeysgetvalue{/pgf/calligraphy/pen name}{\cgrphy@current@pen}%
+    \global\let\cgrphy@current@pen=\cgrphy@current@pen}%
+    \def\tikz@path@do@at@end{%
+      \endgroup
+      \tikz@path@do@at@end
+      \processpen[\cgrphy@current@pen]%
+    }%
+    \begingroup
   },
   use pen/.default=default,
   use pen/.code={
@@ -798,15 +816,15 @@ and the derived files           calligraphy.ins,
     \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}
     \pgfpathmoveto{\pgfpointorigin}
     \pgfpathcurveto
-    {\pgfqpoint{.15\pgfdecorationsegmentamplitude}{.3\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{.76604\pgfdecorationsegmentamplitude}{.64279\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{2.3333\pgfdecorationsegmentamplitude}{\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{3.3333\pgfdecorationsegmentamplitude}{\pgfdecorationsegmentamplitude}}
     {
       \pgftransformxshift{+\pgfdecoratedremainingdistance}
-      \pgfpathlineto{\pgfqpoint{-\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
+      \pgfpathlineto{\pgfqpoint{-3.3333\pgfdecorationsegmentamplitude}{\pgfdecorationsegmentamplitude}}
       \pgfpathcurveto
-      {\pgfqpoint{-.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-      {\pgfqpoint{-.15\pgfdecorationsegmentamplitude}{.3\pgfdecorationsegmentamplitude}}
+      {\pgfqpoint{-2.3333\pgfdecorationsegmentamplitude}{\pgfdecorationsegmentamplitude}}
+      {\pgfqpoint{-.76604\pgfdecorationsegmentamplitude}{.64279\pgfdecorationsegmentamplitude}}
       {\pgfqpoint{0pt}{0pt}}
     }
     \pgfkeys{
@@ -825,32 +843,13 @@ and the derived files           calligraphy.ins,
   {
     \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}
     \pgfpathmoveto{\pgfpointorigin}
-    \pgfpathcurveto
-    {\pgfqpoint{.1\pgfdecorationsegmentamplitude}{.2\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{.25\pgfdecorationsegmentamplitude}{.375\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
     \pgf@xa=\pgfdecoratedremainingdistance\relax
-    \advance\pgf@xa by -2\pgfdecorationsegmentamplitude\relax
-    \pgf@xb=\pgfdecoratedremainingdistance\relax
-    \advance\pgf@xb by -.5\pgfdecorationsegmentamplitude\relax
+    \advance\pgf@xa by -1.5890\pgfdecorationsegmentamplitude\relax
     \edef\cgrphy@xa{\the\pgf@xa}
-    \edef\cgrphy@xb{\the\pgf@xb}
     \pgfpathcurveto
-    {\pgfqpoint{2\pgfdecorationsegmentamplitude}{1.2\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{\cgrphy@xa}{1.2\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{\cgrphy@xb}{.5\pgfdecorationsegmentamplitude}}
-    \pgf@xa=\pgfdecoratedremainingdistance\relax
-    \advance\pgf@xa by -.25\pgfdecorationsegmentamplitude\relax
-    \pgf@xb=\pgfdecoratedremainingdistance\relax
-    \advance\pgf@xb by -.1\pgfdecorationsegmentamplitude\relax
-    \pgf@xc=\pgfdecoratedremainingdistance\relax
-    \edef\cgrphy@xa{\the\pgf@xa}
-    \edef\cgrphy@xb{\the\pgf@xb}
-    \edef\cgrphy@xc{\the\pgf@xc}
-    \pgfpathcurveto
-    {\pgfqpoint{\cgrphy@xa}{.375\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{\cgrphy@xb}{.2\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{\cgrphy@xc}{0pt}}
+    {\pgfqpoint{1.5890\pgfdecorationsegmentamplitude}{1.3333\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{\cgrphy@xa}{1.3333\pgfdecorationsegmentamplitude}}
+    {\pgfqpoint{\pgfdecoratedremainingdistance}{0pt}}
     \pgfkeys{
       /pgf/calligraphy/line width=\pgflinewidth,
       /pgf/calligraphy/taper line width=.5\pgflinewidth

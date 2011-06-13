@@ -2,8 +2,8 @@
 \immediate\write18{tex spath.dtx}
 \documentclass{article}
 \usepackage{tikz}
-\usepackage{calligraphy}
 \usetikzlibrary{decorations.pathreplacing,matrix}
+\usepackage{calligraphy}
 
 \begin{document}
 
@@ -13,27 +13,38 @@
 \processpen
 
 \begin{tikzpicture}
+\node[anchor=south west,minimum height=8cm,outer sep=0pt,left delimiter=(] at (0,0) {};
+\node[anchor=south west,minimum height=8cm,outer sep=0pt,left delimiter=\{] at (.3,0) {};
+\draw[/pgf/calligraphy/pen colour=red,decorate,decoration={calligraphic straight parenthesis,amplitude=1.5mm},thick] (.6,0) -- ++(0,8);
+\draw[/pgf/calligraphy/pen colour=red,decorate,decoration={calligraphic curved parenthesis,amplitude=1.5mm},thick] (1,0) -- ++(0,8);
+\draw (.85,4) circle[radius=2pt];
+\draw[gray,opacity=.5] (-.06,0) rectangle ++(-.15,.5);
+\draw[gray,opacity=.5] (-.07,0) -- ++(130:1);
+\draw[gray,opacity=.5] (-.07,0) -- ++(-.15,.5);
+\calligraphy[copperplate,light,taper line width=.5\pgflinewidth] (.1,0) .. controls +(130:.15) and +(0,-.15) .. ++(-.15,.5) -- ++(0,7) .. controls +(0,.15) and +(230:.15) .. ++(.15,.5);
+\draw[gray,opacity=.5] (1,0) -- ++(-.15,.5);
+\end{tikzpicture}
+
+\begin{tikzpicture}
 \pen[pen name=cplate] (0,0);
-\processpen[cplate]
 \calligraphy[cplate,red] (0,0) .. controls +(1,1) and +(-1,-1) .. ++(5,0);
 \end{tikzpicture}
 
 \begin{tikzpicture}
 \draw[decorate,decoration={calligraphic brace,amplitude=4mm},ultra thick] (0,0) -- (0,8);
-\draw[decorate,decoration={calligraphic straight parenthesis,amplitude=4mm},ultra thick] (1,0) -- (1,8);
-\draw[decorate,decoration={calligraphic curved parenthesis,amplitude=4mm},ultra thick] (2,0) -- (2,8);
-\draw[line width=2pt,decorate,decoration={brace,amplitude=10},line cap=round] (3,0) -- ++(0,8);
-\node[anchor=south west,minimum height=8cm,outer sep=0pt,left delimiter=\{] (a) at (4,0) {};
+\draw[decorate,decoration={calligraphic straight parenthesis,amplitude=4mm},ultra thick] (3,0) -- ++(0,8);
+\draw[decorate,decoration={calligraphic curved parenthesis,amplitude=4mm},ultra thick] (4,0) -- ++(0,8);
+\draw[line width=2pt,decorate,decoration={brace,amplitude=10},line cap=round] (1,0) -- ++(0,8);
+\node[anchor=south west,minimum height=8cm,outer sep=0pt,left delimiter=\{] (a) at (2,0) {};
+\node[anchor=south west,minimum height=8cm,outer sep=0pt,left delimiter=(] (a) at (5,0) {};
 \end{tikzpicture}
 
 \begin{tikzpicture}
-%\useasboundingbox (-3,-1) rectangle (3,2);
 \calligraphy[annotate,annotation style={dashed,->,thin},annotation node style={2}{circle,draw,fill=white},heavy,pen colour=red,pen nib={1}{pen colour=green}] (0,0) .. controls +(45:1) and +(-135:1) .. +(3,0) [calligraphy,line style={light,pen nib={1}{pen colour=yellow}}] ++(1.5,0) .. controls +(-135:2) and +(45:2) .. +(0,-3) [calligraphy,line style={heavy}]  (0,-3) .. controls +(45:1) and +(-135:1) .. +(3,0) [calligraphy,line style={light}];
 \end{tikzpicture}
 
 \begin{tikzpicture}
 \pen (0,0);
-\processpen
 \calligraphystyle{heavy line width=3mm}
 \calligraphy[heavy, taper=end] (0,0) -- +(10,0);
 \calligraphy[heavy, taper=start] (0,-1) -- +(10,0);
