@@ -161,6 +161,7 @@ and the derived files           spath.ins,
 %<*package>
 % \fi
 %
+% TODO: close a path, close components of a path, set current path
 % Set up tokens for comparison
 %    \begin{macrocode}
 \usepgfmodule{oo}
@@ -623,8 +624,8 @@ and the derived files           spath.ins,
     \expandafter\spath@gobble\spath@tmppath\relax
     #1.let(reverse path,\spath@tmppath)%
     #2.let(reverse path,\spath@tmppatha)%
-    #1.let(prepared,1)%
-    #2.let(prepared,1)%
+    #1.set(prepared,1)%
+    #2.set(prepared,1)%
   }
 
   \method reprocess path() {%
@@ -636,6 +637,17 @@ and the derived files           spath.ins,
     \pgfoolet{path}{\spath@tmppath}%
     \endgroup
     \let\spath@tmppath\pgfutil@empty
+  }
+
+  \method set as current path() {%
+    \pgfooget{path}{\spath@tmppath}%
+    \pgfsyssoftpath@setcurrentpath{\spath@tmppath}%
+  }
+
+  \method get from current path() {%
+    \pgfsyssoftpath@getcurrentpath{\spath@tmppath}%
+    \pgfooset{path}{\spath@tmppath}%
+    \pgfoothis.set(prepared,0)%
   }
 
   \method use path(#1) {%
@@ -894,6 +906,29 @@ and the derived files           spath.ins,
      \endgroup
      \let#1=\spath@newpath
     \fi
+  }
+
+  \method close() {
+    \pgfooget{path}{\spath@tmppath}%
+    \g@addto@macro\spath@tmppath{\pgfsyssoftpath@closepath{0pt}{0pt}}%
+    \pgfoolet{path}{\spath@tmppath}%
+    \pgfooget{length}{\spath@temp}%
+    \pgfmathtruncatemacro{\spath@temp}{\spath@temp + 1}%
+    \pgfoolet{length}{\spath@temp}%
+    \pgfooget{real length}{\spath@temp}%
+    \pgfmathtruncatemacro{\spath@temp}{\spath@temp + 1}%
+    \pgfoolet{real length}{\spath@temp}%
+    \pgfooget{number of components}{\spath@temp}%
+    \pgfmathtruncatemacro{\spath@temp}{\spath@temp + 1}%
+    \pgfoolet{number of components}{\spath@temp}%
+    \pgfooget{initial point}{\spath@temp}%
+    \pgfoolet{final point}{\spath@temp}%
+% Reverse probably isn't quite right
+    \pgfooget{reverse path}{\spath@tmppath}%
+    \g@addto@macro\spath@tmppath{\pgfsyssoftpath@closepath{0pt}{0pt}}%
+    \pgfoolet{reverse path}{\spath@tmppath}%
+    \pgfooset{last action}{closepath}%
+    \pgfooset{prepared}{0}%
   }
 
 }
