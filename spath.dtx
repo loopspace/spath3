@@ -722,6 +722,53 @@ and the derived files           spath.ins,
    \fi
   }
 
+% This concatenates the paths but with a lineto instead of a moveto 
+
+  \method concatenate with lineto(#1,#2) {%
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+     \let\spath@other=#2\relax
+     \ifx\spath@other\relax
+     \else
+      \spath@other.get(path,\spath@tmppath)%
+      \expandafter\spath@movetoline\spath@tmppath\relax
+      \pgfooget{path}{\spath@tmppatha}%
+      \ge@addto@macro\spath@tmppatha\spath@tmppath
+      \pgfoolet{path}{\spath@tmppatha}%
+      \spath@other.get(reverse path,\spath@tmppath)%
+      \pgfooget{reverse path}{\spath@tmppatha}%
+      \ge@addto@macro\spath@tmppath\spath@tmppatha
+      \pgfoolet{reverse path}{\spath@tmppath}%
+      \spath@other.get(final point,\spath@temp)%
+      \pgfoolet{final point}{\spath@temp}%
+      \spath@other.get(last action,\spath@temp)%
+      \pgfoolet{last action}{\spath@temp}%
+      \foreach \attribute in {
+        length,
+        real length,
+        number of components%
+      } {
+        \spath@other.get(\attribute,\spath@temp)%
+        \pgfooget{\attribute}{\spath@tempa}%
+        \ifx\spath@temp\pgfutil@empty
+        \else
+        \ifx\spath@tempa\pgfutil@empty
+        \else
+         \pgfmathsetmacro{\spath@tempa}{\spath@temp + \spath@tempa}%
+         \pgfoolet{\attribute}{\spath@tempa}%
+        \fi
+        \fi
+      }%
+    \fi
+   \else
+    \pgfoothis.clone(\spath@newpath)%
+    \begingroup
+    \spath@newpath.concatenate(,#2)%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+  }
+
 % Welding is like concatenation except that the paths are brought
 % together and the intervening moveto is removed
 
@@ -1204,6 +1251,15 @@ and the derived files           spath.ins,
   \edef\spath@this@action{\string#1}%
   \ifx\spath@this@action\spath@moveto
    \def\spath@tmppath{#4}%
+  \else
+   \def\spath@tmppath{#1{#2}{#3}#4}%
+  \fi
+}
+
+\def\spath@movetoline#1#2#3#4\relax{%
+  \edef\spath@this@action{\string#1}%
+  \ifx\spath@this@action\spath@moveto
+   \def\spath@tmppath{\pgfsyssoftpath@linetotoken{#2}{#3}#4}%
   \else
    \def\spath@tmppath{#1{#2}{#3}#4}%
   \fi
