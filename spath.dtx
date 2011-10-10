@@ -161,40 +161,95 @@ and the derived files           spath.ins,
 %<*package>
 % \fi
 %
+% Load the \Verb+pgf.oo+ module.
 %    \begin{macrocode}
 \usepgfmodule{oo}
-
+%    \end{macrocode}
+% Define some auxilliary macros (should replace these with \Verb+etoolbox+
+% \begin{macro}{ge@addto@macro}
+%    \begin{macrocode}
 \long\def\ge@addto@macro#1#2{%
   \begingroup
   \toks@\expandafter\expandafter\expandafter{\expandafter#1#2}%
   \xdef#1{\the\toks@}%
   \endgroup}
-
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{ge@addbefore@macro}
+%    \begin{macrocode}
 \long\def\ge@addbefore@macro#1#2{%
   \begingroup
   \toks@\expandafter\expandafter\expandafter{\expandafter#2#1}%
   \xdef#1{\the\toks@}%
   \endgroup}
-
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\g@addbefore@macro}
+%    \begin{macrocode}
 \long\def\g@addbefore@macro#1#2{%
   \def\@temp{#2}%
   \ge@addbefore@macro{#1}{\@temp}}
-
+%    \end{macrocode}
+% This is the \Verb+spath+ object.
+% It is defined using the \Verb+pgf.oo+ module.
+% It represents a ``soft path''.
+%    \begin{macrocode}
 \pgfooclass{spath}{
-
+%    \end{macrocode}
+% Certain attributes of the soft path are saved to avoid having to recompute them for every operation.
+% The \Verb+path+ attribute is the soft path itself.
+%    \begin{macrocode}
   \attribute path;
+%    \end{macrocode}
+% The \Verb+length+ is the crudest measure of length: the number of soft path tokens in the path.
+%    \begin{macrocode}
   \attribute length;
+%    \end{macrocode}
+% Since some path pieces consist of more than one token, the \Verb+length+ is longer than what one might call the path length.
+% The \Verb+real length+ counts only the key tokens.
+%    \begin{macrocode}
   \attribute real length;
+%    \end{macrocode}
+% A path can be viewed as being a collection of drawing tokens and moving tokens.
+% We call a collection of subsequent drawing tokens a \Verb+component+.
+% The \Verb+number of components+ counts this.
+% (Actually, it counts the number of \Verb+moveto+s, which could be more if there are successive \Verb+moveto+s.)
+%    \begin{macrocode}
   \attribute number of components;
+%    \end{macrocode}
+% The \Verb+initial point+ is where the path starts.
+%    \begin{macrocode}
   \attribute initial point;
+%    \end{macrocode}
+% The \Verb+final point+ is where the path ends.
+%    \begin{macrocode}
   \attribute final point;
-  \attribute reverse path;
+%    \end{macrocode}
+% The \Verb+first action+ is the first drawing action on the path (so not including the initial \Verb+moveto+.)
+%    \begin{macrocode}
   \attribute first action;
+%    \end{macrocode}
+% The \Verb+last action+ is the last action on the path (which might be a \Verb+moveto+.)
+%    \begin{macrocode}
   \attribute last action;
+%    \end{macrocode}
+% To compute most of these attributes, we need to walk along the path.
+% Obviously, we save their values to avoid having to do this walk too often.
+% The \Verb+prepared+ attribute tells us whether or not we've already done this walk.
+%    \begin{macrocode}
   \attribute prepared;
+%    \end{macrocode}
+% For the path tapering, we need to know the line width and the width to taper to.
+% The \Verb+taper line width+ holds the latter.
+%    \begin{macrocode}
   \attribute taper line width;
-
-% Store the given path
+%    \end{macrocode}
+% 
+% Now we have the methods for the \Verb+spath+ object.
+%
+% We start with the creator.
+% If given a path, we store it as the \Verb+path+ attribute.
+%    \begin{macrocode}
   \method spath(#1) {%
     \let\spath@temp=#1\relax
     \ifx\spath@temp\relax
@@ -202,30 +257,46 @@ and the derived files           spath.ins,
      \pgfoolet{path}{#1}%
     \fi
   }
-
-% Generic attribute handling
-
+%    \end{macrocode}
+%
+% Next, we have some generic attribute handling methods.
+% These allow us to set, get, and let attributes, and also to show them in the logs.
+%
+% We start with one that inserts the value of the given attribute in the token stream.
+%    \begin{macrocode}
   \method value(#1) {%
     \pgfoovalueof{#1}%
   }
-
+%    \end{macrocode}
+% This sets the attribute (first argument) to the second argument.
+%    \begin{macrocode}
   \method set(#1,#2) {%
     \pgfooset{#1}{#2}%
   }
-
+%    \end{macrocode}
+% This lets the attribute (first argument) to the second argument, which must be a macro.
+%    \begin{macrocode}
   \method let(#1,#2) {%
     \pgfoolet{#1}{#2}%
   }
-
+%    \end{macrocode}
+% This gets the attribute (first argument) into the second argument, which must be a macro.
+%    \begin{macrocode}
   \method get(#1,#2) {%
     \pgfooget{#1}{#2}%
   }
-
+%    \end{macrocode}
+% This shows the attribute (argument) in the logs, via \Verb+\show+.
+% (Should prefix with the attribute name to be more useful.)
+%    \begin{macrocode}
   \method show(#1) {%
     \pgfooget{#1}{\@temp}%
     \show\@temp
   }
-
+%    \end{macrocode}
+% This clones the path to the macro passed to it.
+% The macro must already exist (at the moment, though in thinking about it that's a little daft) but will be overwritten.
+%    \begin{macrocode}
   \method clone(#1) {%
     \let\spath@newpath=#1\relax
     \ifx\spath@newpath\relax
@@ -238,7 +309,6 @@ and the derived files           spath.ins,
       number of components,
       initial point,
       final point,
-      reverse path,
       first action,
       last action,
       prepared,
@@ -250,11 +320,20 @@ and the derived files           spath.ins,
     \let#1=\spath@newpath%
     \fi
   }
-
-% Translate the path by #2 in x and #3 in y, if #1 is given then it
-% should be a macro and it will be an object with the translated path,
-% otherwise the current object is modified
-
+%    \end{macrocode}
+%
+% Now we begin the path-walking methods.
+% These methods work by ``evaluating'' the path under certain conditions.
+% A soft path consists of a series of commands which take two arguments, nominally an x-coordinate and a y-coordinate.
+% By reseting the commands, we can make a soft path rewrite itself in a modified form, or to extract certain information from it.
+% The actual implementation of these uses various auxilliary macros which are defined later.
+%
+% This method translates the path by #2 in x and #3 in y.
+% If #1 is given then it should be a macro and it will be turned into an object with the translated path, otherwise the current object is modified.
+%
+% It works by redefining each soft path token to add the given dimensions to its arguments and then rewrite itself back to the path.
+% Having done that, we have to adjust the various other attributes which are location-specific.
+%    \begin{macrocode}
   \method translate path(#1,#2,#3) {%
     \let\spath@newpath=#1\relax
     \ifx\spath@newpath\relax
@@ -266,12 +345,6 @@ and the derived files           spath.ins,
      \pgfoovalueof{path}%
      \pgfoolet{path}{\spath@tmppath}%
      \let\spath@tmppath=\pgfutil@empty
-     \pgfooget{reverse path}{\spath@tmppatha}%
-     \ifx\spath@tmppatha\pgfutil@empty
-     \else
-      \spath@tmppatha
-      \pgfoolet{reverse path}{\spath@tmppath}%
-     \fi
      \pgfooget{initial point}{\spath@temp}%
      \ifx\spath@temp\pgfutil@empty
      \else
@@ -300,9 +373,9 @@ and the derived files           spath.ins,
     \let#1=\spath@newpath
    \fi
   }
-
+%    \end{macrocode}
 % Get the length of the path (number of pieces)
-
+%    \begin{macrocode}
   \method length() {%
     \pgfooget{length}{\spath@temp}%
     \ifx\spath@temp\pgfutil@empty
@@ -316,9 +389,9 @@ and the derived files           spath.ins,
     \fi
     \spath@temp
   }
-
+%    \end{macrocode}
 % Get the real length of the path (number of components that draw)
-
+%    \begin{macrocode}
   \method real length() {%
     \pgfooget{real length}{\spath@temp}%
     \ifx\spath@temp\pgfutil@empty
@@ -332,9 +405,9 @@ and the derived files           spath.ins,
     \fi
     \spath@temp
   }
-
+%    \end{macrocode}
 % Get the number of components of the path
-
+%    \begin{macrocode}
   \method number of components() {%
     \pgfooget{number of components}{\spath@temp}%
     \ifx\spath@temp\pgfutil@empty
@@ -348,9 +421,9 @@ and the derived files           spath.ins,
     \fi
     \spath@temp
   }
-
+%    \end{macrocode}
 % Get the initial point of the path
-
+%    \begin{macrocode}
   \method initial point() {%
     \pgfooget{initial point}{\spath@temp}%
     \ifx\spath@temp\pgfutil@empty
@@ -364,9 +437,9 @@ and the derived files           spath.ins,
     \fi
     \spath@temp
   }
-
+%    \end{macrocode}
 % Get the final point of the path
-
+%    \begin{macrocode}
   \method final point() {%
     \pgfooget{final point}{\spath@temp}%
     \ifx\spath@temp\pgfutil@empty
@@ -380,30 +453,21 @@ and the derived files           spath.ins,
     \fi
     \spath@temp
   }
-
-% Compute the reversed path
-
-  \method compute reverse() {%
-    \pgfooget{reverse path}{\spath@tmppath}%
-    \ifx\spath@tmppath\pgfutil@empty
-     \begingroup
-     \spath@reverse@init
-     \pgfoovalueof{path}%
-     \g@addbefore@macro\spath@tmppath\pgfsyssoftpath@movetotoken
-     \endgroup
-     \pgfoolet{reverse path}{\spath@tmppath}%
-    \fi
-    \let\spath@tmppath\pgfutil@empty
-  }
-
-% Reverse the path
-
-  \method reverse() {%
+%    \end{macrocode}
+% Reverse the path.
+% If #1 is given then it should be a macro and it will be an object with the reversed path, otherwise the current object is modified.
+%    \begin{macrocode}
+  \method reverse path(#1) {%
+   \let\spath@newpath=#1\relax
+   \ifx\spath@newpath\relax
+    \let\spath@tmppath=\pgfutil@empty
     \pgfoothis.prepare()%
-    \pgfooget{path}{\spath@tmppath}%
-    \pgfooget{reverse path}{\spath@tmppatha}%
-    \pgfoolet{reverse path}{\spath@tmppath}%
-    \pgfoolet{path}{\spath@tmppatha}%
+    \begingroup
+    \spath@reverse@init
+    \pgfoovalueof{path}%
+    \g@addbefore@macro\spath@tmppath\pgfsyssoftpath@movetotoken
+    \endgroup
+    \pgfoolet{path}{\spath@tmppath}%
     \pgfooget{initial point}{\spath@temp}%
     \pgfooget{final point}{\spath@tempa}%
     \pgfoolet{final point}{\spath@temp}%
@@ -412,10 +476,18 @@ and the derived files           spath.ins,
     \pgfooget{last action}{\spath@tempa}%
     \pgfoolet{last action}{\spath@temp}%
     \pgfoolet{first action}{\spath@tempa}%
+   \else
+    \pgfoothis.clone(\spath@newpath)%
+    \begingroup
+    \spath@newpath.reverse()%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
   }
-
-% Prepare the path, filling out all the attributes
-
+%    \end{macrocode}
+% Prepare the path, filling out all the attributes.
+% As many of the attributes require ``walking'' the path to figure them out, by doing them all in one go we can avoid too much duplication of effort.
+%    \begin{macrocode}
   \method prepare() {%
     \pgfooget{prepared}{\spath@temp}%
     \ifx\spath@temp\pgfutil@empty
@@ -427,8 +499,6 @@ and the derived files           spath.ins,
     \spath@prepare@init
     \let\spath@first=\pgfutil@empty
     \pgfoovalueof{path}%
-    \g@addbefore@macro\spath@tmppath\pgfsyssoftpath@movetotoken
-    \pgfoolet{reverse path}{\spath@tmppath}%
     \edef\spath@temp{\the\value{spath@components}}%
     \pgfoolet{number of components}{\spath@temp}%
     \edef\spath@temp{\the\value{spath@length}}%
@@ -445,9 +515,15 @@ and the derived files           spath.ins,
     \endgroup
     \fi
   }
-
-% Ensure that the path has at least 3 components
-
+%    \end{macrocode}
+%
+% Now we have some other path manipulation methods that don't involve walking a path.
+%
+% For tapering a path, it is important that the path has at least 3 components so that the first and last can be tapered.
+% This method ensures that that is so by splitting the path if its real length is less than 3.
+% If the real length is 1, it replaces the component by three.
+% If the real length is 2, it splits both of them in half.
+%    \begin{macrocode}
   \method at least three() {%
     \pgfoothis.prepare()%
     \pgfooget{real length}{\spath@temp}%
@@ -458,22 +534,10 @@ and the derived files           spath.ins,
       \expandafter\spath@split@single@lineto\spath@tmppath\relax
       \pgfoolet{path}{\spath@tmppath}%
       \pgfooset{length}{4}%
-      \pgfooget{reverse path}{\spath@tmppath}%
-      \ifx\spath@tmppath\pgfutil@empty
-      \else
-       \expandafter\spath@split@single@lineto\spath@tmppath\relax
-       \pgfoolet{reverse path}{\spath@tmppath}%
-      \fi
      \else
       \expandafter\spath@split@single@curveto\spath@tmppath\relax
       \pgfoolet{path}{\spath@tmppath}%
       \pgfooset{length}{10}%
-      \pgfooget{reverse path}{\spath@tmppath}%
-      \ifx\spath@tmppath\pgfutil@empty
-      \else
-       \expandafter\spath@split@single@curveto\spath@tmppath\relax
-       \pgfoolet{reverse path}{\spath@tmppath}%
-      \fi
      \fi
      \pgfooset{real length}{3}%
     \else
@@ -499,30 +563,15 @@ and the derived files           spath.ins,
       \ge@addto@macro\spath@tmppath\spath@split@path@end
       \pgfoolet{path}{\spath@tmppath}%
       \pgfoolet{length}{\spath@tempa}%
-      \pgfooget{reverse path}{\spath@tmppath}%
-      \ifx\spath@tmppath\pgfutil@empty
-      \else
-       \pgfooget{last action}{\spath@temp}%
-       \ifx\spath@temp\spath@lineto
-        \expandafter\spath@split@first@lineto\spath@tmppath\relax
-       \else
-        \expandafter\spath@split@first@curveto\spath@tmppath\relax
-       \fi
-       \pgfooget{first action}{\spath@temp}%
-       \ifx\spath@temp\spath@lineto
-        \expandafter\spath@split@second@lineto\spath@split@path@end\relax
-       \else
-        \expandafter\spath@split@second@curveto\spath@split@path@end\relax
-       \fi
-       \let\spath@tmppath=\spath@split@path@start
-       \ge@addto@macro\spath@tmppath\spath@split@path@end
-       \pgfoolet{reverse path}{\spath@tmppath}%
-      \fi
       \pgfooset{real length}{4}%
      \fi
     \fi
   }
-
+%    \end{macrocode}
+% This is the tapering method.
+% It actually only tapers the first (real) component of the path and throws away the rest.
+% It should therefore be called after a path has been split (and after the path has been made to have at least 3 components).
+%    \begin{macrocode}
   \method taper out() {%
     \pgfoothis.prepare()%
     \pgfooget{first action}{\spath@temp}%
@@ -538,44 +587,44 @@ and the derived files           spath.ins,
     \fi
     \pgfoolet{path}{\spath@tapered@path}%
   }
-
-  \method taper in() {%
-    \pgfoothis.prepare()%
-    \pgfooget{first action}{\spath@temp}%
-    \pgfooget{reverse path}{\spath@tmppath}%
-    \pgfooget{taper line width}{\taper@line@width}%
-    \ifx\taper@line@width\pgfutil@empty
-     \pgfmathsetmacro{\taper@line@width}{.5*\pgflinewidth}%
-    \fi
-    \ifx\spath@temp\spath@lineto
-     \expandafter\spath@taper@lineto@out\spath@tmppath\relax
-    \else
-     \expandafter\spath@taper@curveto@out\spath@tmppath\relax
-    \fi
-    \pgfoolet{path}{\spath@tapered@path}%
-  }
-
+%    \end{macrocode}
+% The next few methods split a path by various conditions.
+% The actual splitting routine is the same for all, the next few methods work by setting up the conditions necessary to determine the place to split the path.
+%
+% The arguments are the same for each: macros to store the first and second parts of the path, and the number at which to split (negative counts from the end).
+%
+% The first splits the path by number of tokens.
+%    \begin{macrocode}
   \method split path by length(#1,#2,#3) {%
     \pgfoothis.prepare()%
     \def\spath@test{\the\value{spath@length}}%
     \pgfooget{length}{\spath@length}%
     \pgfoothis.split(#1,#2,#3)%
   }
-
+%    \end{macrocode}
+% This splits the path by number of drawing tokens.
+%    \begin{macrocode}
   \method split path by real length(#1,#2,#3) {%
     \pgfoothis.prepare()%
     \def\spath@test{\the\value{spath@reallength}}%
     \pgfooget{real length}{\spath@length}%
     \pgfoothis.split(#1,#2,#3)%
   }
-
+%    \end{macrocode}
+% This splits the path by the number of components (\Verb+moveto+s).
+%    \begin{macrocode}
   \method split path by component(#1,#2,#3) {%
     \pgfoothis.prepare()%
     \def\spath@test{\the\value{spath@components}}%
     \pgfooget{number of components}{\spath@length}%
     \pgfoothis.split(#1,#2,#3)%
   }
-
+%    \end{macrocode}
+% This is the actual splitting code.
+% It's another path-walker, counting as it goes and splitting when we get to the right place.
+% Negative numbers mean working from the end.
+% After the split, we have to ensure that the second part has a suitable \Verb+moveto+ since all paths start with a move.
+%    \begin{macrocode}
   \method split(#1,#2,#3) {%
     \pgfmathsetmacro{\spath@splitat}{#3 < 0 ? \spath@length + #3: #3}%
     \pgfooget{path}{\spath@tmppath}%
@@ -614,18 +663,14 @@ and the derived files           spath.ins,
     #2.let(taper line width,\spath@temp)%
     \pgfmathsetmacro{\spath@splitat}{\spath@length - \spath@splitat}%
     #2.let(length,\spath@splitat)%
-    \pgfooget{reverse path}{\spath@tmppath}%
-    \let\spath@tmppatha=\pgfutil@empty
-    \setcounter{spath@length}{-1}%
-    \setcounter{spath@reallength}{0}%
-    \setcounter{spath@components}{-1}%
-    \expandafter\spath@gobble\spath@tmppath\relax
-    #1.let(reverse path,\spath@tmppath)%
-    #2.let(reverse path,\spath@tmppatha)%
     #1.set(prepared,1)%
     #2.set(prepared,1)%
   }
-
+%   \end{macrocode}
+% This reprocesses the path (it's another walker).
+% The purpose here is that we can set new conditions (via TikZ or PGF options) which might affect how the path should be built.
+% An obvious example is to turn on the \Verb+rounded cornders+ option.
+%   \begin{macrocode}
   \method reprocess path() {%
     \begingroup
     \spath@reprocess@init
@@ -636,32 +681,36 @@ and the derived files           spath.ins,
     \endgroup
     \let\spath@tmppath\pgfutil@empty
   }
-
+%    \end{macrocode}
+% Now we come to a family of methods that actually use the path.
+% The first sets the path as the current path.
+% This means, for example, that the next TikZ command will start work on this path rather than an empty path. 
+%    \begin{macrocode}
   \method set as current path() {%
     \pgfooget{path}{\spath@tmppath}%
     \pgfsyssoftpath@setcurrentpath{\spath@tmppath}%
   }
-
+%    \end{macrocode}
+% This replaces the path in the object by the current soft path in the TikZ/PGF system.
+% As this replaces the path, all other attributes should be thrown away.
+%    \begin{macrocode}
   \method get from current path() {%
     \pgfsyssoftpath@getcurrentpath{\spath@tmppath}%
     \pgfooset{path}{\spath@tmppath}%
     \pgfoothis.set(prepared,0)%
   }
-
+%    \end{macrocode}
+% This uses the path with the \Verb+\pgfusepath+ command, so is a low-level access to the path.
+%    \begin{macrocode}
   \method use path(#1) {%
     \pgfooget{path}{\spath@tmppath}%
     \pgfsyssoftpath@setcurrentpath{\spath@tmppath}%
     \pgfsyssoftpath@flushcurrentpath
     \pgfusepath{#1}%
   }
-
-  \method use reverse path(#1) {%
-    \pgfooget{reverse path}{\spath@tmppath}%
-    \pgfsyssoftpath@setcurrentpath{\spath@tmppath}%
-    \pgfsyssoftpath@flushcurrentpath
-    \pgfusepath{#1}%
-  }
-
+%    \end{macrocode}
+% This uses the path via a TikZ-like command, so can use TikZ style options (passed as the argument).
+%    \begin{macrocode}
   \method use path with tikz(#1) {%
     \begingroup
     \let\spath@save@cmd=\tikz@scan@next@command
@@ -674,20 +723,12 @@ and the derived files           spath.ins,
     \tikz@finish
     \endgroup
   }
-
-  \method use reverse path with tikz(#1) {%
-    \begingroup
-    \let\spath@save@cmd=\tikz@scan@next@command
-    \let\tikz@scan@next@command=\relax
-    \tikz@@command@path
-    \let\tikz@scan@next@command=\spath@save@cmd
-    \tikzset{#1}%
-    \pgfooget{reverse path}{\spath@tmp}%
-    \pgfsyssoftpath@setcurrentpath{\spath@tmp}%
-    \tikz@finish
-    \endgroup
-  }
-
+%    \end{macrocode}
+% Now we get some methods which act on two paths and join them in some fashion.
+%
+% The first simply concatenates the paths.
+% As each path starts with a \Verb+moveto+, the two paths are still somewhat separate.
+%    \begin{macrocode}
   \method concatenate(#1,#2) {%
     \let\spath@newpath=#1\relax
     \ifx\spath@newpath\relax
@@ -698,10 +739,6 @@ and the derived files           spath.ins,
       \pgfooget{path}{\spath@tmppatha}%
       \ge@addto@macro\spath@tmppatha\spath@tmppath
       \pgfoolet{path}{\spath@tmppatha}%
-      \spath@other.get(reverse path,\spath@tmppath)%
-      \pgfooget{reverse path}{\spath@tmppatha}%
-      \ge@addto@macro\spath@tmppath\spath@tmppatha
-      \pgfoolet{reverse path}{\spath@tmppath}%
       \spath@other.get(final point,\spath@temp)%
       \pgfoolet{final point}{\spath@temp}%
       \spath@other.get(last action,\spath@temp)%
@@ -731,9 +768,9 @@ and the derived files           spath.ins,
     \let#1=\spath@newpath
    \fi
   }
-
+%    \end{macrocode}
 % This concatenates the paths but with a lineto instead of a moveto 
-
+%    \begin{macrocode}
   \method concatenate with lineto(#1,#2) {%
     \let\spath@newpath=#1\relax
     \ifx\spath@newpath\relax
@@ -745,10 +782,6 @@ and the derived files           spath.ins,
       \pgfooget{path}{\spath@tmppatha}%
       \ge@addto@macro\spath@tmppatha\spath@tmppath
       \pgfoolet{path}{\spath@tmppatha}%
-      \spath@other.get(reverse path,\spath@tmppath)%
-      \pgfooget{reverse path}{\spath@tmppatha}%
-      \ge@addto@macro\spath@tmppath\spath@tmppatha
-      \pgfoolet{reverse path}{\spath@tmppath}%
       \spath@other.get(final point,\spath@temp)%
       \pgfoolet{final point}{\spath@temp}%
       \spath@other.get(last action,\spath@temp)%
@@ -778,10 +811,10 @@ and the derived files           spath.ins,
     \let#1=\spath@newpath
    \fi
   }
-
+%    \end{macrocode}
 % Welding is like concatenation except that the paths are brought
 % together and the intervening moveto is removed
-
+%    \begin{macrocode}
   \method weld(#1,#2) {%
     \let\spath@newpath=#1\relax
     \ifx\spath@newpath\relax
@@ -801,18 +834,6 @@ and the derived files           spath.ins,
       \pgfooget{path}{\spath@tmppatha}%
       \ge@addto@macro\spath@tmppatha\spath@tmppath
       \pgfoolet{path}{\spath@tmppatha}%
-%
-      \spath@tempo.get(reverse path,\spath@tmppatha)%
-      \pgfooget{reverse path}{\spath@tmppath}%
-      \ifx\spath@tmppatha\pgfutil@empty
-      \else
-      \ifx\spath@tmppath\pgfutil@empty
-      \else
-      \expandafter\spath@trimfirst\spath@tmppath\relax
-      \ge@addto@macro\spath@tmppatha\spath@tmppath
-      \pgfoolet{reverse path}{\spath@tmppatha}%
-      \fi
-      \fi
 %
       \spath@tempo.get(final point,\spath@temp)%
       \pgfoolet{final point}{\spath@temp}%
@@ -843,69 +864,9 @@ and the derived files           spath.ins,
      \let#1=\spath@newpath
     \fi
   }
-
-  \method weld reverse(#1,#2) {%
-    \let\spath@newpath=#1\relax
-    \ifx\spath@newpath\relax
-     \let\spath@other=#2\relax
-     \ifx\spath@other\relax
-     \else
-      \pgfoothis.final point()%
-      \pgf@xa=\pgf@x
-      \pgf@ya=\pgf@y
-      \spath@other.final point()%
-      \advance\pgf@xa by -\pgf@x
-      \advance\pgf@ya by -\pgf@y
-      \spath@other.translate path(\spath@tempo,\the\pgf@xa,\the\pgf@ya)%
-%
-      \spath@tempo.get(reverse path,\spath@tmppath)%
-      \expandafter\spath@trimfirst\spath@tmppath\relax
-      \pgfooget{path}{\spath@tmppatha}%
-      \ge@addto@macro\spath@tmppatha\spath@tmppath
-      \pgfoolet{path}{\spath@tmppatha}%
-%
-      \spath@tempo.get(path,\spath@tmppatha)%
-      \pgfooget{reverse path}{\spath@tmppath}%
-      \ifx\spath@tmppatha\pgfutil@empty
-      \else
-      \ifx\spath@tmppath\pgfutil@empty
-      \else
-      \expandafter\spath@trimfirst\spath@tmppath\relax
-      \ge@addto@macro\spath@tmppatha\spath@tmppath
-      \pgfoolet{reverse path}{\spath@tmppatha}%
-      \fi
-      \fi
-%
-      \spath@tempo.get(initial point,\spath@temp)%
-      \pgfoolet{final point}{\spath@temp}%
-      \spath@tempo.get(first action,\spath@temp)%
-      \pgfoolet{last action}{\spath@temp}%
-      \foreach \attribute in {
-        length,
-        real length,
-        number of components%
-      } {
-        \spath@tempo.get(\attribute,\spath@temp)%
-        \pgfooget{\attribute}{\spath@tempa}%
-        \ifx\spath@temp\pgfutil@empty
-        \else
-         \ifx\spath@tempa\pgfutil@empty
-         \else
-          \pgfmathsetmacro{\spath@tempa}{\spath@temp + \spath@tempa}%
-          \pgfoolet{\attribute}{\spath@tempa}%
-         \fi
-        \fi
-      }%
-     \fi
-    \else
-     \pgfoothis.clone(\spath@newpath)%
-     \begingroup
-      \spath@newpath.weld reverse(,#2)%
-     \endgroup
-     \let#1=\spath@newpath
-    \fi
-  }
-
+%    \end{macrocode}
+% This library isn't great with closed paths, but we can certainly close up an existing path.
+%    \begin{macrocode}
   \method close() {
     \pgfooget{path}{\spath@tmppath}%
     \g@addto@macro\spath@tmppath{\pgfsyssoftpath@closepath{0pt}{0pt}}%
@@ -921,21 +882,29 @@ and the derived files           spath.ins,
     \pgfoolet{number of components}{\spath@temp}%
     \pgfooget{initial point}{\spath@temp}%
     \pgfoolet{final point}{\spath@temp}%
-% Reverse probably isn't quite right
-    \pgfooget{reverse path}{\spath@tmppath}%
-    \g@addto@macro\spath@tmppath{\pgfsyssoftpath@closepath{0pt}{0pt}}%
-    \pgfoolet{reverse path}{\spath@tmppath}%
     \pgfooset{last action}{closepath}%
     \pgfooset{prepared}{0}%
   }
-
+%    \end{macrocode}
+% Here endeth the \Verb+spath+ object.
+%    \begin{macrocode}
 }
-
+%    \end{macrocode}
+%
+% The \Verb+spath component+ is designed to be part of an array of \Verb+spath+ objects.
+% Each \Verb+spath component+ consists of an \Verb+spath+ object and a link to a previous and a next \Verb+spath component+ (either of which could be empty).
+%    \begin{macrocode}
 \pgfooclass{spath component}{
+%    \end{macrocode}
+% Our attributes are our \Verb+spath+, and the next and previous components.
+%    \begin{macrocode}
   \attribute path;
   \attribute next component;
   \attribute previous component;
-
+%    \end{macrocode}
+% This is the creator.
+% If called with an argument, that is assumed to be the previous component in the array.
+%    \begin{macrocode}
   \method spath component(#1) {%
     \def\spath@temp{#1}%
     \ifx\spath@temp\pgfutil@empty
@@ -943,35 +912,44 @@ and the derived files           spath.ins,
     \pgfoolet{previous component}{#1}%
     \fi
   }
-
-% Generic attribute handling
-
+%    \end{macrocode}
+% Generic attribute handling, see \Verb+spath+ class for details
+%    \begin{macrocode}
   \method value(#1) {%
     \pgfoovalueof{#1}%
   }
-
+%    \end{macrocode}
+%    \begin{macrocode}
   \method set(#1,#2) {%
     \pgfooset{#1}{#2}%
   }
-
+%    \end{macrocode}
+%    \begin{macrocode}
   \method let(#1,#2) {%
     \pgfoolet{#1}{#2}%
   }
-
+%    \end{macrocode}
+%    \begin{macrocode}
   \method get(#1,#2) {%
     \pgfooget{#1}{#2}%
   }
-
+%    \end{macrocode}
+%    \begin{macrocode}
   \method show(#1) {%
     \pgfooget{#1}{\@temp}%
     \show\@temp
   }
-
+%    \end{macrocode}
+% This sets the \Verb+path+ attribute (as an instance of the \Verb+spath+ class) from a saved path.
+%    \begin{macrocode}
   \method set path(#1) {%
     \pgfoonew \spath@tempa =new spath(#1)%
     \pgfoolet{path}{\spath@tempa}%
   }
-
+%    \end{macrocode}
+% This recurses along the array applying an action to every object.
+% Specifically, it applies the action to the \Verb+path+ attribute and then calls the next component with the same arguments.
+%    \begin{macrocode}
   \method apply to paths(#1,#2) {%
     \pgfooget{path}{\spath@tmppath}%
     \spath@tmppath.#1(#2)%
@@ -981,18 +959,27 @@ and the derived files           spath.ins,
      \spath@temp.apply to paths(#1,#2)%
     \fi
   }
+%    \end{macrocode}
+% That's all, folks.
+% At least for the \Verb+spath component+
+%    \begin{macrocode}
 }
-
+%    \end{macrocode}
+% The reason that the above array structure was created was to be able to work on a soft path ``component by component''.
+% The following macros take a soft path and split it at \Verb+moveto+s.
+%    \begin{macrocode}
 \def\spathsplit#1#2{%
   \pgfoonew #1 =new spath component({})%
   \let\spath@this@component=#1\relax
   \expandafter\spath@split@#2\relax
 }
-
+%    \end{macrocode}
+%    \begin{macrocode}
 \def\spath@split@\pgfsyssoftpath@movetotoken#1\relax{%
   \spath@split@@#1\pgfsyssoftpath@movetotoken\relax
 }
-
+%    \end{macrocode}
+%    \begin{macrocode}
 \def\spath@split@@#1\pgfsyssoftpath@movetotoken#2\relax{%
   \def\spath@tmppath{\pgfsyssoftpath@movetotoken#1}%
   \spath@this@component.set path(\spath@tmppath)%
@@ -1005,9 +992,17 @@ and the derived files           spath.ins,
    \spath@split@@#2\relax
   \fi
 }
-
-% These are all our helper macros
-
+%    \end{macrocode}
+%    \begin{macrocode}
+% These are all our helper macros.
+% The first batch are for defining the ``walker'' methods of the \Verb+spath+ class.
+% For each of the methods we have to define some initialiser code which redefines the soft path token macros to something appropriate.
+% As the ``something appropriate'' is often independent of the actual token macro, we set up a default action using \Verb+\spath@define@<something>+ macros.
+% These set the default actions which can be overridden afterwards.
+%
+% We start with translation.
+% Each soft path token translates its arguments and then appends itself, with the translated arguments, to the temporary path.
+%    \begin{macrocode}
 \def\spath@define@translate#1\relax{%
   \expandafter\gdef\csname spath@tr@#1\endcsname##1##2{%
     \pgf@xa=##1\relax
@@ -1018,18 +1013,26 @@ and the derived files           spath.ins,
     \ge@addto@macro\spath@tmppath\spath@tmp
   }
 }
-
+%    \end{macrocode}
+% This is for the length, we simply increment the length counter.
+%    \begin{macrocode}
 \def\spath@define@length#1\relax{%
   \expandafter\gdef\csname spath@len@#1\endcsname##1##2{%
     \stepcounter{spath@length}
   }
 }
-
+%    \end{macrocode}
+% This is for the number of components, by default we do nothing.
+% The special code for the \Verb+moveto+ will be set up later.
+%    \begin{macrocode}
 \def\spath@define@components#1\relax{%
   \expandafter\gdef\csname spath@comp@#1\endcsname##1##2{%
   }
 }
-
+%    \end{macrocode}
+% This is for the real length, by default we do nothing.
+% The special code for the \Verb+lineto+ and \Verb+curveto+ will be set up later.
+%    \begin{macrocode}
 \def\spath@define@reallength#1\relax{%
   \expandafter\gdef\csname spath@rlen@#1\endcsname##1##2{%
   }
