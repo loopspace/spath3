@@ -142,7 +142,7 @@ and the derived files           spath.ins,
 % \DoNotIndex{\newcommand,\newenvironment}
 %
 % \providecommand*{\url}{\texttt}
-% \GetFileInfo{spath.dtx}
+% \GetFileInfo{spath.sty}
 % \title{The \textsf{spath} package}
 % \author{Andrew Stacey \\ \url{stacey@math.ntnu.no}}
 % \date{\fileversion~from \filedate}
@@ -166,7 +166,7 @@ and the derived files           spath.ins,
 \usepgfmodule{oo}
 %    \end{macrocode}
 % Define some auxilliary macros (should replace these with \Verb+etoolbox+
-% \begin{macro}{ge@addto@macro}
+% \begin{macro}{\ge@addto@macro}
 %    \begin{macrocode}
 \long\def\ge@addto@macro#1#2{%
   \begingroup
@@ -175,7 +175,7 @@ and the derived files           spath.ins,
   \endgroup}
 %    \end{macrocode}
 % \end{macro}
-% \begin{macro}{ge@addbefore@macro}
+% \begin{macro}{\ge@addbefore@macro}
 %    \begin{macrocode}
 \long\def\ge@addbefore@macro#1#2{%
   \begingroup
@@ -190,6 +190,7 @@ and the derived files           spath.ins,
   \def\@temp{#2}%
   \ge@addbefore@macro{#1}{\@temp}}
 %    \end{macrocode}
+% \end{macro}
 % This is the \Verb+spath+ object.
 % It is defined using the \Verb+pgf.oo+ module.
 % It represents a ``soft path''.
@@ -328,8 +329,8 @@ and the derived files           spath.ins,
 % By reseting the commands, we can make a soft path rewrite itself in a modified form, or to extract certain information from it.
 % The actual implementation of these uses various auxilliary macros which are defined later.
 %
-% This method translates the path by #2 in x and #3 in y.
-% If #1 is given then it should be a macro and it will be turned into an object with the translated path, otherwise the current object is modified.
+% This method translates the path by \#2 in x and \#3 in y.
+% If \#1 is given then it should be a macro and it will be turned into an object with the translated path, otherwise the current object is modified.
 %
 % It works by redefining each soft path token to add the given dimensions to its arguments and then rewrite itself back to the path.
 % Having done that, we have to adjust the various other attributes which are location-specific.
@@ -455,7 +456,7 @@ and the derived files           spath.ins,
   }
 %    \end{macrocode}
 % Reverse the path.
-% If #1 is given then it should be a macro and it will be an object with the reversed path, otherwise the current object is modified.
+% If \#1 is given then it should be a macro and it will be an object with the reversed path, otherwise the current object is modified.
 %    \begin{macrocode}
   \method reverse path(#1) {%
    \let\spath@newpath=#1\relax
@@ -959,6 +960,15 @@ and the derived files           spath.ins,
      \spath@temp.apply to paths(#1,#2)%
     \fi
   }
+  \method apply to previous paths(#1,#2) {%
+    \pgfooget{path}{\spath@tmppath}%
+    \spath@tmppath.#1(#2)%
+    \pgfooget{previous component}{\spath@temp}%
+    \ifx\spath@temp\pgfutil@empty
+    \else
+     \spath@temp.apply to previous paths(#1,#2)%
+    \fi
+  }
 %    \end{macrocode}
 % That's all, folks.
 % At least for the \Verb+spath component+
@@ -1037,14 +1047,20 @@ and the derived files           spath.ins,
   \expandafter\gdef\csname spath@rlen@#1\endcsname##1##2{%
   }
 }
-
+%    \end{macrocode}
+% This is for reversing the path.
+% By default, we place our coordinates \emph{before} the current token.
+% The special code for the \Verb+curveto+ will be set up later.
+%    \begin{macrocode}
 \def\spath@define@reverse#1\relax{%
   \expandafter\gdef\csname spath@rev@#1\endcsname##1##2{%
     \edef\spath@tmp{{##1}{##2}\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname}
     \ge@addbefore@macro\spath@tmppath\spath@tmp
   }
 }
-
+%    \end{macrocode}
+% This is for recording the start of a path, so we save our coordinates and then reinitialise so that the rest of the path does nothing.
+%    \begin{macrocode}
 \def\spath@define@start#1\relax{%
   \expandafter\gdef\csname spath@start@#1\endcsname##1##2{%
     \edef\spath@sx{##1}
@@ -1052,25 +1068,36 @@ and the derived files           spath.ins,
     \spath@start@reinit
   }
 }
-
+%    \end{macrocode}
+% This is for recording the end of a path, so we save our coordinates.
+% Each component overwrites what the previous one saved so we're left with the final coordinates.
+%    \begin{macrocode}
 \def\spath@define@end#1\relax{%
   \expandafter\gdef\csname spath@end@#1\endcsname##1##2{%
     \edef\spath@ex{##1}
     \edef\spath@ey{##2}
   }
 }
-
+%    \end{macrocode}
+% This is for splitting a soft path into components.
+% The default action is to add ourself to the current temporary path.
+%    \begin{macrocode}
 \def\spath@define@array#1\relax{%
   \expandafter\gdef\csname spath@array@#1\endcsname##1##2{%
     \edef\spath@tmp{\expandafter\noexpand\csname       pgfsyssoftpath@#1token\endcsname{##1}{##2}}
     \ge@addto@macro\spath@tmppath\spath@tmp
   }
 }
-
+%    \end{macrocode}
+% This is for reprocessing the path.
+%    \begin{macrocode}
 \def\spath@define@reprocess#1#2{%
   \expandafter\global\expandafter\let\csname spath@rep@#1\expandafter\endcsname\csname pgfsyssoftpath@#2\endcsname
 }
-
+%    \end{macrocode}
+% The next part of the code sets up the initialiser code for each of the routines.
+% We start with empty initialiser code.
+%    \begin{macrocode} 
 \let\spath@translate@init=\pgfutil@empty
 \let\spath@length@init=\pgfutil@empty
 \let\spath@components@init=\pgfutil@empty
@@ -1082,9 +1109,16 @@ and the derived files           spath.ins,
 \let\spath@array@init=\pgfutil@empty
 \let\spath@prepare@init=\pgfutil@empty
 \let\spath@reprocess@init=\pgfutil@empty
-
+%    \end{macrocode}
+% The closepath token is slightly different to all of the others as it doesn't end in the word ``token''.
+% This means that we have to test for it from time to time.
+%    \begin{macrocode}
 \def\spath@closepath{closepath}
-
+%    \end{macrocode}
+% We now loop over the possible soft path tokens and define the different types of action each will expand to in the different circumstances.
+% These are the default actions, as defined by the above macros.
+% Specific actions can be redefined afterwards.
+%    \begin{macrocode}
 \foreach \spath@cpt in {
   moveto,
   lineto,
@@ -1095,104 +1129,130 @@ and the derived files           spath.ins,
   rectsize,
   closepath%
 } {
+%    \end{macrocode}
+% Fix for the closepath issue.
+%    \begin{macrocode}
   \ifx\spath@cpt\spath@closepath
   \let\spath@cptfull\spath@cpt
   \else
   \edef\spath@cptfull{\spath@cpt token}
   \fi
-% Save token names for comparision
+%    \end{macrocode}
+% Save token names for comparison
+%    \begin{macrocode}
 \expandafter\xdef\csname spath@\spath@cpt\endcsname{\expandafter\string\csname pgfsyssoftpath@\spath@cptfull\endcsname}
-
-% Translation
+%    \end{macrocode}
+% Define the translation macros.
+%    \begin{macrocode}
 \expandafter\spath@define@translate\spath@cpt\relax
-
+%    \end{macrocode}
+% Add the ``redefinition'' code to the initialiser
+%    \begin{macrocode}
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@tr@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@translate@init\spath@tmp
-
-% Counting total length
+%    \end{macrocode}
+% Now do the same for counting the total length.
+%    \begin{macrocode}
 \expandafter\spath@define@length\spath@cpt\relax
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@len@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@length@init\spath@tmp
-
-% Counting components
+%    \end{macrocode}
+% Now do the same for counting the components.
+%    \begin{macrocode}
 \expandafter\spath@define@components\spath@cpt\relax
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@comp@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@components@init\spath@tmp
-
-% Counting real length
+%    \end{macrocode}
+% Now do the same for counting the real length.
+%    \begin{macrocode}
 \expandafter\spath@define@reallength\spath@cpt\relax
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@rlen@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@reallength@init\spath@tmp
-
-% Reversal
+%    \end{macrocode}
+% This is for reversing a path.
+%    \begin{macrocode}
 \expandafter\spath@define@reverse\spath@cpt\relax
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@rev@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@reverse@init\spath@tmp
-
-% Initial coordinates
+%    \end{macrocode}
+% This is for the initial coordinates
+%    \begin{macrocode}
 \expandafter\spath@define@start\spath@cpt\relax
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@start@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@start@init\spath@tmp
-
+%    \end{macrocode}
+% Once we have the initial coordinates, we reinitialise our path tokens so that they just gobble their code.
+%    \begin{macrocode}
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\noexpand\@gobbletwo}
 
 \ge@addto@macro\spath@start@reinit\spath@tmp
-
-% Final coordinates
+%    \end{macrocode}
+% This is for the final coordinates.
+%    \begin{macrocode}
 \expandafter\spath@define@end\spath@cpt\relax
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@end@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@end@init\spath@tmp
-
+%    \end{macrocode}
 % Split in to array
+%    \begin{macrocode}
 \expandafter\spath@define@array\spath@cpt\relax
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@array@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@array@init\spath@tmp
-
-% Prepare a path: reverse the components, figure out endpoints
+%    \end{macrocode}
+% Prepare a path, figuring out all the data.
 % Actions are too complicated to specify a template so just create
 % initialisation code
-
+%    \begin{macrocode}
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@prepare@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@prepare@init\spath@tmp
-
+%    \end{macrocode}
 % Reprocess a path
+%    \begin{macrocode}
 \spath@define@reprocess\spath@cpt\spath@cptfull
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@rep@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@reprocess@init\spath@tmp
+%    \end{macrocode}
+% Phew!
+%    \begin{macrocode}
 }
-
+%    \end{macrocode}
+% Now we add the corrections for the above: where an action deviates from the ``default'' we need to redefine it.
+%
 % Correction for counting components: count movetos
+%    \begin{macrocode}
 \def\spath@comp@moveto#1#2{%
   \stepcounter{spath@length}%
 }
-
+%    \end{macrocode}
 % Correction for counting real length: count linetos and curvetos
+%    \begin{macrocode}
 \def\spath@rlen@lineto#1#2{%
   \stepcounter{spath@length}%
 }
 \def\spath@rlen@curveto#1#2{%
   \stepcounter{spath@length}%
 }
-
+%    \end{macrocode}
 % Correction for reversing initial moveto
+%    \begin{macrocode}
 \def\spath@rev@moveto#1#2{
   \ifx\spath@tmppath\pgfutil@empty
   \edef\spath@tmp{{#1}{#2}}%
@@ -1201,8 +1261,9 @@ and the derived files           spath.ins,
   \fi
   \ge@addbefore@macro\spath@tmppath\spath@tmp
 }
-
+%    \end{macrocode}
 % Correction for reversing curvetos
+%    \begin{macrocode}
 \def\spath@rev@curvetosupporta#1#2{%
   \edef\spath@tmp{{#1}{#2}\noexpand\pgfsyssoftpath@curvetotoken}%
   \ge@addbefore@macro\spath@tmppath\spath@tmp
@@ -1215,14 +1276,16 @@ and the derived files           spath.ins,
   \edef\spath@tmp{{#1}{#2}\noexpand\pgfsyssoftpath@curvetosupportatoken}%
   \ge@addbefore@macro\spath@tmppath\spath@tmp
 }
-
+%    \end{macrocode}
 % Correction for reversing closepaths
+%    \begin{macrocode}
 \def\spath@rev@closepath#1#2{%
   \edef\spath@tmp{\noexpand\pgfsyssoftpath@closepath{#1}{#2}}%
   \ge@addto@macro\spath@tmppath\spath@tmp
 }
-
+%    \end{macrocode}
 % Correction for splitting in to an array
+%    \begin{macrocode}
 \def\spath@array@moveto#1#2{%
   \ifx\spath@tmppath\pgfutil@empty
   \else
@@ -1231,7 +1294,11 @@ and the derived files           spath.ins,
   \fi
   \stepcounter{spath@array}%
 }
-
+%    \end{macrocode}
+% The ``prepare'' routine is too complicated to have defaults, so we need to set up them all here.
+% At the moment, this reverses the path as well.
+% This is now implemented in a different way so should be removed.
+%    \begin{macrocode}
 \def\spath@prepare@moveto#1#2{%
   \ifx\spath@tmppath\pgfutil@empty
   \g@addbefore@macro\spath@tmppath{{#1}{#2}}%
@@ -1280,9 +1347,13 @@ and the derived files           spath.ins,
   \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@curvetosupportbtoken}%
   \stepcounter{spath@length}%
 }
-
-% Also need to handle the closepath variants
-
+%    \end{macrocode}
+% At the moment, this doesn't handle the closepath variants very well (if at all).
+% This needs implementing.
+%
+% Now we have some helper macros.
+% This gets rid of the initial \Verb+moveto+, leaving the rest in \Verb+\spath@tmppath+.
+%    \begin{macrocode}
 \def\spath@trimfirst#1#2#3#4\relax{%
   \edef\spath@this@action{\string#1}%
   \ifx\spath@this@action\spath@moveto
@@ -1291,7 +1362,9 @@ and the derived files           spath.ins,
    \def\spath@tmppath{#1{#2}{#3}#4}%
   \fi
 }
-
+%    \end{macrocode}
+% This replaces the initial \Verb+moveto+ with a \Verb+lineto+, leaving the whole path in \Verb+\spath@tmppath+.
+%    \begin{macrocode}
 \def\spath@movetoline#1#2#3#4\relax{%
   \edef\spath@this@action{\string#1}%
   \ifx\spath@this@action\spath@moveto
@@ -1300,7 +1373,9 @@ and the derived files           spath.ins,
    \def\spath@tmppath{#1{#2}{#3}#4}%
   \fi
 }
-
+%    \end{macrocode}
+% This is our gobbling macro for splitting a path according to some criterion (length, real length, or number of components).
+%    \begin{macrocode}
 \def\spath@gobble#1#2#3{%
   \stepcounter{spath@length}%
   \edef\spath@this@action{\string#1}%
@@ -1337,7 +1412,9 @@ and the derived files           spath.ins,
    \edef\spath@sx{#2}%
    \edef\spath@sy{#3}%
 }
-
+%    \end{macrocode}
+% We need a few dimensions and counters to keep track of things.
+%    \begin{macrocode}
 \newdimen\spath@trx
 \newdimen\spath@try
 \newcounter{spath@length}
@@ -1347,15 +1424,18 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 %
 % \begin{macro}{\spath@taper@lineto@out}
+% This macro sets things up for tapering a \Verb+lineto+.
 %    \begin{macrocode}
 \def\spath@taper@lineto@out#1#2#3#4#5#6#7\relax{%
-% #1 is \pgfsyssoftpath@movetotoken
-% #2 is x-coord of starting point
-% #3 is y-coord of starting point
-% #4 is \pgfsyssoftpath@linetotoken
-% #5 is x-coord of ending point
-% #6 is y-coord of ending point
-% #7 shouldn't have anything in
+%    \end{macrocode}
+% \#1 is \Verb+\pgfsyssoftpath@movetotoken+
+% \#2 is x-coord of starting point
+% \#3 is y-coord of starting point
+% \#4 is \Verb+\pgfsyssoftpath@linetotoken+
+% \#5 is x-coord of ending point
+% \#6 is y-coord of ending point
+% \#7 shouldn't have anything in
+%    \begin{macrocode}
   \pgfmathsetmacro{\spath@sx}{.7 * #2 + .3 * #5}
   \pgfmathsetmacro{\spath@sy}{.7 * #3 + .3 * #6}
   \pgfmathsetmacro{\spath@ex}{.3 * #2 + .7 * #5}
@@ -1368,6 +1448,7 @@ and the derived files           spath.ins,
 %
 %
 % \begin{macro}{\spath@taper@curveto@out}
+% This macro sets things up for tapering a \Verb+curveto+.
 %    \begin{macrocode}
 \def\spath@taper@curveto@out\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
   \spath@taper@path{#1}{#2}{#3}{#4}{#5}{#6}{#7}{#8}
@@ -1377,17 +1458,19 @@ and the derived files           spath.ins,
 %
 %
 % \begin{macro}{\spath@taper@path}
+% This is the actual tapering macro.
 %    \begin{macrocode}
 \def\spath@taper@path#1#2#3#4#5#6#7#8{
-% #1 is x-coord of starting point
-% #2 is y-coord of starting point
-% #3 is x-coord of first control point
-% #4 is y-coord of first control point
-% #5 is x-coord of second control point
-% #6 is y-coord of second control point
-% #7 is x-coord of ending point
-% #8 is y-coord of ending point
-%
+%    \end{macrocode}
+% \#1 is x-coord of starting point
+% \#2 is y-coord of starting point
+% \#3 is x-coord of first control point
+% \#4 is y-coord of first control point
+% \#5 is x-coord of second control point
+% \#6 is y-coord of second control point
+% \#7 is x-coord of ending point
+% \#8 is y-coord of ending point
+%    \begin{macrocode}
   \edef\spath@sx{#1}
   \edef\spath@sy{#2}
   \edef\spath@cx{#3}
@@ -1505,6 +1588,7 @@ and the derived files           spath.ins,
 % \end{macro}
 %
 % \begin{macro}{\spath@split@single@lineto}
+% This splits a single \Verb+lineto+ into three pieces.
 %    \begin{macrocode}
 \def\spath@split@single@lineto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@linetotoken#3#4#5\relax{%
   \pgfmathsetmacro{\spath@sx}{(1-\spath@single@split)*#1 + \spath@single@split * #3}
@@ -1518,6 +1602,7 @@ and the derived files           spath.ins,
 %
 %
 % \begin{macro}{\spath@split@single@curveto}
+% This splits a single \Verb+curveto+ into three pieces.
 %    \begin{macrocode}
 \def\spath@split@single@curveto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
   \pgfmathsetmacro{\spath@cx}{(1 - \spath@single@split)*#1 + \spath@single@split * #3}
@@ -1548,6 +1633,7 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 % \end{macro}
 %
+% The next routines split two path tokens into four, they therefore split each one in half.
 %
 % \begin{macro}{\spath@double@split}
 %    \begin{macrocode}
@@ -1557,6 +1643,7 @@ and the derived files           spath.ins,
 %
 %
 % \begin{macro}{\spath@split@first@lineto}
+% This splits the first token if it is a \Verb+lineto+.
 %    \begin{macrocode}
 \def\spath@split@first@lineto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@linetotoken#3#4#5\relax{%
   \pgfmathsetmacro{\spath@sx}{(1-\spath@single@split)*#1 + \spath@single@split * #3}
@@ -1570,6 +1657,7 @@ and the derived files           spath.ins,
 %
 %
 % \begin{macro}{\spath@split@second@lineto}
+% This splits the second token if it is a \Verb+lineto+.
 %    \begin{macrocode}
 \def\spath@split@second@lineto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@linetotoken#3#4#5\relax{%
   \pgfmathsetmacro{\spath@sx}{(1-\spath@single@split)*#3 + \spath@single@split * #1}
@@ -1581,6 +1669,7 @@ and the derived files           spath.ins,
 %
 %
 % \begin{macro}{\spath@split@first@curveto}
+% This splits the first token if it is a \Verb+curveto+.
 %    \begin{macrocode}
 \def\spath@split@first@curveto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
   \pgfmathsetmacro{\spath@cx}{(1 - \spath@double@split)*#1 + \spath@double@split * #3}
@@ -1605,6 +1694,7 @@ and the derived files           spath.ins,
 %
 %
 % \begin{macro}{\spath@split@second@curveto}
+% This splits the second token if it is a \Verb+curveto+.
 %    \begin{macrocode}
 \def\spath@split@second@curveto\pgfsyssoftpath@movetotoken#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8#9\relax{%
   \pgfmathsetmacro{\spath@cx}{(1 - \spath@double@split)*#1 + \spath@double@split * #3}
