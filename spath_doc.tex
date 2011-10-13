@@ -1,0 +1,272 @@
+\immediate\write18{tex spath.dtx}
+\documentclass{ltxdoc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{morefloats}
+\usepackage{tikz}
+\usepackage{spath}
+\usepackage[numbered]{hypdoc}
+\definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9} 
+ 
+\usepackage{listings}
+\lstloadlanguages{[LaTeX]TeX}
+\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+ 
+\usepackage{fancyvrb}
+
+\newenvironment{example}
+  {\VerbatimEnvironment
+   \begin{VerbatimOut}{example.out}}
+  {\end{VerbatimOut}
+   \begin{center}
+   \setlength{\parindent}{0pt}
+   \fbox{\begin{minipage}{.9\linewidth}
+     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
+     \lstinputlisting[]{example.out}
+   \end{minipage}}
+
+   \fbox{\begin{minipage}{.9\linewidth}
+     \input{example.out}
+   \end{minipage}}
+\end{center}
+}
+
+\providecommand*{\url}{\texttt}
+\GetFileInfo{spath.sty}
+
+\title{The \textsf{spath} Package: Documentation}
+\author{Andrew Stacey \\ \url{stacey@math.ntnu.no}}
+\date{\fileversion~from \filedate}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The \texttt{spath} library is an object-oriented interface to the \emph{soft path} system of PGF.
+It allows one to save, manipulate, and use \emph{soft paths} in a more general way than is currently easy with TikZ/PGF.
+This library was developed for use with the \texttt{calligraphy} package since that required various path manipulations that would have been hard to do otherwise.
+
+There are several steps in the TikZ/PGF system between writing \Verb+\draw (0,0) -- (1,0);+ and a line appearing in the document.
+The command just given is a TikZ command.
+The TikZ frontend translates that into PGF commands.
+These are then processed into a \emph{soft path}.
+The soft path can be manipulated further before being ``baked'' into a hard path which is then written out into the output file via an appropriate driver.
+
+A soft path is a simple object.
+It consists of a list of tokens of the form \Verb+\pgfsyssoftpath@<something>token{x pt}{y pt}+\footnote{Except for the \Verb+closepath+ token which omits the final \Verb+token+.}.
+There are only a handful of possible \Verb+<something>+s.
+It is therefore quite straightforward to manipulate these paths in an orderly fashion.
+However, the PGF code does not provide a particular method for doing complicated manipulations on these paths.
+This library introduces some such methods.
+
+One thing to note at the outset is that this library makes no attempt to optimise the code and so if the soft path is very long, it will take a considerable time to do any of these manipulations.
+The PGF soft path system does have some optimisations to handle this.
+
+\section{Usage}
+
+Using this library is relatively straightforward.
+After loading TikZ/PGF, simply \Verb+\usepackage{spath}+ in the preamble.
+A typical example of using the library is in the following example.
+
+\begin{example}
+\begin{tikzpicture}
+\path[save path=\tmppath] (-1,0) -- (0,0) .. controls +(1,0) and +(1,0) .. (1,1);
+\pgfoonew \mypath=new spath(\tmppath)
+\mypath.prepare()
+\mypath.reverse path()
+\mypath.use path with tikz(draw)
+\mypath.translate path(,0cm,-2cm)
+\mypath.at least three()
+\mypath.split path by real length(\fpath,\mpath,1)
+\begin{scope}[ultra thick]
+\fpath.taper out()
+\fpath.use path with tikz(fill)
+\mpath.split path by real length(\mmpath,\epath,-1)
+\epath.reverse path()
+\epath.taper out()
+\epath.use path with tikz(fill)
+\mmpath.use path with tikz(draw)
+\end{scope}
+\end{tikzpicture}
+\end{example}
+
+In this example, we start by defining a path in the usual TikZian manner.
+However, instead of doing something with the path, we save it.
+This saves the raw path as a macro.
+In order to use this library on that path, we have to convert it into an \Verb+spath+ object.
+This is done with the next line, starting \Verb+\pgfoonew+ (note the spacing: there must be no space after the \Verb+=+).
+This command declares \Verb+\mypath+ to be an instance of the \Verb+spath+ class and initialises it with the path stored in \Verb+\tmppath+.
+(For scoping reasons, we can't define a PGF key to be given to the original \Verb+\path+ command to do this in one go.)
+This can now be manipulated with the \Verb+spath+ methods.
+We shall explain the actual methods later so shall not go into detail now.
+
+\section{Attributes and Methods}
+
+The \texttt{spath} library defines two classes: the \Verb+spath+ and \Verb+spath component+.
+The \Verb+spath+ is a soft path, the \Verb+spath component+ is an array of \Verb+spath+ objects.
+
+\subsection{The \texttt{spath} Object}
+
+The following is a list of the attributes that an \Verb+spath+ object has.
+The class operates on a lazy system: attributes are not automatically worked out so they will not have values initially.
+However, as soon as you do something that needs one to have a value it will be computed.
+
+\begin{itemize}
+\item \Verb+path+
+
+This holds the actual soft path.
+
+\item \Verb+length+
+
+This (when initialised) is the length of the soft path in number of soft path tokens.
+
+\item \Verb+real length+
+
+This is the number of actual drawing tokens in the soft path; that is, the number of \Verb+lineto+ and \Verb+curveto+ tokens.
+
+(This ought to also count \Verb+rect+, but I don't know of a TikZ command that actually produces a \Verb+rect+.)
+
+\item \Verb+number of components+
+
+This is the number of components of the path when divided up by \Verb+moveto+s.
+It is actually the number of \Verb+moveto+s so successive \Verb+moveto+s will each count.
+
+\item \Verb+initial point+
+
+This is the coordinates of the start of the path.
+It is of the form \Verb+\pgfpoint{x coordinate}{y coordinate}+ so when executed will set \Verb+\pgf@x+ and \Verb+\pgf@y+ to the corresponding coordinates.
+
+\item \Verb+final point+
+
+This is the coordinates of the end of the path.
+
+\item \Verb+first action+
+
+This is the first drawing action on the path (that is, not the initial \Verb+moveto+).
+
+\item \Verb+last action+
+
+This is the last action on the path (which might be a \Verb+moveto+).
+
+\item \Verb+prepared+
+
+The attributes are not calculated initially, but are calculated as needed.
+There is a method available for calculating them all in one fell swoop.
+If this has been called, this attribute is set so that the path knows its attributes have all be computed and don't need to be computed again.
+
+\item \Verb+taper line width+
+
+When tapering a path, it is necessary to set both the current line width and a width to taper to.
+This holds the latter.
+
+\end{itemize}
+
+The following is a list of the methods available for an \Verb+spath+ object with a brief explanation of what each does.
+The contents of the parentheses are the arguments for the method.
+
+\begin{itemize}
+\item \Verb+spath(#1)+
+
+This is the creator method, it is called automatically when the object is created.
+The argument, if given, is a macro containing a soft path which is used to set the \Verb+path+ attribute.
+
+\item \Verb+value(#1)+
+
+This method inserts the value of the attribute passed to it into the token stream.
+
+\item \Verb+set(#1,#2)+
+
+This method sets the attribute passed to it as the first argument to the second argument.
+
+\item \Verb+let(#1,#2)+
+
+This method lets the attribute passed to it as the first argument to be the second argument.
+The second argument ought to be a macro, therefore.
+
+\item \Verb+get(#1,#2)+
+
+This method assigns the second argument to the value of the attribute passed to it as the first argument.
+The second argument ought to be a macro, therefore.
+
+\item \Verb+show(#1)+
+
+This method shows the value of the attribute in the logs.
+It uses \Verb+\show+ internally.
+
+\item \Verb+clone(#1)+
+
+This method clones the \Verb+spath+ object into the macro passed as the argument. 
+
+\item \Verb+translate path(#1,#2,#3)+
+
+This method translates the path by \Verb+#2+ in the x-direction and \Verb+#3+ in the y-direction.
+If \Verb+#1+ is not empty, it should be a macro which is used to store the translated object (it will be an \Verb+spath+ object).
+If \Verb+#1+ is empty, the current object is modified.
+
+\item \Verb+length()+
+
+This method inserts the length of the path in the token stream, computing it if it is not already known.
+(It is this computation which makes it differ from the \Verb+value+ method.)
+
+\item \Verb+real length()+
+
+This method inserts the real length of the path in the token stream, computing it if it is not already known.
+
+\item \Verb+number of components()+
+
+This method inserts the number of components of the path in the token stream, computing it if it is not already known.
+
+\item \Verb+initial point()+
+
+This method inserts the number of components of the path in the token stream, computing it if it is not already known.
+
+\item \Verb+final point()+
+
+This method inserts the number of components of the path in the token stream, computing it if it is not already known.
+
+\item \Verb+reverse path(#1)+
+
+This method reverses the soft path.
+If the argument is given, the reverse path is stored in it as a new \Verb+spath+ object.
+If not, the current path is modified.
+
+\item \Verb+prepare()+
+\item \Verb+at least three()+
+\item \Verb+taper out()+
+\item \Verb+split path by length(#1,#2,#3)+
+\item \Verb+split path by real length(#1,#2,#3)+
+\item \Verb+split path by component(#1,#2,#3)+
+\item \Verb+split(#1,#2,#3)+
+\item \Verb+reprocess path()+
+\item \Verb+set as current path()+
+\item \Verb+get from current path()+
+\item \Verb+use path(#1)+
+\item \Verb+use path with tikz(#1)+
+\item \Verb+concatenate(#1,#2)+
+\item \Verb+concatenate with lineto(#1,#2)+
+\item \Verb+weld(#1,#2)+
+\item \Verb+close()+
+\end{itemize}
+
+
+\begin{itemize}
+\item \Verb+path+
+\item \Verb+next component+
+\item \Verb+previous component+
+\end{itemize}
+
+\begin{itemize}
+\item \Verb+spath component(#1)+
+\item \Verb+value(#1)+
+\item \Verb+set(#1,#2)+
+\item \Verb+let(#1,#2)+
+\item \Verb+get(#1,#2)+
+\item \Verb+show(#1)+
+\item \Verb+set path(#1)+
+\item \Verb+apply to paths(#1,#2)+
+\item \Verb+apply to previous paths(#1,#2)+
+\end{itemize}
+
+\end{document}
