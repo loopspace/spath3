@@ -72,6 +72,7 @@ A typical example of using the library is in the following example.
 
 \begin{example}
 \begin{tikzpicture}
+\useasboundingbox (-1,1) rectangle (2,-2);
 \path[save path=\tmppath] (-1,0) -- (0,0) .. controls +(1,0) and +(1,0) .. (1,1);
 \pgfoonew \mypath=new spath(\tmppath)
 \mypath.prepare()
@@ -233,40 +234,150 @@ If the argument is given, the reverse path is stored in it as a new \Verb+spath+
 If not, the current path is modified.
 
 \item \Verb+prepare()+
+
+This fills out all the attributes.
+Finding the information for an attribute involves ``walking'' along the path.
+Therefore, if we're going to need more than one, it makes sense to do them all in one go.
+Calling this method ensures that they are all filled in and does so more efficiently than calling each individually.
+
 \item \Verb+at least three()+
+
+One of the things that the \texttt{calligraphy} package wants to be able to do is taper a path.
+To do this nicely, the path should have at least three drawing pieces.
+This ensures that this is so by splitting it if it does not.
+If it has one piece, it is split into three at the .3 and .7 marks.
+If it has two pieces, each is split in half.
+
 \item \Verb+taper out()+
+
+This is used to taper a path.
+In fact, it replaces the first drawing component by a simularted tapered path (actually the outline of the tapered path is returned).
+The rest of the path is thrown away, so this should be used after the path has been split.
+
 \item \Verb+split path by length(#1,#2,#3)+
+
+This splits a path according to the length.
+The first argument will be an \Verb+spath+ object corresponding to the first part of the path, the second the rest, and the third says how many tokens should be in the first part of the path.
+Both pieces are ``proper'' paths, so the second will be given an initial \Verb+moveto+.
+
 \item \Verb+split path by real length(#1,#2,#3)+
+
+This is the same as \Verb+split path by length+ except that it uses the \Verb+real length+ as the criterion of when to split.
+
 \item \Verb+split path by component(#1,#2,#3)+
+
+This is the same as \Verb+split path by length+ except that it uses the \Verb+number of components+ as the criterion of when to split.
+
 \item \Verb+split(#1,#2,#3)+
+
+This is the method that actually does the splitting.
+It depends on certain macros being set which the previous three methods initialise.
+It should therefore not be called directly.
+Consider it a ``private'' method.
+
 \item \Verb+reprocess path()+
+
+This reprocesses the path.
+Some TikZ/PGF settings have implications for how a path is constructed (such as the \Verb+rounded corners+ option).
+If these have changed since the path was originally defined, it might be reasonable to redraw the path under the new conditions.
+This does so.
+
 \item \Verb+set as current path()+
+
+This replaces the current path by the path stored in this object.
+
 \item \Verb+get from current path()+
+
+This replaces the path stored in this object by the current path.
+
 \item \Verb+use path(#1)+
+
+This uses the path.
+The argument should be one of the PGF usage commands: \Verb+draw+, \Verb+fill+, \Verb+clip+, or \Verb+discard+.
+
 \item \Verb+use path with tikz(#1)+
+
+This uses the path but in a TikZian way.
+The argument should be a list of TikZ styles to be set for the path.
+Imagine this as \Verb+\path[<options>] <path>;+.
+
 \item \Verb+concatenate(#1,#2)+
+
+This concatenates the path in the current object with that from another.
+If the first argument is given (which should be a macro), the result will a new \Verb+spath+ object stored in that macro.
+If not, the object will be modified itself.
+Since paths start with a \Verb+moveto+, the concatenation will not be a continuous path. 
+
 \item \Verb+concatenate with lineto(#1,#2)+
+
+This concatenates the path as \Verb+concatenate+ does, except that the \Verb+moveto+ in the middle is replaced by a \Verb+lineto+.
+
 \item \Verb+weld(#1,#2)+
+
+This welds two paths together.
+Welding is like concatenation except that the second path is translated so that its starting point is the final point of the first path (and the \Verb+moveto+ is removed).
+
 \item \Verb+close()+
+
+This closes the path.
 \end{itemize}
 
+\subsection{The \texttt{spath component} Object}
+
+An \Verb+spath component+ object is an element in an array of \Verb+spath+ objects.
+Each element contains an \Verb+spath+ object and pointers to the previous and successive components.
 
 \begin{itemize}
 \item \Verb+path+
+
+This is the \Verb+spath+ object of the current element.
+
 \item \Verb+next component+
+
+This is the next \Verb+spath component+ object (if non-empty).
+
 \item \Verb+previous component+
+
+This is the previous \Verb+spath component+ object (if non-empty).
 \end{itemize}
+
+The methods for \Verb+spath component+s are as follows.
 
 \begin{itemize}
 \item \Verb+spath component(#1)+
+
+This is the initialiser method.
+The argument should be the previous component in the array.
+
 \item \Verb+value(#1)+
+
+This method, and the following ones, are exactly as in the \Verb+spath+ object.
+
 \item \Verb+set(#1,#2)+
 \item \Verb+let(#1,#2)+
 \item \Verb+get(#1,#2)+
 \item \Verb+show(#1)+
 \item \Verb+set path(#1)+
+
+This sets the \Verb+spath+ attribute of this object.
+
 \item \Verb+apply to paths(#1,#2)+
+
+This applies a method to all of the \Verb+spath+ objects in the array, starting with the current path and proceding to the next component, and so on.
+The first argument is the method name, the second is any argument that is to be passed to that method.
+
 \item \Verb+apply to previous paths(#1,#2)+
+
+This applies a method to all of the \Verb+spath+ objects in the array, starting with the current path and proceding to the previous component, and so on.
 \end{itemize}
+
+There is an additional command for use when creating an array of \Verb+spath component+s.
+This is \Verb+\spathsplit+.
+It takes two arguments.
+The first is a macro that will become the first component of an array of \Verb+spath component+s.
+The second is a macro containing a soft path.
+The soft path will be split into pieces according to its components (that is, at the \Verb+moveto+s) and stored in the array.
+At the moment, the last component is (temporarily) available at the end of the split as the \Verb+\spath@this@component+ macro.
+
 
 \end{document}

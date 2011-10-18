@@ -179,11 +179,16 @@ and the derived files           calligraphy.ins,
 %<*package>
 % \fi
 %
+% This package depends on the \texttt{spath} library for soft path manipulations.
 %    \begin{macrocode}
 \ProvidesPackage{calligraphy}
 \RequirePackage{spath}
 %    \end{macrocode}
 %
+% We start with some initialisation stuff.
+% We have some \Verb+\if+s: one for whether we annotate our paths, one for whether we taper the start (of a copperplate path), and one for whether we taper the end.
+% We also have some counters: the labels (for annotating the strokes), the nibs, and the parts of paths.
+% These latter two are used for styling parts of paths and nibs.
 %    \begin{macrocode}
 \newif\ifcalligraphy@annotate
 \newif\ifcgrphy@taper@start
@@ -193,21 +198,34 @@ and the derived files           calligraphy.ins,
 \newcounter{cgrphy@label}
 \newcounter{cgrphy@nib}
 \newcounter{cgrphy@path@parts}
+%    \end{macrocode}
+% Now we set all our \Verb+pgfkeys+.
+%    \begin{macrocode}
 \pgfkeys{
+%    \end{macrocode}
+% Often need to declare a path without wanting it to be included in the bounding box (for example, when defining a pen).
+%    \begin{macrocode}
   /tikz/irrelevant for bounding box/.code={
     \pgf@relevantforpicturesizefalse
   },
+%    \end{macrocode}
+% Our ``home directory'' is \Verb+/pgf/calligraphy+.
+% This ensures that \Verb+calligraphy+ in a TikZ setting switches to our home directory.
+%    \begin{macrocode}
   /tikz/calligraphy/.style={
     /pgf/calligraphy/.cd
   },
+%    \end{macrocode}
+% This is our handler for unknown options.
+% First, we check to see if it is a pen name.
+% Then, we check to see if it is a colour and if so set the pen colour.
+% If neither, we pass it to TikZ and let TikZ handle it.
+%    \begin{macrocode}
   /pgf/calligraphy/.unknown/.code={%
     \let\cgrphy@key=\pgfkeyscurrentname%
-    % Is it a pen name?
     \expandafter\ifx\csname calligraphy@pen@\cgrphy@key\endcsname\relax
-    % No, is it a colour?
     \expandafter\pgfutil@in@\expandafter!\expandafter{\cgrphy@key}%
     \ifpgfutil@in@%
-      % Yes, it is a colour
 \message{It is a colour: \cgrphy@key}%
       \pgfkeyslet{/pgf/calligraphy/pen colour}{\cgrphy@key}%
     \else
@@ -215,24 +233,38 @@ and the derived files           calligraphy.ins,
 {
   \pgfkeyslet{/pgf/calligraphy/pen colour}{\cgrphy@key}%
 }{
-    % Pass it on to TikZ to see if that can make use of it
      \pgfkeysalso{%
        /tikz/\cgrphy@key={#1}%
      }
 }
     \fi
     \else
-    % Is a pen name, install it
       \pgfkeyslet{/pgf/calligraphy/pen name}{\cgrphy@key}%
     \fi
   },
+%    \end{macrocode}
+% Now we work in our ``home'' directory.
+%    \begin{macrocode}
   /pgf/calligraphy/.cd,
+%    \end{macrocode}
+% This is the style used for defining a pen.
+%    \begin{macrocode}
   define pen/.style={
     /tikz/irrelevant for bounding box,
     pen name=#1,
     save pen,
   },
+%    \end{macrocode}
+% A pen must always be named, so we use \Verb+default+ if we're not told otherwise.
+%    \begin{macrocode}
   pen name/.initial=default,
+%    \end{macrocode}
+% When saving a pen, we have a little problem with scoping.
+% It's easy enough to save the soft path.
+% What is a little harder is to process the pen (into an \Verb+spath+ object) since that must be done outside the group used to work on the path.
+% So we add a little hook at the end of the path (via \Verb+\tikz@path@do@at@end+) to allow us to actually process the path.
+% This involves adding an extra group to ensure that everything happens at the right level.
+%    \begin{macrocode}
   save pen/.code={
     \tikz@addmode{\pgfsyssoftpath@getcurrentpath\calligraphy@pen@default
     \expandafter\global\expandafter\let\csname calligraphy@pen@\pgfkeysvalueof{/pgf/calligraphy/pen name}@path\endcsname=\calligraphy@pen@default%
@@ -245,33 +277,74 @@ and the derived files           calligraphy.ins,
     }%
     \begingroup
   },
+%    \end{macrocode}
+% By default, we use the default pen.
+%    \begin{macrocode}
   use pen/.default=default,
-  use pen/.code={
+%    \end{macrocode}
+% This is the code that sets up the path for being stroked by a calligraphic pen.
+%    \begin{macrocode}
+  use pen/.code={%
     \tikz@addmode{\pgfsyssoftpath@getcurrentpath\calligraphy@main@path
       \global\let\calligraphy@main@path=\calligraphy@main@path}
     \let\pgfpathmoveto=\cgrphy@pathmoveto
     \setcounter{cgrphy@path@parts}{0}%
     \tikz@addmode{\cgrphy@thickenpath{\calligraphy@main@path}{\pgfkeysvalueof{/pgf/calligraphy/pen       name}}}%
   },
+%    \end{macrocode}
+% Our pen colour is initially black.
+%    \begin{macrocode}
   pen colour/.initial=black,
-  annotate if/.is if=calligraphy@annotate,
+%    \end{macrocode}
+% We can annotate paths, thus showing how they were constructed.
+% The idea here is to be able to do an instruction booklet.
+%    \begin{macrocode}
   annotate/.style={
     annotate if,
     annotate reset
   },
+%    \end{macrocode}
+% Switch to determine if to annotate or not.
+%    \begin{macrocode}
+  annotate if/.is if=calligraphy@annotate,
+%    \end{macrocode}
+% When annotating, we count the pieces of the path so need to reset our counter.
+%    \begin{macrocode}
   annotate reset/.code={
     \setcounter{cgrphy@label}{0}
   },
+%    \end{macrocode}
+% Our initial annotation style is a line with an arrowhead in the direction of the path.
+%    \begin{macrocode}
   annotation style/.initial={->},
+%    \end{macrocode}
+% Our default shift of the annotation is 1ex upwards.
+%    \begin{macrocode}
   annotation shift/.initial={(0,1ex)},
+%    \end{macrocode}
+% Our initial style for the nodes in the annotations, just anchor them nicely.
+%    \begin{macrocode}
   annotation nodes style/.initial={anchor=south east},
+%    \end{macrocode}
+% This allows us to set a style according to which piece of the nib is in use.
+%    \begin{macrocode}
   pen nib/.code 2 args={
     \expandafter\def\csname calligraphy@nib@style@#1\endcsname{#2}
   },
+%    \end{macrocode}
+% This allows us to set an annotation style for a specific component of the path.
+%    \begin{macrocode} 
   annotation node style/.code 2 args={
     \expandafter\def\csname calligraphy@annotation@style@#1\endcsname{#2}
   },
+%    \end{macrocode}
+% This is the overall style for the pen nib.
+%    \begin{macrocode}
   pen nib style/.initial={},
+%    \end{macrocode}
+% When drawing a copperplate stroke, we can choose to draw it with a ``heavy'' stroke or a ``light'' one.
+% This also affects the tapering.
+%    \begin{macrocode}
   weight/.is choice,
   weight/heavy/.style={
     line width=\pgfkeysvalueof{/pgf/calligraphy/heavy line width},
@@ -290,6 +363,10 @@ and the derived files           calligraphy.ins,
   heavy line width/.initial=2pt,
   light line width/.initial=1pt,
   line width/.initial=1pt,
+%    \end{macrocode}
+% We taper from the \Verb+taper line width+ to the \Verb+line width+.
+% We have complete freedom whether to taper either end.
+%    \begin{macrocode}
   taper line width/.initial=0pt,
   taper/.is choice,
   taper/none/.style={
@@ -310,6 +387,10 @@ and the derived files           calligraphy.ins,
   },
   taper at start/.is if=cgrphy@taper@start,
   taper at end/.is if=cgrphy@taper@end,
+%    \end{macrocode}
+% It is possible to put a style definition in a path declaration using the \Verb+line style+ key.
+% This means we can specify the style corresponding to the current component without having to count up components.
+%    \begin{macrocode}
   line style/.code={
     \expandafter\def\csname calligraphy@part@style@\the\value{cgrphy@path@parts}\endcsname{#1}%
   },
@@ -318,6 +399,7 @@ and the derived files           calligraphy.ins,
 %
 %
 % \begin{macro}{\calligraphystyle}
+% This is a calligraphy version of the \Verb+\tikzset+ command.
 %    \begin{macrocode}
 \newcommand{\calligraphystyle}[1]{\pgfkeys{/pgf/calligraphy/.cd,#1}}
 %    \end{macrocode}
@@ -325,6 +407,7 @@ and the derived files           calligraphy.ins,
 %
 %
 % \begin{macro}{\pen}
+% This is a shortcut for defining a pen, it works just like a \Verb+\path+ command.
 %    \begin{macrocode}
 \newcommand{\pen}[1][]{\path[calligraphy,define pen,#1]}
 %    \end{macrocode}
@@ -332,6 +415,7 @@ and the derived files           calligraphy.ins,
 %
 %
 % \begin{macro}{\calligraphy}
+% This is a shortcut for using a pen, it works just like a \Verb+\path+ command.
 %    \begin{macrocode}
 \newcommand{\calligraphy}[1][]{\path[calligraphy,use pen,#1]}
 %    \end{macrocode}
@@ -339,20 +423,23 @@ and the derived files           calligraphy.ins,
 %
 %
 % \begin{macro}{\definepen}
+% This is like \Verb+\pen+ but doesn't need to be in a \Verb+tikzpicture+ environment.
 %    \begin{macrocode}
 \newcommand{\definepen}[1][]{\tikz \path[calligraphy,define pen,#1]}
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\processpen}
+% This is the macro that actually processes the pen declaration, converting it into two arrays of \Verb+spath component+ objects (one for the forward path and one for the reverse).
 %    \begin{macrocode}
 \newcommand{\processpen}[1][default]{%
 \expandafter\let\expandafter\cgrphy@tmp@path\csname calligraphy@pen@#1@path\endcsname
     \expandafter\spathsplit\csname calligraphy@pen@#1\endcsname\cgrphy@tmp@path
     \expandafter\let\expandafter\cgrphy@temp\csname calligraphy@pen@#1\endcsname
     \cgrphy@temp.apply to paths(prepare,)%
-%
+%    \end{macrocode}
 % Reverse the path and save that, too
+%    \begin{macrocode}
     \begingroup
     \spath@reverse@init
     \cgrphy@tmp@path
@@ -369,17 +456,25 @@ and the derived files           calligraphy.ins,
 %
 % Calligraphy commands
 %
-% Thicken a piece of the path with the pen
-% So we step through the pen path, thickening
+% Thicken a piece of the path with the pen.
+% So we step through the pen path, thickening each component.
+% When the path is originally defined, we need to keep track of the number of components so that we can use the \Verb+line style+ to set an appropriate style.
+% For this, we need to redefine the \Verb+moveto+ to step a counter whenever it is called.
 %
 %    \begin{macrocode}
 \let\cgrphy@orig@pathmoveto=\pgfpathmoveto
-
 \def\cgrphy@pathmoveto#1{%
   \stepcounter{cgrphy@path@parts}%
   \cgrphy@orig@pathmoveto{#1}%
 }
-
+%    \end{macrocode}
+% \begin{macro}{\cgrphy@thickenpath}
+% This is the macro that starts us off thickening a path.
+% We split the path into components, initialising them as an array of  \Verb+spath component+s.
+% Then we reverse it and do the same.
+% We find out our pen, and start our counters, and apply our initial styles.
+% Then we call the macro that does the \emph{real} work.
+%    \begin{macrocode}
 \def\cgrphy@thickenpath#1#2{%
   \spathsplit\cgrphy@path#1\relax
   \begingroup
@@ -413,7 +508,12 @@ and the derived files           calligraphy.ins,
   \pgfsys@endscope
 \fi
 }
-
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\cgrphy@@thickenpath}
+% This is the macro that does the real work.
+% This creates the thickened path working component by component in the given path.
+%    \begin{macrocode}
 \def\cgrphy@@thickenpath{%
   \pgfsys@beginscope
   \cgrphy@pen@path.get(path,\cgrphy@this@nib)%
@@ -491,7 +591,11 @@ and the derived files           calligraphy.ins,
   \fi
   \cgrphy@next
 }
-
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\cgrhy@annotatepath}
+% If we're to annotate the path, this macro is called and does the annotation.
+%    \begin{macrocode}
 \def\cgrphy@annotatepath{%
   \pgfsys@beginscope
 \begingroup
@@ -535,10 +639,13 @@ and the derived files           calligraphy.ins,
   \pgfsys@endscope
 }
 %    \end{macrocode}
-%
+% \end{macro}
+% \begin{macro}{\cgrphy@getpt}
+% Ought to replace this with \Verb+\pgfutil@firstofone+.
 %    \begin{macrocode}
 \def\cgrphy@getpt#1{#1}
 %    \end{macrocode}
+% \end{macro}
 %
 % Some default pens: copperplate
 %    \begin{macrocode}
@@ -546,8 +653,9 @@ and the derived files           calligraphy.ins,
 \processpen[copperplate]%
 %    \end{macrocode}
 %
+% If the pgfdecoration module is loaded then we define some decorations that use this library.
+% The first is a calligraphy brace.
 %    \begin{macrocode}
-% If the pgfdecoration module is loaded.
 \expandafter\ifx\csname pgfdeclaredecoration\endcsname\relax
 \else
 \pgfdeclaredecoration{calligraphic brace}{brace}
@@ -590,7 +698,9 @@ and the derived files           calligraphy.ins,
   }
   \state{final}{}
 }
-
+%    \end{macrocode}
+% The second is a straightened parenthesis (so that when very large it doesn't bow out too far).
+%    \begin{macrocode}
 \pgfdeclaredecoration{calligraphic straight parenthesis}{brace}
 {
   \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]
@@ -618,7 +728,9 @@ and the derived files           calligraphy.ins,
   }
   \state{final}{}%
 }
-
+%    \end{macrocode}
+% The third is a curved parenthesis.
+%    \begin{macrocode}
 \pgfdeclaredecoration{calligraphic curved parenthesis}{brace}
 {
   \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]
@@ -641,7 +753,9 @@ and the derived files           calligraphy.ins,
   }
   \state{final}{}%
 }
+%    \end{macrocode}
 % End if pgfdecoration module is loaded
+%    \begin{macrocode}
 \fi
 %    \end{macrocode}
 %
