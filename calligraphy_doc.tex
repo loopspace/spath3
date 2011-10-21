@@ -87,7 +87,7 @@ However, as the direction of the path isn't important, the same effect can be ob
 \end{tikzpicture}
 \end{center}
 \end{example}
-However, it should work as expected providing the following golden rule is not violated:
+It should work as expected providing the following golden rule is not violated:
 \begin{quotation}
 Never \emph{push} a calligraphic pen.
 \end{quotation}
@@ -162,7 +162,7 @@ When the pen is used, the origin will correspond to the path along which it is d
 \item \DescribeMacro{pen name}The key \Verb+pen name=name+ sets the name for the current pen.
 This can be used either when defining or using a pen.
 \item \DescribeMacro{\pen}\DescribeMacro{\definepen}The macros \Verb+\pen+ and \Verb+\definepen+ are analogous to the TikZ commands \Verb+\draw+ or \Verb+\fill+ in that it acts like a path command but stores the path as a pen.
-(The two macros are the same.)
+The difference is that \Verb+\definepen+ is to be used outside a TikZ picture (it contains its own \Verb+\tikz+ command) and \Verb+\pen+ inside.
 These macros also change the ``key family'' to \Verb+/pgf/calligraphy+ so that any further options do not need their full path.
 \item \DescribeMacro{\processpen}The macro \Verb+\processpen+ processes a pen so that it is set up for using later on.
 As remarked earlier, it has to be given at least at the outermost grouping of where it will be used.
