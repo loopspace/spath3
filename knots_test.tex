@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{intersections}
+\usepackage{spath}
+
+\makeatletter
+\def\splitcurveto#1#2\pgfsyssoftpath@curvetosupportatoken#3#4\pgfsyssoftpath@curvetosupportbtoken#5#6\pgfsyssoftpath@curvetotoken#7#8{%
+  \pgfmathsetmacro{\knot@ax}{#1/28}
+  \pgfmathsetmacro{\knot@bx}{#3/28}
+  \pgfmathsetmacro{\knot@cx}{#5/28}
+  \pgfmathsetmacro{\knot@dx}{#7/28}
+  \pgfmathsetmacro{\knot@ay}{#2/28}
+  \pgfmathsetmacro{\knot@by}{#4/28}
+  \pgfmathsetmacro{\knot@cy}{#6/28}
+  \pgfmathsetmacro{\knot@dy}{#8/28}
+  \pgfmathsetmacro{\splittimenum}{%
+    ( (\knot@ay - 3 * \knot@by + 3 * \knot@cy - \knot@dy) * (3 * \knot@cx - 3 * \knot@dx)
+    - (\knot@ax - 3 * \knot@bx + 3 * \knot@cx - \knot@dx) * (3 * \knot@cy - 3 * \knot@dy) )}
+  \pgfmathsetmacro{\splittimeden}{%
+    ( (\knot@ax - 3 * \knot@bx + 3 * \knot@cx - \knot@dx) * (3 * \knot@by - 6 * \knot@cy + 3 * \knot@dy)
+    - (\knot@ay - 3 * \knot@by + 3 * \knot@cy - \knot@dy) * (3 * \knot@bx - 6 * \knot@cx + 3 * \knot@dx) )}
+  \pgfmathsetmacro{\splittime}{.5*\splittimenum/\splittimeden}
+  \pgfpointcurveattime{\splittime}{\pgfqpoint{#1}{#2}}{\pgfqpoint{#3}{#4}}{\pgfqpoint{#5}{#6}}{\pgfqpoint{#7}{#8}}
+  \global\pgf@xa=\pgf@x
+  \global\pgf@ya=\pgf@y
+}
+\def\splitit{\message{split it}}
+\def\nosplitit{\message{don't split it}}
+\makeatother
+
+\begin{document}
+\begin{tikzpicture}
+\makeatletter
+\foreach \k in {0,...,-10} {
+\begin{scope}[yshift=\k cm]
+\draw[save path=\tmppath] (0,0) .. controls +(3,3) and +(2,-2) .. (\k,1);
+\draw[red] (0,0) -- (3,3) -- (\k + 2,-1) -- (\k,1);
+\begingroup
+\let\pgfsyssoftpath@movetotoken=\splitcurveto
+\tmppath
+\endgroup
+\end{scope}
+\fill (\the\pgf@xa,\the\pgf@ya) circle[radius=2pt];
+}
+\makeatother
+
+
+
+\end{tikzpicture}
+\end{document}
+\draw[save path=\tmppath] (0,0) -- (1,1) .. controls +(1,1) and +(1,-1) .. (1,0) -- (0,1);
+\pgfintersectionofpaths{\pgfsetpath\tmppath}{\pgfsetpath\tmppath}
+\foreach \ints in {1,...,\pgfintersectionsolutions} {
+      \pgfpointintersectionsolution{\ints}
+      \pgfgetlastxy{\intsectx}{\intsecty}
+  \fill (\intsectx,\intsecty) circle[radius=2pt];
+}
+\end{tikzpicture}
+\end{document}
