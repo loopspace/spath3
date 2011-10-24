@@ -13,6 +13,7 @@
   \pgfmathsetmacro{\knot@by}{#4/28}
   \pgfmathsetmacro{\knot@cy}{#6/28}
   \pgfmathsetmacro{\knot@dy}{#8/28}
+  \message{Got (\knot@ax,\knot@ay), (\knot@bx,\knot@by), (\knot@cx,\knot@cy), (\knot@cx,\knot@cy)}
   \pgfmathsetmacro{\splittimenum}{%
     ( (\knot@ay - 3 * \knot@by + 3 * \knot@cy - \knot@dy) * (3 * \knot@cx - 3 * \knot@dx)
     - (\knot@ax - 3 * \knot@bx + 3 * \knot@cx - \knot@dx) * (3 * \knot@cy - 3 * \knot@dy) )}
@@ -29,6 +30,19 @@
 \makeatother
 
 \begin{document}
+\begin{tikzpicture}
+\makeatletter
+\draw[save path=\tmppath] (0,0) .. controls +(3,3) and +(2,-2) .. (0,1);
+\draw[save path=\tmppath] (0,0) .. controls (2,1) and (-1,1) .. (1,0);
+\begingroup
+\let\pgfsyssoftpath@movetotoken=\splitcurveto
+\tmppath
+\endgroup
+\fill (\the\pgf@xa,\the\pgf@ya) circle[radius=2pt];
+\makeatother
+
+\end{tikzpicture}
+\end{document}
 \begin{tikzpicture}
 \makeatletter
 \foreach \k in {0,...,-10} {
