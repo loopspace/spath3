@@ -1,3 +1,93 @@
+\immediate\write18{tex spath.dtx}
+\immediate\write18{tex knots.dtx}
+\documentclass[border=10]{standalone}
+\usepackage{tikz}
+\usepackage{knots}
+\begin{document}
+\begin{tikzpicture}
+\node (A) at (0,4) [draw,minimum width=30pt,minimum height=10pt,thick] {};
+\begin{knot}%[draft mode]
+\strand [thick] (0,0)
+to [out=up, in=down] (-1,1)
+to [out=up, in=down] (0,2)
+to [out=up, in=down] (-1.2,4)
+to [out=up, in=down, looseness=0.7] (0,5.5)
+to [out=up, in=down] (-2,7);
+\strand [thick] (-1,0)
+to [out=up, in=down] (1,2)
+to [out=up, in=down] (A.south);
+\strand [thick] (1,0)
+to [out=up, in=down] (-1,2)
+to [out=up, in=down] (1.5,4)
+to [out=up, in=right] (0,5.5)
+to [out=left, in=up] (-2,4)
+to [out=down, in=up] (-2,0);
+\strand [thick] (A.150)
+to [out=up, in=down] (0.7,5.5)
+to [out=up, in=down] (0,7);
+\strand [thick] (A.30)
+to [out=up, in=down] (-1,6)
+to [out=up, in=down] (2,7);
+\flipcrossings{6,2,9,5,11}
+\redraw{3}{(0,5.5)}
+\end{knot}
+\end{tikzpicture}
+\end{document}
+\begin{tikzpicture}
+\begin{knot}[knot/draft mode]
+\strand[red,ultra thick]  (0,0) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1);
+\strand[blue,ultra thick] (0,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1);
+\crossing{1-2-1}{1}
+\crossing{1-2-2}{2}
+\crossing{1-2-3}{1}
+\crossing{1-2-4}{2}
+\end{knot}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\begin{knot}[knot/draft mode=false]
+\strand[red,ultra thick]  (0,0) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1);
+\strand[blue,ultra thick] (0,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1);
+\crossing{1-2-1}{1}
+\crossing{1-2-2}{2}
+\crossing{1-2-3}{1}
+\crossing{1-2-4}{2}
+\end{knot}
+\end{tikzpicture}
+\end{document}
+
+\begin{tikzpicture}
+\draw[ultra thick, red,save path=\toppath] (0,0) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1);
+\draw[ultra thick, blue,save path=\botpath] (0,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1);
+%\pgfintersectionsortbyfirstpath
+\pgfintersectionofpaths{\pgfsetpath\toppath}{\pgfsetpath\botpath}
+\foreach \intsect in {1,...,\pgfintersectionsolutions} {
+  \pgfpointintersectionsolution{\intsect}
+  \pgfgetlastxy{\intsectx}{\intsecty}
+  \node[circle,fill=white] at (\intsectx,\intsecty) {\intsect};
+}
+\begin{scope}[yshift=-3cm]
+\draw[ultra thick, red] (0,0) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1);
+\draw[ultra thick, blue] (0,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1);
+\foreach \intsect in {1,...,\pgfintersectionsolutions} {
+  \begin{scope}
+  \pgfpointintersectionsolution{\intsect}
+  \pgfgetlastxy{\intsectx}{\intsecty}
+  \clip  (\intsectx,\intsecty) circle[radius=10pt];
+\ifodd\intsect
+\draw[ultra thick,double=red,double distance=1.6pt,white] (0,0) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1);
+\fi
+\draw[ultra thick,double=blue,double distance=1.6pt,white] (0,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1);
+\ifodd\intsect
+\else
+\draw[ultra thick,double=red,double distance=1.6pt,white] (0,0) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1) .. controls +(1,0) and +(-1,0) .. ++(2,-1) .. controls +(1,0) and +(-1,0) .. ++(2,1);
+\fi
+\end{scope}
+}
+\end{scope}
+\end{tikzpicture}
+\end{document}
+
 \documentclass{article}
 \usepackage{tikz}
 \usetikzlibrary{intersections}
@@ -71,3 +161,8 @@
 }
 \end{tikzpicture}
 \end{document}
+
+
+% Local Variables:
+% tex-output-type: "pdf18"
+% End:

@@ -245,6 +245,10 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
   \attribute taper line width;
 %    \end{macrocode}
+% Our last attribute is a ``scratch'' attribute for saving some macro that relates to the object in some way.
+%    \begin{macrocode}
+  \attribute scratch pad;
+%    \end{macrocode}
 % 
 % Now we have the methods for the \Verb+spath+ object.
 %
@@ -279,6 +283,24 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
   \method let(#1,#2) {%
     \pgfoolet{#1}{#2}%
+  }
+%    \end{macrocode}
+% This sets the attribute (first argument) to the second argument if the attribute is not empty.
+%    \begin{macrocode}
+  \method set if not empty(#1,#2) {%
+  \pgfooget{#1}{\spath@tmp}%
+  \ifx\spath@tmp\pgfutil@empty
+    \pgfooset{#1}{#2}%
+  \fi
+  }
+%    \end{macrocode}
+% This lets the attribute (first argument) to the second argument, which must be a macro, if the attribute is not empty.
+%    \begin{macrocode}
+  \method let if not empty(#1,#2) {%
+  \pgfooget{#1}{\spath@tmp}%
+  \ifx\spath@tmp\pgfutil@empty
+    \pgfoolet{#1}{#2}%
+  \fi
   }
 %    \end{macrocode}
 % This gets the attribute (first argument) into the second argument, which must be a macro.
@@ -996,23 +1018,29 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
   \method apply to paths(#1,#2) {%
     \pgfooget{path}{\spath@tmppath}%
+    \ifx\spath@tmppath\pgfutil@empty
+    \else
     \spath@tmppath.#1(#2)%
+    \fi
     \pgfooget{next component}{\spath@temp}%
     \let\spath@next=\pgfutil@empty
     \ifx\spath@temp\pgfutil@empty
     \else
-     \def\spath@next{\spath@temp.apply to paths(#1,#2)}%
+     \def\spath@next{\spath@temp.apply to paths(#1,{#2})}%
     \fi
     \spath@next
   }
   \method apply to previous paths(#1,#2) {%
     \pgfooget{path}{\spath@tmppath}%
+    \ifx\spath@temppath\pgfutil@empty
+    \else
     \spath@tmppath.#1(#2)%
+    \fi
     \pgfooget{previous component}{\spath@temp}%
     \let\spath@next=\pgfutil@empty
     \ifx\spath@temp\pgfutil@empty
     \else
-     \def\spath@next{\spath@temp.apply to previous paths(#1,#2)}%
+     \def\spath@next{\spath@temp.apply to previous paths(#1,{#2})}%
     \fi
     \spath@next%
   }
