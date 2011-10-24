@@ -1,0 +1,336 @@
+% \iffalse meta-comment
+%<*internal>
+\iffalse
+%</internal>
+%<*readme>
+----------------------------------------------------------------
+knots --- a style file for drawing knot diagrams with TikZ/PGF
+E-mail: stacey@math.ntnu.no
+Released under the LaTeX Project Public License v1.3c or later
+See http://www.latex-project.org/lppl.txt
+----------------------------------------------------------------
+
+This package defines some commands for drawing knot diagrams with TikZ/PGF.
+It was designed and tested with PGF2.10.
+The initial idea of this package came from a question and answer on the site http://tex.stackexchange.com.
+%</readme>
+%<*internal>
+\fi
+\def\nameofplainTeX{plain}
+\ifx\fmtname\nameofplainTeX\else
+  \expandafter\begingroup
+\fi
+%</internal>
+%<*install>
+\input docstrip.tex
+\keepsilent
+\askforoverwritefalse
+\preamble
+----------------------------------------------------------------
+knots --- a style file for drawing knot diagrams with TikZ/PGF
+E-mail: stacey@math.ntnu.no
+Released under the LaTeX Project Public License v1.3c or later
+See http://www.latex-project.org/lppl.txt
+----------------------------------------------------------------
+
+\endpreamble
+\postamble
+
+Copyright (C) 2011 by Andrew Stacey <stacey@math.ntnu.no>
+
+This work may be distributed and/or modified under the
+conditions of the LaTeX Project Public License (LPPL), either
+version 1.3c of this license or (at your option) any later
+version.  The latest version of this license is in the file:
+
+http://www.latex-project.org/lppl.txt
+
+This work is "maintained" (as per LPPL maintenance status) by
+Andrew Stacey.
+
+This work consists of the files  knots.dtx
+                                 knots_doc.tex
+and the derived files            README.txt,
+                                 knots.ins,
+                                 knots.pdf,
+                                 knots.sty,
+                                 knots_doc.pdf.
+
+\endpostamble
+\usedir{tex/latex/knots}
+\generate{
+  \file{\jobname.sty}{\from{\jobname.dtx}{package}}
+}
+%</install>
+%<install>\endbatchfile
+%<*internal>
+\usedir{source/latex/knots}
+\generate{
+  \file{\jobname.ins}{\from{\jobname.dtx}{install}}
+}
+\nopreamble\nopostamble
+\usedir{doc/latex/demopkg}
+\generate{
+  \file{README.txt}{\from{\jobname.dtx}{readme}}
+}
+\ifx\fmtname\nameofplainTeX
+  \expandafter\endbatchfile
+\else
+  \expandafter\endgroup
+\fi
+%</internal>
+%<*package>
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{knots}[2011/10/24 v0.1 Tikz/PGF commands for drawing knot diagrams]
+%</package>
+%<*driver>
+\documentclass{ltxdoc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+%\usepackage{morefloats}
+\usepackage{tikz}
+\usepackage{\jobname}
+\usepackage[numbered]{hypdoc}
+\definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9} 
+ 
+\usepackage{listings}
+\lstloadlanguages{[LaTeX]TeX}
+\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+ 
+\usepackage{fancyvrb}
+
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \CheckSum{1078}
+%
+% \CharacterTable
+%  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+%   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+%   Digits        \0\1\2\3\4\5\6\7\8\9
+%   Exclamation   \!     Double quote  \"     Hash (number) \#
+%   Dollar        \$     Percent       \%     Ampersand     \&
+%   Acute accent  \'     Left paren    \(     Right paren   \)
+%   Asterisk      \*     Plus          \+     Comma         \,
+%   Minus         \-     Point         \.     Solidus       \/
+%   Colon         \:     Semicolon     \;     Less than     \<
+%   Equals        \=     Greater than  \>     Question mark \?
+%   Commercial at \@     Left bracket  \[     Backslash     \\
+%   Right bracket \]     Circumflex    \^     Underscore    \_
+%   Grave accent  \`     Left brace    \{     Vertical bar  \|
+%   Right brace   \}     Tilde         \~}
+%
+%
+% \changes{1.0}{2011/05/03}{Converted to DTX file}
+%
+% \DoNotIndex{\newcommand,\newenvironment}
+%
+% \providecommand*{\url}{\texttt}
+% \GetFileInfo{knots.sty}
+% \title{The \textsf{knots} package: codebase}
+% \author{Andrew Stacey \\ \url{stacey@math.ntnu.no}}
+% \date{\fileversion~from \filedate}
+% 
+% \maketitle
+% 
+% \section{Introduction}
+% 
+% This is a package for drawing knot diagrams using PGF/TikZ.
+% Its inspiration was a question and answer on the website \url{http://tex.stackexchange.com}.
+%
+% \section{History}
+%
+% \begin{itemize}
+% \item v1.0 First public release.
+%
+% \item v1.1 Added ability to configure the gap size, the control points, and the ``nudge''.
+% Added ability to add labels to strands between crossings.
+% \end{itemize}
+% \StopEventually{}
+%
+% \section{Implementation}
+%
+% \iffalse
+%<*package>
+% \fi
+%
+% Test the version of PGF to see if it's what we expect.
+% If not, issue a warning (but continue anyway; after all, it \emph{might just work}).
+%    \begin{macrocode}
+\def\knot@pgfversion{2.10}%
+\ifx\pgfversion\knot@pgfversion
+\else
+\PackageWarning{knots}{This package was designed using PGF2.10; you are using \pgfversion.}%
+\fi
+%    \end{macrocode}
+%    \begin{macrocode}
+\RequirePackage{spath}
+\usetikzlibrary{intersections}
+
+\long\def\ge@addto@macro#1#2{%
+  \begingroup
+  \toks@\expandafter\expandafter\expandafter{\expandafter#1#2}%
+  \xdef#1{\the\toks@}%
+  \endgroup}
+
+\newcount\knot@strings
+\newcount\knot@intersections
+\newif\ifknot@draftmode
+
+\tikzoption{save knot path}{\tikz@addmode{\pgfsyssoftpath@getcurrentpath\knot@tmppath\expandafter\global\expandafter\let#1=\knot@tmppath}}
+
+\tikzoption{use knot path}{\tikz@addmode{\expandafter\pgfsyssoftpath@setcurrentpath#1}}
+
+\tikzset{
+  knot/draft mode/.is if=knot@draftmode,
+  knot/draft/clip radius/.initial=10pt,
+  knot/draft/crossing first path/.style={blue,thick},
+  knot/draft/crossing second path/.style={red,thick},
+  knot/draft/crossing label/.style={},
+  knot/clip radius/.initial=10pt,
+}
+
+\newenvironment{knot}[1][]{%
+  \tikzset{#1}%
+  \knot@strings=0\relax}{%
+  % Define the spath objects, need to do so outside the loop
+  \def\knot@marshal{}%
+  \foreach \knot@str in {1,...,\the\knot@strings} {%
+    \edef\knot@tmp{\noexpand\pgfoonew \expandafter\noexpand\csname knot@path@\knot@str\endcsname =new spath(\expandafter\noexpand\csname knot@string@\knot@str\endcsname)}%
+    \ge@addto@macro\knot@marshal\knot@tmp
+  }%
+  \knot@marshal
+  % Split self-intersecting components
+  \foreach \knot@str in {1,...,\the\knot@strings} {%
+    \csname knot@path@\knot@str\endcsname.split self intersecting pieces()
+  }
+  % Split strands into components
+  \def\knot@marshal{}%
+  \pgfoonew \knot@slices =new spath component()
+  \let\spath@this@component=\knot@slices
+  \foreach \knot@str in {1,...,\the\knot@strings} {%
+    \edef\knot@tmp{\expandafter\noexpand\csname knot@path@\knot@str\endcsname.explode(\noexpand\spath@this@component)}%
+    \ge@addto@macro\knot@marshal\knot@tmp
+  }
+  \knot@marshal
+  % Find intersections of each pair of strands, excepting endpoints
+  \ifknot@draftmode
+  \let\spath@execute@at@intersections=\spath@execute@at@intersections@draft
+  \fi
+  \knot@intersections=0\relax
+  \knot@slices.at intersections()
+  % Label and render
+}
+
+\def\spath@execute@at@intersections@draft{%
+  \ifnum\spath@ignore=1\relax
+  \else
+  \global\advance\knot@intersections by 1\relax
+  \begin{scope}
+  \clip (\spath@ix,\spath@iy) circle[radius=        \pgfkeysvalueof{/tikz/knot/draft/clip radius}];
+  \spath@firstpath.use path with tikz(draw,knot/draft/crossing first   path)
+\spath@secondpath.use path with tikz(draw,knot/draft/crossing second path)
+  \end{scope}
+  \node[knot/draft/crossing label] at (\spath@ix,\spath@iy) {\the\knot@intersections};
+\fi
+}%
+
+\def\spath@execute@at@intersections{%
+  \ifnum\spath@ignore=1\relax
+  \else
+   \global\advance\knot@intersections by 1\relax
+   \ifcsname knot@crossing@\the\knot@intersections\endcsname
+    \pgfkeysgetvalue{/tikz/knot/clip radius}{\knot@clipradius}%
+    \begin{scope}
+     \clip (\spath@ix,\spath@iy) circle[radius=\knot@clipradius];
+     \csname spath@\csname knot@crossing@\the\knot@intersections\endcsname path\endcsname.use path with tikz(draw,white,line width=3\pgflinewidth)
+    \end{scope}
+    \begin{scope}
+     \clip (\spath@ix,\spath@iy) circle[radius=1.1*\knot@clipradius];
+     \csname spath@\csname knot@crossing@\the\knot@intersections\endcsname path\endcsname.use path with tikz(draw)
+    \end{scope}
+   \fi
+  \fi
+}
+
+
+%% \def\junk{  
+%%     \ifknot@draftmode
+%%     \begingroup
+%%     \let\pgfsyssoftpath@movetotoken=\pgfqpoint
+%%     \let\pgfsyssoftpath@linetotoken=\pgfqpoint
+%%     \let\pgfsyssoftpath@curvetotoken=\pgfqpoint
+%%     \let\pgfsyssoftpath@curvetosupportatoken=\pgfqpoint
+%%     \let\pgfsyssoftpath@curvetosupportbtoken=\pgfqpoint
+%%     \csname knot@string@\knot@str\endcsname
+%%     \global\pgf@xa=\pgf@x
+%%     \global\pgf@ya=\pgf@y
+%%     \endgroup
+%%     \node[circle,fill=white,fill opacity=.5] at (\pgf@xa,\pgf@ya) %% {\knot@str};
+%%     \begingroup
+%%     \let\pgfsyssoftpath@movetotoken=\knot@startofpath
+%%     \let\pgfsyssoftpath@linetotoken=\pgfutil@gobbletwo
+%%     \let\pgfsyssoftpath@curvetotoken=\pgfutil@gobbletwo
+%%     \let\pgfsyssoftpath@curvetosupportatoken=\pgfutil@gobbletwo
+%%     \let\pgfsyssoftpath@curvetosupportbtoken=\pgfutil@gobbletwo
+%%     \csname knot@string@\knot@str\endcsname
+%%     \global\pgf@xa=\pgf@x
+%%     \global\pgf@ya=\pgf@y
+%%     \endgroup
+%%     \node[circle,fill=white,fill opacity=.5] at (\pgf@xa,\pgf@ya) %% {\knot@str};
+%% \fi
+%%   }
+%%   \pgfmathtruncatemacro{\knot@stam}{\the\value{knot@strings}-1}
+%%   \foreach \knot@sta in {1,...,\knot@stam} {
+%%     \pgfmathtruncatemacro{\knot@stap}{\knot@sta + 1}
+%%     \foreach \knot@stb in {\knot@stap,...,\the\value{knot@strings}} {
+%%       \pgfintersectionofpaths{\expandafter\pgfsetpath\csname %% knot@string@\knot@sta\endcsname}{\expandafter\pgfsetpath\csname %% knot@string@\knot@stb\endcsname}
+%%       \ifnum\pgfintersectionsolutions>0
+%%     \foreach \intsect in {1,...,\pgfintersectionsolutions} {
+%%       \pgfpointintersectionsolution{\intsect}
+%%       \pgfgetlastxy{\intsectx}{\intsecty}
+%%         \ifknot@draftmode
+%%         \node[circle,fill=white,fill opacity=.5] at %% (\intsectx,\intsecty)         {\knot@sta-\knot@stb-\intsect};
+%% \else
+%% \@ifundefined{knot@crossing@\knot@sta-\knot@stb-\intsect}{
+%% %\message{\knot@sta-\knot@stb-\intsect not defined}
+%% }{
+%% \pgfscope
+%% \clip (\intsectx,\intsecty) circle[radius=10pt];
+%%     \expandafter\expandafter\expandafter\draw\expandafter\expandafter\expandafter[\csname %% knot@string@opts@\csname %% knot@crossing@\knot@sta-\knot@stb-\intsect\endcsname\endcsname,use %% knot path=\csname knot@string@\csname %% knot@crossing@\knot@sta-\knot@stb-\intsect\endcsname\endcsname,white,line %% width=3\pgflinewidth] (0,0);
+%% \endpgfscope
+%% \pgfscope
+%% \clip (\intsectx,\intsecty) circle[radius=11pt];
+%%     \expandafter\expandafter\expandafter\draw\expandafter\expandafter\expandafter[\csname %% knot@string@opts@\csname %% knot@crossing@\knot@sta-\knot@stb-\intsect\endcsname\endcsname,use %% knot path=\csname knot@string@\csname %% knot@crossing@\knot@sta-\knot@stb-\intsect\endcsname\endcsname] (0,0);
+%% \endpgfscope
+%% }
+%% \fi
+%%       }
+%%       \fi
+%%     }
+%%   }
+%% }
+
+\newcommand{\strand}[1][]{%
+  \advance\knot@strings by 1\relax
+  \expandafter\def\csname knot@string@opts@\the\knot@strings\endcsname{#1}%
+\draw[save knot path=\csname knot@string@\the\knot@strings\endcsname]}
+\newcommand{\crossing}[2]{%
+\expandafter\def\csname knot@crossing@#1\endcsname{#2}}
+
+
+
+%    \end{macrocode}
+% \iffalse
+%</package>
+% \fi
+%
+% \Finale
+
+\endinput
