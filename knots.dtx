@@ -108,7 +108,7 @@ and the derived files            README.txt,
 %</driver>
 % \fi
 %
-% \CheckSum{1078}
+% \CheckSum{}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -126,8 +126,6 @@ and the derived files            README.txt,
 %   Grave accent  \`     Left brace    \{     Vertical bar  \|
 %   Right brace   \}     Tilde         \~}
 %
-%
-% \changes{1.0}{2011/05/03}{Converted to DTX file}
 %
 % \DoNotIndex{\newcommand,\newenvironment}
 %
@@ -147,10 +145,6 @@ and the derived files            README.txt,
 % \section{History}
 %
 % \begin{itemize}
-% \item v1.0 First public release.
-%
-% \item v1.1 Added ability to configure the gap size, the control points, and the ``nudge''.
-% Added ability to add labels to strands between crossings.
 % \end{itemize}
 % \StopEventually{}
 %
@@ -190,17 +184,22 @@ and the derived files            README.txt,
 \tikzoption{use knot path}{\tikz@addmode{\expandafter\pgfsyssoftpath@setcurrentpath#1}}
 
 \tikzset{
-  knot/draft mode/.is if=knot@draftmode,
-  knot/draft/clip radius/.initial=10pt,
-  knot/draft/crossing first path/.style={blue,thick},
-  knot/draft/crossing second path/.style={red,thick},
-  knot/draft/crossing label/.style={fill=white,fill opacity=.5,text opacity=1,text=blue,anchor=south east,append after command={(\tikzlastnode.center) edge[blue,->] (\tikzlastnode.south east)}},
-  knot/draft/strand label/.style={circle,draw=purple,fill=white,fill opacity=.5,text opacity=1,text=purple,inner sep=0pt},
-  knot/ignore intersections/.is if=knot@ignoreintersections,
-  knot/clip radius/.initial=10pt,
-  knot/flip crossing/.code={%
+  knot/.is family,
+  knot,
+  ignore intersections/.is if=knot@ignoreintersections,
+  clip radius/.initial=10pt,
+  clip width/.initial=3,
+  flip crossing/.code={%
     \expandafter\def\csname knot@crossing@#1\endcsname{}%
-  }
+  },
+  draft mode/.is if=knot@draftmode,
+  draft/.is family,
+  draft,
+  clip radius/.initial=10pt,
+  crossing first path/.style={blue,thick},
+  crossing second path/.style={red,thick},
+  crossing label/.style={fill=white,fill opacity=.5,text opacity=1,text=blue,anchor=south east,append after command={(\tikzlastnode.center) edge[blue,->] (\tikzlastnode.south east)}},
+  strand label/.style={circle,draw=purple,fill=white,fill opacity=.5,text opacity=1,text=purple,inner sep=0pt},
 }
 
 \newenvironment{knot}[1][]{%
@@ -267,7 +266,7 @@ and the derived files            README.txt,
     \begin{scope}
      \def\knot@clip@options{draw,}%
      \ge@addto@macro\knot@clip@options\knot@options
-     \g@addto@macro\knot@clip@options{,white,line width=3*\pgflinewidth}
+     \g@addto@macro\knot@clip@options{,white,line width=\pgfkeysvalueof{/tikz/knot/clip width}*\pgflinewidth}
      \clip (\spath@ix,\spath@iy) circle[radius=\knot@clipradius];
      \def\knot@marshal{\knot@path@to@render.use path with tikz(}
      \ge@addto@macro\knot@marshal\knot@clip@options
@@ -305,7 +304,7 @@ and the derived files            README.txt,
     \begin{scope}
      \def\knot@clip@options{draw,}%
      \ge@addto@macro\knot@clip@options\knot@options
-     \g@addto@macro\knot@clip@options{,white,line width=3*\pgflinewidth}
+     \g@addto@macro\knot@clip@options{,white,line width=\pgfkeysvalueof{/tikz/knot/clip width}*\pgflinewidth}
      \clip #2 circle[radius=\knot@clipradius];
      \def\knot@marshal{\csname knot@path@#1\endcsname.use path with tikz(}
      \ge@addto@macro\knot@marshal\knot@clip@options
