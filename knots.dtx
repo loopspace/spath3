@@ -176,8 +176,10 @@ and the derived files            README.txt,
 \newcount\knot@strings
 \newcount\knot@intersections
 \newif\ifknot@draftmode
-\newif\ifknot@ignoreintersections
-\knot@ignoreintersectionstrue
+\newif\ifknot@ignoreendpoints
+\newif\ifknot@selfintersections
+\newif\ifknot@superdraftmode
+\knot@ignoreendpointstrue
 
 \tikzoption{save knot path}{\tikz@addmode{\pgfsyssoftpath@getcurrentpath\knot@tmppath\expandafter\global\expandafter\let#1=\knot@tmppath}}
 
@@ -186,13 +188,26 @@ and the derived files            README.txt,
 \tikzset{
   knot/.is family,
   knot,
-  ignore intersections/.is if=knot@ignoreintersections,
+  ignore endpoint intersections/.is if=knot@ignoreendpoints,
+  consider self intersections/.is if=knot@selfintersections,
   clip radius/.initial=10pt,
   clip width/.initial=3,
   flip crossing/.code={%
     \expandafter\def\csname knot@crossing@#1\endcsname{}%
   },
-  draft mode/.is if=knot@draftmode,
+  draft mode/.is choice,
+  draft mode/off/.code={%
+    \knot@draftmodefalse
+    \knot@superdraftmodefalse
+  },
+  draft mode/crossings/.code={%
+    \knot@draftmodetrue
+    \knot@superdraftmodefalse
+  },
+  draft mode/strands/.code={%
+    \knot@draftmodetrue
+    \knot@superdraftmodetrue
+  },
   draft/.is family,
   draft,
   clip radius/.initial=10pt,
@@ -207,6 +222,8 @@ and the derived files            README.txt,
   \knot@strings=0\relax
   \def\knot@redraws{}%
 }{%
+  \ifknot@superdraftmode
+  \else
   % Define the spath objects, need to do so outside the loop
   \def\knot@marshal{}%
   \foreach \knot@str in {1,...,\the\knot@strings} {%
@@ -227,29 +244,42 @@ and the derived files            README.txt,
     \pgf@ya=\pgf@y
     \node[knot/draft/strand label] at (\pgf@xa,\pgf@ya) {\knot@str};
     \fi
+    \ifknot@selfintersections
     \csname knot@path@\knot@str\endcsname.split self intersecting pieces()%
+    \fi
   }
   % Split strands into components
   \def\knot@marshal{}%
   \pgfoonew \knot@slices =new spath component()
   \let\spath@this@component=\knot@slices
   \foreach \knot@str in {1,...,\the\knot@strings} {%
+    \ifknot@selfintersections
     \edef\knot@tmp{\expandafter\noexpand\csname knot@path@\knot@str\endcsname.explode(\noexpand\spath@this@component)%
 \noexpand\knot@slices.apply to paths(let if not empty,{scratch pad,\expandafter\noexpand\csname knot@string@opts@\knot@str\endcsname})%
 }%
+    \else
+    \expandafter\let\expandafter\knot@tmp\csname knot@string@opts@\knot@str\endcsname
+    \csname knot@path@\knot@str\endcsname.let(scratch pad,\knot@tmp)%
+    \edef\knot@tmp{\noexpand\spath@this@component.set(path,\expandafter\noexpand\csname knot@path@\knot@str\endcsname)%
+    \noexpand\pgfoonew \noexpand\spath@next@component =new spath component(\noexpand\spath@this@component)%
+    \noexpand\spath@this@component.let(next component,\noexpand\spath@next@component)%
+    \noexpand\let\noexpand\spath@this@component=\noexpand\spath@next@component
+    }
+    \fi
     \ge@addto@macro\knot@marshal\knot@tmp
   }
   \knot@marshal
-  % Find intersections of each pair of strands, excepting endpoints
+  % Find intersections of each pair of strands
   \let\spath@execute@at@intersections=\knot@execute@at@intersections
   \knot@intersections=0\relax
   \knot@slices.at intersections()
   % Now do any redraws
   \knot@redraws
+  \fi
 }
 
 \def\knot@execute@at@intersections{%
-  \ifknot@ignoreintersections
+  \ifknot@ignoreendpoints
   \else
   \def\spath@ignore{0}%
   \fi

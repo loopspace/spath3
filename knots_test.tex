@@ -1,12 +1,17 @@
 \immediate\write18{tex spath.dtx}
 \immediate\write18{tex knots.dtx}
-\documentclass[border=10]{standalone}
+%\documentclass[border=10]{standalone}
+\documentclass{article}
 \usepackage{tikz}
 \usepackage{knots}
 \begin{document}
 \begin{tikzpicture}
 \node (A) at (0,4) [draw,minimum width=30pt,minimum height=10pt,thick] {};
-\begin{knot}[draft mode=false,clip width=5]
+\begin{knot}[
+  draft mode=strands,
+  clip width=5,
+%  consider self intersections,
+]
 \strand [thick] (0,0)
 to [out=up, in=down] (-1,1)
 to [out=up, in=down] (0,2)
