@@ -8,7 +8,7 @@
 \begin{tikzpicture}
 \node (A) at (0,4) [draw,minimum width=30pt,minimum height=10pt,thick] {};
 \begin{knot}[
-  draft mode=strands,
+  draft mode=crossings,
   clip width=5,
 %  consider self intersections,
 ]
@@ -34,7 +34,7 @@ to [out=up, in=down] (0,7);
 to [out=up, in=down] (-1,6)
 to [out=up, in=down] (2,7);
 \flipcrossings{6,2,9,5,11}
-\redraw{3}{(0,5.5)}
+%\redraw{3}{(0,5.5)}
 \end{knot}
 \end{tikzpicture}
 \end{document}
