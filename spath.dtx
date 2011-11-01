@@ -892,7 +892,7 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
   \method close() {%
     \pgfooget{path}{\spath@tmppath}%
-    \g@addto@macro\spath@tmppath{\pgfsyssoftpath@closepath{0pt}{0pt}}%
+    \g@addto@macro\spath@tmppath{\pgfsyssoftpath@closepathtoken{0pt}{0pt}}%
     \pgfoolet{path}{\spath@tmppath}%
     \pgfooget{length}{\spath@temp}%
     \pgfmathtruncatemacro{\spath@temp}{\spath@temp + 1}%
@@ -1162,7 +1162,7 @@ and the derived files           spath.ins,
   \ifx#1\pgfsyssoftpath@curvetosupportatoken
   \let\spath@explode@next=\spath@explode@curveto
   \else
-  \ifx#1\pgfsyssoftpath@closepath
+  \ifx#1\pgfsyssoftpath@closepathtoken
   \let\spath@explode@next=\spath@explode@lineto
   \else
   \ifx#1\pgfsyssoftpath@recttoken
@@ -1294,19 +1294,19 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 % This is for reprocessing the path.
 %    \begin{macrocode}
-\def\spath@define@reprocess#1#2{%
-  \expandafter\global\expandafter\let\csname spath@rep@#1\expandafter\endcsname\csname pgfsyssoftpath@#2\endcsname
+\def\spath@define@reprocess#1{%
+  \expandafter\global\expandafter\let\csname spath@rep@#1\expandafter\endcsname\csname pgfsyssoftpath@#1\endcsname
 }
 %    \end{macrocode}
 % This is for splitting self-intersecting pieces.
 % Most pieces just record the endpoints.
 % We only actually split \Verb+curveto+s.
 %    \begin{macrocode}
-\def\spath@define@selfintersect#1#2{%
+\def\spath@define@selfintersect#1{%
   \expandafter\gdef\csname spath@selfintersect@#1\endcsname##1##2{%
     \edef\spath@ex{##1}%
     \edef\spath@ey{##2}%
-    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#2\endcsname{##1}{##2}}%
+    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1\endcsname{##1}{##2}}%
     \ge@addto@macro\spath@tmppath\spath@tmp
   }
 }
@@ -1327,11 +1327,6 @@ and the derived files           spath.ins,
 \let\spath@reprocess@init=\pgfutil@empty
 \let\spath@selfintersect@init=\pgfutil@empty
 %    \end{macrocode}
-% The closepath token is slightly different to all of the others as it doesn't end in the word ``token''.
-% This means that we have to test for it from time to time.
-%    \begin{macrocode}
-\def\spath@closepath{closepath}
-%    \end{macrocode}
 % We now loop over the possible soft path tokens and define the different types of action each will expand to in the different circumstances.
 % These are the default actions, as defined by the above macros.
 % Specific actions can be redefined afterwards.
@@ -1347,17 +1342,9 @@ and the derived files           spath.ins,
   closepath%
 } {
 %    \end{macrocode}
-% Fix for the closepath issue.
-%    \begin{macrocode}
-  \ifx\spath@cpt\spath@closepath
-  \let\spath@cptfull\spath@cpt
-  \else
-  \edef\spath@cptfull{\spath@cpt token}
-  \fi
-%    \end{macrocode}
 % Save token names for comparison
 %    \begin{macrocode}
-\expandafter\xdef\csname spath@\spath@cpt\endcsname{\expandafter\string\csname pgfsyssoftpath@\spath@cptfull\endcsname}
+\expandafter\xdef\csname spath@\spath@cpt\endcsname{\expandafter\string\csname pgfsyssoftpath@\spath@cpt token\endcsname}
 %    \end{macrocode}
 % Define the translation macros.
 %    \begin{macrocode}
@@ -1365,7 +1352,7 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 % Add the ``redefinition'' code to the initialiser
 %    \begin{macrocode}
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@tr@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@tr@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@translate@init\spath@tmp
 %    \end{macrocode}
@@ -1373,7 +1360,7 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \expandafter\spath@define@length\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@len@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@len@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@length@init\spath@tmp
 %    \end{macrocode}
@@ -1381,7 +1368,7 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \expandafter\spath@define@components\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@comp@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@comp@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@components@init\spath@tmp
 %    \end{macrocode}
@@ -1389,7 +1376,7 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \expandafter\spath@define@reallength\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@rlen@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rlen@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@reallength@init\spath@tmp
 %    \end{macrocode}
@@ -1397,7 +1384,7 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \expandafter\spath@define@reverse\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@rev@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rev@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@reverse@init\spath@tmp
 %    \end{macrocode}
@@ -1405,13 +1392,13 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \expandafter\spath@define@start\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@start@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@start@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@start@init\spath@tmp
 %    \end{macrocode}
 % Once we have the initial coordinates, we reinitialise our path tokens so that they just gobble their code.
 %    \begin{macrocode}
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\noexpand\@gobbletwo}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\noexpand\@gobbletwo}
 
 \ge@addto@macro\spath@start@reinit\spath@tmp
 %    \end{macrocode}
@@ -1419,7 +1406,7 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \expandafter\spath@define@end\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@end@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@end@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@end@init\spath@tmp
 %    \end{macrocode}
@@ -1427,7 +1414,7 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \expandafter\spath@define@array\spath@cpt\relax
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@array@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@array@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@array@init\spath@tmp
 %    \end{macrocode}
@@ -1435,23 +1422,23 @@ and the derived files           spath.ins,
 % Actions are too complicated to specify a template so just create
 % initialisation code
 %    \begin{macrocode}
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@prepare@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@prepare@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@prepare@init\spath@tmp
 %    \end{macrocode}
 % Reprocess a path
 %    \begin{macrocode}
-\spath@define@reprocess\spath@cpt\spath@cptfull
+\spath@define@reprocess\spath@cpt
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@rep@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rep@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@reprocess@init\spath@tmp
 %    \end{macrocode}
 % Split self-intersecting pieces
 %    \begin{macrocode}
-\expandafter\expandafter\expandafter\spath@define@selfintersect\expandafter\expandafter\expandafter{\expandafter\spath@cpt\expandafter}\expandafter{\spath@cptfull}
+\expandafter\spath@define@selfintersect\expandafter{\spath@cpt}
 
-\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cptfull\endcsname=\expandafter\noexpand\csname spath@selfintersect@\spath@cpt \endcsname}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@selfintersect@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@selfintersect@init\spath@tmp
 %    \end{macrocode}
@@ -1505,7 +1492,7 @@ and the derived files           spath.ins,
 % Correction for reversing closepaths
 %    \begin{macrocode}
 \def\spath@rev@closepath#1#2{%
-  \edef\spath@tmp{\noexpand\pgfsyssoftpath@closepath{#1}{#2}}%
+  \edef\spath@tmp{\noexpand\pgfsyssoftpath@closepathtoken{#1}{#2}}%
   \ge@addto@macro\spath@tmppath\spath@tmp
 }
 %    \end{macrocode}
@@ -1835,7 +1822,7 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 % Close the path, ought to make it rounded
 %    \begin{macrocode}
-%  \g@addto@macro{\spath@tapered@path}{\pgfsyssoftpath@closepath}
+%  \g@addto@macro{\spath@tapered@path}{\pgfsyssoftpath@closepathtoken}
 }
 %    \end{macrocode}
 % \end{macro}
