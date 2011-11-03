@@ -8,11 +8,12 @@
 \begin{tikzpicture}
 \node (A) at (0,4) [draw,minimum width=30pt,minimum height=10pt,thick] {};
 \begin{knot}[
-  draft mode=crossings,
+%  draft mode=crossings,
+  background colour=red,
   clip width=5,
 %  consider self intersections,
 ]
-\strand [thick] (0,0)
+\strand [thick,knot/only when rendering/.style={dashed}] (0,0)
 to [out=up, in=down] (-1,1)
 to [out=up, in=down] (0,2)
 to [out=up, in=down] (-1.2,4)
