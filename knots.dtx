@@ -251,6 +251,9 @@ and the derived files            README.txt,
   \knot@marshal
   % If in draft mode, put labels at the ends of the strands
   % Split self-intersecting components
+  % At this point, all transformation matrices have been applied so
+  % we don't want to apply them again.
+  \begin{scope}[reset cm]
   \foreach \knot@str in {1,...,\the\knot@strings} {%
     \ifknot@draftmode
     \csname knot@path@\knot@str\endcsname.initial point()%
@@ -294,6 +297,7 @@ and the derived files            README.txt,
   % Now do any redraws
   \knot@redraws
   \fi
+  \end{scope}
 }
 
 \def\knot@execute@at@intersections{%

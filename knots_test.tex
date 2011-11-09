@@ -1,5 +1,74 @@
 \immediate\write18{tex spath.dtx}
 \immediate\write18{tex knots.dtx}
+\documentclass{article}
+\usepackage{tikz}
+\usepackage{knots}
+\begin{document}
+\begin{tikzpicture}
+\draw (0,0) -- (1,0);
+\begin{scope}[line width=2pt,scale=2,rotate=45]%,shift={(1cm,2cm)}]
+\begin{knot}[draft mode=crossings]
+\strand[red] (0,0) -- (2,2);
+\strand[blue] (2,0) -- (0,2);
+\end{knot}
+\end{scope}
+\end{tikzpicture}
+\end{document}
+
+\usepackage{nopageno,tikz,knots,geometry}
+\geometry{landscape}
+
+\begin{document}
+
+\phantom{.}
+
+\vfill
+
+\hspace{-0.75in}
+\noindent
+\begin{tikzpicture}[line width=6,line join=round,scale=1.5]
+%\def\x{1.5}
+%\def\y{1.5}
+\def\x{1}
+\def\y{1}
+\begin{knot}[clip width=1.5]
+\strand[red  ] (0*\x,0.0*\y) to (14*\x,0*\y);
+\strand[blue ] (0*\x,1.0*\y) to (14*\x,1*\y);
+\strand[green] (0*\x,2.0*\y) to (14*\x,2*\y);
+\strand[black] (0*\x,0.5*\y) to[out=right,in=left] ++(\x,0)
+  to ++(0,-1*\y) to[out=down,in=down] ++(\x,0)
+  to ++(0, 2*\y) to[out=up  ,in=up  ] ++(\x,0)
+  to ++(0,-2*\y) to[out=down,in=down] ++(\x,0)
+  to ++(0, 2*\y) to[out=up  ,in=up  ] ++(\x,0)
+  to ++(0,-1*\y) to[out=down,in=down] ++(\x,0)
+  to ++(0, 2*\y) to[out=up  ,in=up  ] ++(\x,0)
+  to ++(0,-2*\y) to[out=down,in=down] ++(\x,0)
+  to ++(0, 1*\y) to[out=up  ,in=up  ] ++(\x,0)
+  to ++(0,-2*\y) to[out=down,in=down] ++(\x,0)
+  to ++(0, 2*\y) to[out=up  ,in=up  ] ++(\x,0)
+  to ++(0,-2*\y) to[out=down,in=down] ++(\x,0)
+  to ++(0, 3*\y) to[out=up  ,in=up  ] ++(\x,0)
+  to ++(0,-2*\y) to[out=right,in=left] ++(\x,0)
+;
+%\flipcrossings{1,4,5,8,9,12,15,18,21,24}
+\end{knot}
+\draw
+( 1.5*\x,-0.5*\y)     node {\LARGE$a$}
+( 2.5*\x, 1.5*\y)     node {\LARGE$b$}
+( 3.5*\x,-0.5*\y+0.1) node {\LARGE$a^{-1}$}
+( 4.5*\x, 1.5*\y-0.1) node {\LARGE$b^{-1}$}
+( 6.5*\x, 2.5*\y)     node {\LARGE$c$}
+( 8.5*\x, 1.5*\y)     node {\LARGE$b$}
+( 9.5*\x,-0.5*\y)     node {\LARGE$a$}
+(10.5*\x, 1.5*\y-0.1) node {\LARGE$b^{-1}$}
+(11.5*\x,-0.5*\y+0.1) node {\LARGE$a^{-1}$}
+(12.5*\x, 2.5*\y-0.1) node {\LARGE$c^{-1}$}
+;
+\end{tikzpicture}
+
+\vfill
+
+\end{document}
 %\documentclass[border=10]{standalone}
 \documentclass{article}
 \usepackage{tikz}
