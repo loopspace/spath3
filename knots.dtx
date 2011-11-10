@@ -185,11 +185,18 @@ and the derived files            README.txt,
 
 \tikzset{
   knot/.is family,
+  knot/.unknown/.code={%
+    \let\knot@searchname=\pgfkeyscurrentname%
+    \pgfkeysalso{%
+      /tikz/\knot@searchname=#1
+    }
+  },
   knot,
   only when rendering/.style={},
   ignore endpoint intersections/.is if=knot@ignoreendpoints,
   consider self intersections/.is if=knot@selfintersections,
   clip radius/.initial=10pt,
+  end tolerance/.initial=14pt,
   clip width/.initial=3,
   flip crossing/.code={%
     \expandafter\def\csname knot@crossing@#1\endcsname{}%
@@ -217,8 +224,6 @@ and the derived files            README.txt,
   draft/.is family,
   draft,
   clip radius/.initial=10pt,
-  crossing first path/.style={blue,thick},
-  crossing second path/.style={red,thick},
   crossing label/.style={fill=white,fill opacity=.5,text opacity=1,text=blue,anchor=south east,append after command={(\tikzlastnode.center) edge[blue,->] (\tikzlastnode.south east)}},
   strand label/.style={circle,draw=purple,fill=white,fill opacity=.5,text opacity=1,text=purple,inner sep=0pt},
 }
@@ -293,34 +298,91 @@ and the derived files            README.txt,
   % Find intersections of each pair of strands
   \let\spath@execute@at@intersections=\knot@execute@at@intersections
   \knot@intersections=0\relax
-  \knot@slices.at intersections()
+  \pgfkeysgetvalue{/tikz/knot/end tolerance}{\spath@intersectiontolerance}%
+  \knot@slices.at intersections(,,)
   % Now do any redraws
   \knot@redraws
-  \fi
   \end{scope}
+  \fi
 }
 
 \def\knot@execute@at@intersections{%
-  \ifknot@ignoreendpoints
-  \else
-  \def\spath@ignore{0}%
-  \fi
-  \ifnum\spath@ignore=1\relax
-  \else
-   \global\advance\knot@intersections by 1\relax
-    \pgfkeysgetvalue{/tikz/knot/clip radius}{\knot@clipradius}%
-    \ifcsname knot@crossing@\the\knot@intersections\endcsname
-     \let\knot@path@to@render=\spath@secondpath
-    \else
-     \let\knot@path@to@render=\spath@firstpath
+   \ifknot@ignoreendpoints
+   \else
+   \def\spath@nearends{0}%
+   \fi
+   \def\knot@skip{0}%
+   \ifnum\spath@nearends=1\relax
+    \def\knot@skip{1}%
+   \fi
+   \ifknot@selfintersections
+  % Check our endpoints
+    \ifnum\spath@first@nearstart=1\relax
+  % We're near the start of the first path, is the other our previous component?
+    \ifx\spath@secondpath\spath@firstpath@prev
+     \def\knot@skip{1}%
     \fi
-    \knot@path@to@render.get(scratch pad,\knot@options)%
+    \fi
+    \ifnum\spath@first@nearend=1\relax
+  % We're near the end of the first path, is the other our previous component?
+    \ifx\spath@secondpath\spath@firstpath@next
+     \def\knot@skip{1}%
+    \fi
+    \fi
+    \ifnum\spath@second@nearstart=1\relax
+  % We're near the start of the second path, is the other our previous component?
+    \ifx\spath@firstpath\spath@secondpath@prev
+     \def\knot@skip{1}%
+    \fi
+    \fi
+    \ifnum\spath@second@nearend=1\relax
+  % We're near the end of the second path, is the other our previous component?
+    \ifx\spath@firstpath\spath@secondpath@next
+     \def\knot@skip{1}%
+    \fi
+    \fi
+   \fi
+% Phew!
+% Did any of that succeed?
+   \ifnum\knot@skip=0\relax
+    \global\advance\knot@intersections by 1\relax
+    \pgfkeysgetvalue{/tikz/knot/clip radius}{\knot@clipradius}%
+   \ifcsname knot@crossing@\the\knot@intersections\endcsname
+    \let\knot@path@to@render=\spath@secondpath
+    \let\knot@path@to@render@prev=\spath@secondpath@prev
+    \let\knot@path@to@render@next=\spath@secondpath@next
+    \let\knot@nearstart=\spath@second@nearstart
+    \let\knot@nearend=\spath@second@nearend
+   \else
+    \let\knot@path@to@render=\spath@firstpath
+    \let\knot@path@to@render@prev=\spath@firstpath@prev
+    \let\knot@path@to@render@next=\spath@firstpath@next
+    \let\knot@nearstart=\spath@first@nearstart
+    \let\knot@nearend=\spath@first@nearend
+   \fi
+   \knot@path@to@render.get(scratch pad,\knot@options)%
+    \ifnum\knot@nearstart=1\relax
+     \ifx\knot@path@to@render@prev\relax
+     \else
+      \let\knot@tmp=\pgfutil@empty
+      \knot@path@to@render@prev.concatenate without moveto(\knot@tmp,\knot@path@to@render)%
+      \let\knot@path@to@render=\knot@tmp
+     \fi
+    \fi
+    \ifnum\knot@nearend=1\relax
+     \ifx\knot@path@to@render@next\relax
+     \else
+      \let\knot@tmp=\pgfutil@empty
+      \knot@path@to@render.concatenate without moveto(\knot@tmp,\knot@path@to@render@next)
+      \let\knot@path@to@render=\knot@tmp
+     \fi
+    \fi
     \begin{scope}
      \def\knot@clip@options{draw,}%
      \ge@addto@macro\knot@clip@options\knot@options
-     \g@addto@macro\knot@clip@options{,knot@bg,line width=\pgfkeysvalueof{/tikz/knot/clip width}*\pgflinewidth}
+     \g@addto@macro\knot@clip@options{,knot@bg,line width=\pgfkeysvalueof{/tikz/knot/clip width}*\pgflinewidth}%
      \clip (\spath@ix,\spath@iy) circle[radius=\knot@clipradius];
-     \def\knot@marshal{\knot@path@to@render.use path with tikz(}
+     \def\knot@marshal{\knot@path@to@render.use path with tikz(}%
      \ge@addto@macro\knot@marshal\knot@clip@options
      \g@addto@macro\knot@marshal{)}%
      \knot@marshal
@@ -335,10 +397,10 @@ and the derived files            README.txt,
      \g@addto@macro\knot@marshal{)}%
      \knot@marshal
     \end{scope}
-    \ifknot@draftmode
+   \ifknot@draftmode
     \node[knot/draft/crossing label] at (\spath@ix,\spath@iy) {\the\knot@intersections};
-\fi
-\fi
+   \fi
+  \fi
 }%
 
 \def\flipcrossings#1{%

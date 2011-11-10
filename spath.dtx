@@ -317,6 +317,12 @@ and the derived files           spath.ins,
     \show\@temp
   }
 %    \end{macrocode}
+% This says what we are
+%    \begin{macrocode}
+  \method what am I() {%
+     \message{I am an spath object}%
+  }
+%    \end{macrocode}
 % This clones the path to the macro passed to it.
 % The macro must already exist (at the moment, though in thinking about it that's a little daft) but will be overwritten.
 %    \begin{macrocode}
@@ -829,7 +835,53 @@ and the derived files           spath.ins,
    \else
     \pgfoothis.clone(\spath@newpath)%
     \begingroup
-    \spath@newpath.concatenate(,#2)%
+    \spath@newpath.concatenate with lineto(,#2)%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+  }
+%    \end{macrocode}
+% This concatenates the paths but removes the moveto 
+%    \begin{macrocode}
+  \method concatenate without moveto(#1,#2) {%
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+     \let\spath@other=#2\relax
+     \ifx\spath@other\relax
+     \else
+      \spath@other.get(path,\spath@tmppath)%
+      \expandafter\spath@trimfirst\spath@tmppath\relax
+      \pgfooget{path}{\spath@tmppatha}%
+      \ge@addto@macro\spath@tmppatha\spath@tmppath
+      \pgfoolet{path}{\spath@tmppatha}%
+      \spath@other.get(final point,\spath@temp)%
+      \pgfoolet{final point}{\spath@temp}%
+      \spath@other.get(last action,\spath@temp)%
+      \pgfoolet{last action}{\spath@temp}%
+      \foreach \attribute in {
+        length,
+        real length,
+        number of components%
+      } {
+        \spath@other.get(\attribute,\spath@temp)%
+        \pgfooget{\attribute}{\spath@tempa}%
+        \ifx\spath@temp\pgfutil@empty
+        \else
+        \ifx\spath@tempa\pgfutil@empty
+        \else
+         \pgfmathsetmacro{\spath@tempa}{\spath@temp + \spath@tempa}%
+         \pgfoolet{\attribute}{\spath@tempa}%
+        \fi
+        \fi
+      }%
+      \pgfooget{length}{\spath@tempa}%
+      \pgfmathsetmacro{\spath@tempa}{\spath@tempa - 1}%
+      \pgfoolet{length}{\spath@tempa}%
+     \fi
+   \else
+    \pgfoothis.clone(\spath@newpath)%
+    \begingroup
+    \spath@newpath.concatenate without moveto(,#2)%
     \endgroup
     \let#1=\spath@newpath
    \fi
@@ -933,7 +985,7 @@ and the derived files           spath.ins,
   #1.get(path,\spath@tmppatha)%
   \ifx\spath@tmppatha\pgfutil@empty
   \else
-  \let\spath@firstpath=\pgfoothis
+  \pgfoothis.get handle(\spath@firstpath)%
   \let\spath@secondpath=#1%
   \pgfintersectionofpaths{\pgfsetpath\spath@tmppatha}{\pgfsetpath\spath@tmppath}%
   \ifnum\pgfintersectionsolutions>0\relax
@@ -942,10 +994,17 @@ and the derived files           spath.ins,
     \pgfpointintersectionsolution{\spath@k}%
     \edef\spath@ix{\the\pgf@x}%
     \edef\spath@iy{\the\pgf@y}%
-    \pgfoothis.initial point()
-    \pgfmathtruncatemacro{\spath@ignore}{(abs(\pgf@x - \spath@ix) + abs(\pgf@y - \spath@iy)) < 0.1}%
+    \pgfoothis.initial point()%
+    \pgfmathtruncatemacro{\spath@first@nearstart}{(abs(\pgf@x - \spath@ix) + abs(\pgf@y - \spath@iy)) < \spath@intersectiontolerance}%
     \pgfoothis.final point()
-    \pgfmathtruncatemacro{\spath@ignore}{\spath@ignore || (abs(\pgf@x - \spath@ix) + abs(\pgf@y - \spath@iy) < 0.1)}%
+    \pgfmathtruncatemacro{\spath@first@nearend}{(abs(\pgf@x - \spath@ix) + abs(\pgf@y - \spath@iy) <  \spath@intersectiontolerance)}%
+    \pgfmathtruncatemacro{\spath@first@nearends}{\spath@first@nearstart || \spath@first@nearend}%
+    \spath@secondpath.initial point()%
+    \pgfmathtruncatemacro{\spath@second@nearstart}{(abs(\pgf@x - \spath@ix) + abs(\pgf@y - \spath@iy)) < \spath@intersectiontolerance}%
+    \spath@secondpath.final point()
+    \pgfmathtruncatemacro{\spath@second@nearend}{(abs(\pgf@x - \spath@ix) + abs(\pgf@y - \spath@iy) <  \spath@intersectiontolerance)}%
+    \pgfmathtruncatemacro{\spath@second@nearends}{\spath@second@nearstart || \spath@second@nearend}%
+    \pgfmathtruncatemacro{\spath@nearends}{\spath@first@nearends || \spath@second@nearends}%
     \spath@execute@at@intersections
   }
   \fi
@@ -1004,6 +1063,12 @@ and the derived files           spath.ins,
   \method show(#1) {%
     \pgfooget{#1}{\@temp}%
     \show\@temp
+  }
+%    \end{macrocode}
+% This says what we are
+%    \begin{macrocode}
+  \method what am I() {%
+     \message{I am an spath component object}%
   }
 %    \end{macrocode}
 % This sets the \Verb+path+ attribute (as an instance of the \Verb+spath+ class) from a saved path.
@@ -1067,36 +1132,55 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 % We look for intersections between paths.
 % If \#1 is given, we use that as one of the \Verb+spath+ objects to intersect with and look for intersections with that starting with us and proceeding to all following components.
-% If \#1 is not given, we take our \Verb+spath+ object as the one to use and look for intersections for all subsequent components. 
+% If \#1 is not given, we take our \Verb+spath+ object as the one to use and look for intersections for all subsequent components.
+% We carry the previous and next components around with us in case the intersection happens to be too close to an endpoint and we want to use the other components as well.
 %    \begin{macrocode}
-  \method at intersections(#1) {%
+  \method at intersections(#1,#2,#3) {%
   \let\spath@next=\pgfutil@empty
   \let\spath@tmp#1\relax%
+  \let\spath@secondpath@prev#2\relax
+  \let\spath@secondpath@next#3\relax
   \ifx\spath@tmp\relax
    \pgfooget{path}{\spath@tmp}%
+   \pgfooget{previous component}{\spath@temp}%
+   \ifx\spath@temp\pgfutil@empty
+   \else
+   \spath@temp.get(path,\spath@secondpath@prev)%
+   \fi
    \pgfooget{next component}{\spath@temp}%
    \ifx\spath@temp\pgfutil@empty
    \else
+    \spath@temp.get(path,\spath@secondpath@next)%
     \def\spath@next{%
      \begingroup
-     \spath@temp.at intersections(\spath@tmp)%
+     \spath@temp.at intersections(\spath@tmp,\spath@secondpath@prev,\spath@secondpath@next)%
      \endgroup
-     \spath@temp.at intersections()%
+     \spath@temp.at intersections(,,)%
     }
    \fi
   \else
    \begingroup
-   \pgfooget{path}{\spath@temp}%
-   \ifx\spath@temp\pgfutil@empty
-   \else
-    \spath@temp.at intersections(\spath@tmp)%
-   \fi
+    \pgfooget{previous component}{\spath@temp}%
+    \ifx\spath@temp\pgfutil@empty
+    \else
+     \spath@temp.get(path,\spath@firstpath@prev)%
+    \fi
+    \pgfooget{next component}{\spath@temp}%
+    \ifx\spath@temp\pgfutil@empty
+    \else
+     \spath@temp.get(path,\spath@firstpath@next)%
+    \fi
+    \pgfooget{path}{\spath@temp}%
+    \ifx\spath@temp\pgfutil@empty
+    \else
+     \spath@temp.at intersections(\spath@tmp)%
+    \fi
    \endgroup
    \pgfooget{next component}{\spath@temp}%
    \ifx\spath@temp\pgfutil@empty
    \else
     \def\spath@next{%
-     \spath@temp.at intersections(\spath@tmp)%
+     \spath@temp.at intersections(\spath@tmp,\spath@secondpath@prev,\spath@secondpath@next)%
     }
    \fi
   \fi
@@ -1306,7 +1390,7 @@ and the derived files           spath.ins,
   \expandafter\gdef\csname spath@selfintersect@#1\endcsname##1##2{%
     \edef\spath@ex{##1}%
     \edef\spath@ey{##2}%
-    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1\endcsname{##1}{##2}}%
+    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{##1}{##2}}%
     \ge@addto@macro\spath@tmppath\spath@tmp
   }
 }

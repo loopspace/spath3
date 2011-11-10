@@ -1,5 +1,37 @@
 \immediate\write18{tex spath.dtx}
 \immediate\write18{tex knots.dtx}
+\documentclass[border=10]{standalone}
+\usepackage{tikz,knots}
+
+
+\newcommand{\motif}[1]{ to ++(180+#1:0.5) arc (270+#1:150+#1:0.15) to ++(60+#1:0.5) arc (-30+#1:150+#1:0.15) to ++(240+#1:0.25) arc (150+#1:330+#1:0.25) to ++(60+#1:0.5) arc (150+#1:30+#1:0.2) }
+\newcommand{\celticknot}{\motif{0}\motif{120}\motif{240}}
+\begin{document}
+\begin{tikzpicture}[line width=3,line join=round,scale=2]
+\begin{knot}[
+  clip width=2pt,
+  clip radius=5pt,
+  end tolerance=14pt,
+%  background colour=red,
+  scale=4,
+%  draft mode=crossings,
+  consider self intersections,
+  ignore endpoint intersections=false,
+  draft/crossing label/.style={text opacity=1,text=blue,anchor=south east,append after command={(\tikzlastnode.center) edge[blue,->,thin] (\tikzlastnode.south east)}},
+]
+\strand[gray] (0,0) \celticknot;
+\flipcrossings{9,7,5,2,4,11,12}
+\end{knot}
+\end{tikzpicture}
+\end{document}
+\begin{tikzpicture}
+\begin{knot}[
+  consider self intersections,
+]
+\strand (0,0) .. controls +(2,1) and +(-2,1) .. (1,0);
+\end{knot}
+\end{tikzpicture}
+\end{document}
 \documentclass{article}
 \usepackage{tikz}
 \usepackage{knots}
