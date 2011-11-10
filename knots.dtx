@@ -176,6 +176,7 @@ and the derived files            README.txt,
 \newif\ifknot@draftmode
 \newif\ifknot@ignoreendpoints
 \newif\ifknot@selfintersections
+\newif\ifknot@splits
 \newif\ifknot@superdraftmode
 \knot@ignoreendpointstrue
 
@@ -194,7 +195,20 @@ and the derived files            README.txt,
   knot,
   only when rendering/.style={},
   ignore endpoint intersections/.is if=knot@ignoreendpoints,
-  consider self intersections/.is if=knot@selfintersections,
+  consider self intersections/.is choice,
+  consider self intersections/.default=true,
+  consider self intersections/true/.code={%
+    \knot@selfintersectionstrue
+    \knot@splitstrue
+  },
+  consider self intersections/false/.code={%
+    \knot@selfintersectionsfalse
+    \knot@splitstrue
+  },
+  consider self intersections/no splits/.code={%
+    \knot@selfintersectionstrue
+    \knot@splitsfalse
+  },
   clip radius/.initial=10pt,
   end tolerance/.initial=14pt,
   clip width/.initial=3,
@@ -271,7 +285,9 @@ and the derived files            README.txt,
     \node[knot/draft/strand label] at (\pgf@xa,\pgf@ya) {\knot@str};
     \fi
     \ifknot@selfintersections
+    \ifknot@splits
     \csname knot@path@\knot@str\endcsname.split self intersecting pieces()%
+    \fi
     \fi
   }
   % Split strands into components

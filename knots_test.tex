@@ -8,14 +8,16 @@
 \newcommand{\celticknot}{\motif{0}\motif{120}\motif{240}}
 \begin{document}
 \begin{tikzpicture}[line width=3,line join=round,scale=2]
+\path[save path=\tmppath] (0,0) \celticknot;
+%\show\tmppath
 \begin{knot}[
-  clip width=2pt,
-  clip radius=5pt,
-  end tolerance=14pt,
+  clip width=1.5pt,
+  clip radius=10pt,
+  end tolerance=10pt,
 %  background colour=red,
-  scale=4,
+  scale=2,
 %  draft mode=crossings,
-  consider self intersections,
+  consider self intersections=no splits,
   ignore endpoint intersections=false,
   draft/crossing label/.style={text opacity=1,text=blue,anchor=south east,append after command={(\tikzlastnode.center) edge[blue,->,thin] (\tikzlastnode.south east)}},
 ]
