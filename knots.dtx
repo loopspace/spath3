@@ -361,7 +361,10 @@ and the derived files            README.txt,
 % Phew!
 % Did any of that succeed?
    \ifnum\knot@skip=0\relax
+\begingroup
     \global\advance\knot@intersections by 1\relax
+\edef\knot@tmp{\noexpand\pgfkeys{/tikz/knot/intersection \the\knot@intersections/.try}}%
+\knot@tmp
     \pgfkeysgetvalue{/tikz/knot/clip radius}{\knot@clipradius}%
    \ifcsname knot@crossing@\the\knot@intersections\endcsname
     \let\knot@path@to@render=\spath@secondpath
@@ -416,6 +419,7 @@ and the derived files            README.txt,
    \ifknot@draftmode
     \node[knot/draft/crossing label] at (\spath@ix,\spath@iy) {\the\knot@intersections};
    \fi
+\endgroup
   \fi
 }%
 
