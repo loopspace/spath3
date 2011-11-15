@@ -193,6 +193,7 @@ and the derived files            README.txt,
     }
   },
   knot,
+  every strand/.style={},
   only when rendering/.style={},
   ignore endpoint intersections/.is if=knot@ignoreendpoints,
   consider self intersections/.is choice,
@@ -248,7 +249,7 @@ and the derived files            README.txt,
   \def\knot@redraws{}%
 }{%
   \foreach \knot@str in {1,...,\the\knot@strings} {%
-    \def\knot@options{draw,}%
+    \def\knot@options{draw,knot/every strand/.try,}%
     \expandafter\let\expandafter\knot@tmp\csname knot@string@opts@\knot@str\endcsname
     \ge@addto@macro\knot@options\knot@tmp
     \g@addto@macro\knot@options{,knot/only when rendering}
@@ -397,7 +398,7 @@ and the derived files            README.txt,
      \fi
     \fi
     \begin{scope}
-     \def\knot@clip@options{draw,}%
+     \def\knot@clip@options{draw,knot/every strand/.try,}%
      \ge@addto@macro\knot@clip@options\knot@options
      \g@addto@macro\knot@clip@options{,knot@bg,line width=\pgfkeysvalueof{/tikz/knot/clip width}*\pgflinewidth}%
      \clip (\spath@ix,\spath@iy) circle[radius=\knot@clipradius];
@@ -408,7 +409,7 @@ and the derived files            README.txt,
     \end{scope}
     \begin{scope}
      \clip (\spath@ix,\spath@iy) circle[radius=1.1*\knot@clipradius];
-     \def\knot@line@options{draw,}%
+     \def\knot@line@options{draw,knot/every strand/.try,}%
      \ge@addto@macro\knot@line@options\knot@options
      \g@addto@macro\knot@line@options{,knot/only when rendering}
      \def\knot@marshal{\knot@path@to@render.use path with tikz(}
@@ -437,7 +438,7 @@ and the derived files            README.txt,
     \pgfkeysgetvalue{/tikz/knot/clip radius}{\knot@clipradius}%
     \expandafter\let\expandafter\knot@options\csname knot@string@opts@#1\endcsname
     \begin{scope}
-     \def\knot@clip@options{draw,}%
+     \def\knot@clip@options{draw,knot/every strand/.try,}%
      \ge@addto@macro\knot@clip@options\knot@options
      \g@addto@macro\knot@clip@options{,knot@bg,line width=\pgfkeysvalueof{/tikz/knot/clip width}*\pgflinewidth}
      \clip #2 circle[radius=\knot@clipradius];
@@ -448,7 +449,7 @@ and the derived files            README.txt,
     \end{scope}
     \begin{scope}
      \clip #2 circle[radius=1.1*\knot@clipradius];
-     \def\knot@line@options{draw,}%
+     \def\knot@line@options{draw,knot/every strand/.try,}%
      \ge@addto@macro\knot@line@options\knot@options
      \g@addto@macro\knot@options{,knot/only when rendering}
      \def\knot@marshal{\csname knot@path@#1\endcsname.use path with tikz(}

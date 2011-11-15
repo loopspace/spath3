@@ -1,5 +1,26 @@
 \immediate\write18{tex spath.dtx}
 \immediate\write18{tex knots.dtx}
+%% \documentclass{article}
+%% \usepackage{tikz}
+%% \usepackage{knots}
+%% \begin{document}
+%% \tikzset{knot/only when rendering/.style={draw=white, double=red}}
+%% \newsavebox{\firstbox}
+%% \sbox{\firstbox}{\begin{tikzpicture}[remember picture]
+%%     \begin{knot}
+%%         \strand (1,0) to (0,1);
+%%         \strand (0,0) to (1,1);
+%%     \end{knot}
+%% \end{tikzpicture}}
+%% \newsavebox{\secondbox}
+%% \sbox{\secondbox}{\begin{tikzpicture}[remember picture]
+%%     \node at (0,0) {hello};
+%% \end{tikzpicture}}
+%% \begin{tikzpicture}
+%% \node at (0,0) {\usebox\firstbox};
+%% \node at (1,0) {\usebox\secondbox};
+%% \end{tikzpicture}
+%% \end{document}
 \documentclass{article}
 \usepackage{nopageno,tikz,knots,geometry}
 \geometry{landscape}
@@ -30,11 +51,10 @@
   ignore endpoint intersections=false,
   background color=red,
   intersection 12/.style={/tikz/knot/clip radius=13pt},
+  every strand/.style={draw=none},
+  only when rendering/.style={draw=red,double=white,line cap=round,double distance=6pt},
 ]
-\strand[
-  line width=12pt,
-  knot/only when rendering/.style={line cap=round},
-] (0,0) \celticknot;
+\strand (0,0) \celticknot;
 \flipcrossings{1,3,6,8,10}
 \end{knot}
 \end{tikzpicture}
