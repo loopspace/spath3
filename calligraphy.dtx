@@ -444,6 +444,7 @@ and the derived files           calligraphy.ins,
     \cgrphy@tmp@path
     \g@addbefore@macro\spath@tmppath\pgfsyssoftpath@movetotoken
     \endgroup
+\let\cgrphy@temp=\relax
     \spathsplit\cgrphy@temp\spath@tmppath
     \expandafter\let\csname calligraphy@pen@#1@rev\endcsname\spath@this@component
     \expandafter\let\expandafter\cgrphy@temp\csname calligraphy@pen@#1@rev\endcsname
@@ -475,12 +476,14 @@ and the derived files           calligraphy.ins,
 % Then we call the macro that does the \emph{real} work.
 %    \begin{macrocode}
 \def\cgrphy@thickenpath#1#2{%
+  \let\cgrphy@path=\relax
   \spathsplit\cgrphy@path#1\relax
   \begingroup
   \spath@reverse@init
   #1%
   \g@addbefore@macro\spath@tmppath\pgfsyssoftpath@movetotoken
   \endgroup
+  \let\cgrphy@tmp=\relax
   \spathsplit\cgrphy@tmp\spath@tmppath\relax
   \let\cgrphy@path@rev\spath@this@component
   \expandafter\let\expandafter\cgrphy@pen@path\csname calligraphy@pen@#2\endcsname
@@ -633,9 +636,11 @@ and the derived files           calligraphy.ins,
   \let\cgrphy@node@options=\pgfutil@empty
   \fi
 \cgrphy@pt
+\begin{scope}[reset cm]
   \expandafter\node\expandafter[\cgrphy@node@options] at (\the\pgf@x,\the\pgf@y) {\arabic{cgrphy@label}};
+\end{scope}
 \endgroup
-  \pgfsys@endscope
+\pgfsys@endscope
 }
 %    \end{macrocode}
 % \end{macro}

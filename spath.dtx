@@ -1196,9 +1196,10 @@ and the derived files           spath.ins,
 % The following macros take a soft path and split it at \Verb+moveto+s.
 %    \begin{macrocode}
 \def\spathsplit#1#2{%
-  \ifdefined#1
-  \else
+  \ifx#1\relax
   \pgfoonew #1 =new spath component({})%
+  \else
+  \message{\string#1\space already defined}
   \fi
   \let\spath@this@component=#1\relax
   \expandafter\spath@split@#2\relax
