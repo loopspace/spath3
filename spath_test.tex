@@ -1,11 +1,12 @@
 \immediate\write18{tex spath.dtx}
-\documentclass{article}
+\documentclass{standalone}
 \usepackage{tikz}
 \usetikzlibrary{decorations}
 \usepackage{spath}
 
 \begin{document}
 \begin{tikzpicture}
+\useasboundingbox (-5,-5) rectangle (5,5);
 \path[decoration={curveto},decorate,save path=\tmppath] (2,0) to[bend right] (4,2) to[bend right] (5,0) to[bend right] (2,0);
 \pgfoonew \opath=new spath(\tmppath)
 \opath.prepare()
