@@ -403,6 +403,135 @@ and the derived files           spath.ins,
    \fi
   }
 %    \end{macrocode}
+%
+% This method prepares the path for a spirograph by applying an incremental rotation to each coordinate.
+% If \#1 is given then it should be a macro and it will be turned into an object with the transformed path, otherwise the current object is modified.
+%
+% It works by redefining each soft path token to apply the given rotation to its arguments and then rewrite itself back to the path.
+% Having done that, we have to adjust the various other attributes which are location-specific.
+%    \begin{macrocode}
+  \method prepare spirograph(#1,#2,#3,#4) {%
+    \pgfoothis.prepare()%
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \let\spath@tmppath=\pgfutil@empty
+    \begingroup
+     \spath@trx=#2\relax
+     \spath@try=#3\relax
+     \def\spath@n{0}%
+     \pgfooget{length}{\spath@temp}%
+     \pgfmathsetmacro{\spath@gang}{#4/(\spath@temp-1)}%
+     \spath@spirograph@init
+     \pgfoovalueof{path}%
+     \pgfoolet{path}{\spath@tmppath}%
+     \let\spath@tmppath=\pgfutil@empty
+     \pgfooget{final point}{\spath@temp}%
+     \ifx\spath@temp\pgfutil@empty
+     \else
+      \spath@temp
+      \pgf@xa=\pgf@x\relax
+      \pgf@ya=\pgf@y\relax
+      \advance\pgf@xa by -\spath@trx\relax
+      \advance\pgf@ya by -\spath@try\relax
+      \pgfmathsetmacro{\spath@gcos}{cos(#4)}%
+      \pgfmathsetmacro{\spath@gsin}{sin(#4)}%
+      \pgfmathsetlength{\pgf@xb}{\spath@gcos * \pgf@xa - \spath@gsin * \pgf@ya}%
+      \pgfmathsetlength{\pgf@yb}{\spath@gsin * \pgf@xa + \spath@gcos * \pgf@ya}%
+      \advance\pgf@xb by \spath@trx\relax
+      \advance\pgf@yb by \spath@try\relax
+      \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@xb}{\the\pgf@yb}}%
+      \pgfoolet{final point}{\spath@temp}%
+     \fi
+    \endgroup
+    \let\spath@tmppath=\pgfutil@empty
+   \else
+    \pgfoothis.clone(\spath@newpath)%
+    \begingroup
+    \spath@newpath.prepare spirograph(,#2,#3,#4)%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+  }
+%    \end{macrocode}
+%
+% This method actually makes a spirograph.
+% The arguments are the point of rotation and the number of iterations.
+%    \begin{macrocode}
+\method spirograph(#1,#2,#3,#4) {
+    \pgfoothis.prepare()%
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \begingroup
+     \pgfmathsetmacro{\spath@gn}{360/#4}%
+     \pgfoothis.prepare spirograph(,#2,#3,\spath@gn)%
+     \pgfoothis.clone(\spath@tempa)%
+     \pgfmathsetmacro{\spath@gna}{2*\spath@gn}%
+     \pgfmathsetmacro{\spath@gnb}{360-\spath@gn}%
+     \foreach \k in {\spath@gn,\spath@gna,...,\spath@gnb} {%
+      \spath@tempa.rotate path(,\spath@gn)%
+      \pgfoothis.weld(,\spath@tempa)%
+     }%
+    \endgroup
+   \else
+    \pgfoothis.clone(\spath@newpath)%
+    \begingroup
+    \spath@newpath.spirograph(,#2,#3,#4)%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+}
+%    \end{macrocode}
+%
+% This method rotates the path by the given angle.
+% If \#1 is given then it should be a macro and it will be turned into an object with the transformed path, otherwise the current object is modified.
+%
+% It works by redefining each soft path token to apply the given rotation to its arguments and then rewrite itself back to the path.
+% Having done that, we have to adjust the various other attributes which are location-specific.
+%    \begin{macrocode}
+  \method rotate path(#1,#2) {%
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \let\spath@tmppath=\pgfutil@empty
+    \begingroup
+     \pgfmathsetmacro{\spath@gcos}{cos(#2)}%
+     \pgfmathsetmacro{\spath@gsin}{sin(#2)}%
+     \spath@rotate@init
+     \pgfoovalueof{path}%
+     \pgfoolet{path}{\spath@tmppath}%
+     \let\spath@tmppath=\pgfutil@empty
+     \pgfooget{initial point}{\spath@temp}%
+     \ifx\spath@temp\pgfutil@empty
+     \else
+      \spath@temp
+      \pgf@xa=\pgf@x\relax
+      \pgf@ya=\pgf@y\relax
+      \pgfmathsetlength{\pgf@xb}{\spath@gcos * \pgf@xa - \spath@gsin * \pgf@ya}%
+      \pgfmathsetlength{\pgf@yb}{\spath@gsin * \pgf@xa + \spath@gcos * \pgf@ya}%
+      \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@xb}{\the\pgf@yb}}%
+      \pgfoolet{initial point}{\spath@temp}%
+     \fi
+     \pgfooget{final point}{\spath@temp}%
+     \ifx\spath@temp\pgfutil@empty
+     \else
+      \spath@temp
+      \pgf@xa=\pgf@x\relax
+      \pgf@ya=\pgf@y\relax
+      \pgfmathsetlength{\pgf@xb}{\spath@gcos * \pgf@xa - \spath@gsin * \pgf@ya}%
+      \pgfmathsetlength{\pgf@yb}{\spath@gsin * \pgf@xa + \spath@gcos * \pgf@ya}%
+      \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@xb}{\the\pgf@yb}}%
+      \pgfoolet{final point}{\spath@temp}%
+     \fi
+    \endgroup
+    \let\spath@tmppath=\pgfutil@empty
+   \else
+    \pgfoothis.clone(\spath@newpath)%
+    \begingroup
+    \spath@newpath.rotate path(,#2)%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+  }
+%    \end{macrocode}
 % Get the length of the path (number of pieces)
 %    \begin{macrocode}
   \method length() {%
@@ -1312,6 +1441,41 @@ and the derived files           spath.ins,
   }
 }
 %    \end{macrocode}
+% Each soft path token rotates its arguments about the given origin and then appends itself to the temporary path.
+% Then it increments the rotation counter.
+%    \begin{macrocode}
+\def\spath@define@spirograph#1\relax{%
+  \expandafter\gdef\csname spath@gch@#1\endcsname##1##2{%
+    \pgf@xa=##1\relax
+    \pgf@ya=##2\relax
+    \advance\pgf@xa by -\spath@trx
+    \advance\pgf@ya by -\spath@try
+    \pgfmathsetmacro\spath@gcos{cos(\spath@n * \spath@gang)}
+    \pgfmathsetmacro\spath@gsin{sin(\spath@n * \spath@gang)}
+    \pgfmathsetmacro\spath@n{\spath@n + 1}%
+    \global\let\spath@n=\spath@n
+    \pgfmathsetlength\pgf@xb{\spath@gcos * \pgf@xa - \spath@gsin * \pgf@ya}
+    \pgfmathsetlength\pgf@yb{\spath@gsin * \pgf@xa + \spath@gcos * \pgf@ya}
+    \advance\pgf@xb by \spath@trx
+    \advance\pgf@yb by \spath@try
+    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{\the\pgf@xb}{\the\pgf@yb}}
+    \ge@addto@macro\spath@tmppath\spath@tmp
+  }
+}
+%    \end{macrocode}
+% Each soft path token rotates its arguments and then appends itself to the temporary path.
+%    \begin{macrocode}
+\def\spath@define@rotate#1\relax{%
+  \expandafter\gdef\csname spath@rot@#1\endcsname##1##2{%
+    \pgf@xa=##1\relax
+    \pgf@ya=##2\relax
+    \pgfmathsetlength\pgf@xb{\spath@gcos * \pgf@xa - \spath@gsin * \pgf@ya}
+    \pgfmathsetlength\pgf@yb{\spath@gsin * \pgf@xa + \spath@gcos * \pgf@ya}
+    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{\the\pgf@xb}{\the\pgf@yb}}
+    \ge@addto@macro\spath@tmppath\spath@tmp
+  }
+}
+%    \end{macrocode}
 % This is for the length, we simply increment the length counter.
 %    \begin{macrocode}
 \def\spath@define@length#1\relax{%
@@ -1399,6 +1563,8 @@ and the derived files           spath.ins,
 % The next part of the code sets up the initialiser code for each of the routines.
 % We start with empty initialiser code.
 %    \begin{macrocode} 
+\let\spath@spirograph@init=\pgfutil@empty
+\let\spath@rotate@init=\pgfutil@empty
 \let\spath@translate@init=\pgfutil@empty
 \let\spath@length@init=\pgfutil@empty
 \let\spath@components@init=\pgfutil@empty
@@ -1440,6 +1606,26 @@ and the derived files           spath.ins,
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@tr@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@translate@init\spath@tmp
+%    \end{macrocode}
+% Define the spirograph macros.
+%    \begin{macrocode}
+\expandafter\spath@define@spirograph\spath@cpt\relax
+%    \end{macrocode}
+% Add the ``redefinition'' code to the initialiser
+%    \begin{macrocode}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@gch@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@spirograph@init\spath@tmp
+%    \end{macrocode}
+% Define the rotation macros.
+%    \begin{macrocode}
+\expandafter\spath@define@rotate\spath@cpt\relax
+%    \end{macrocode}
+% Add the ``redefinition'' code to the initialiser
+%    \begin{macrocode}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rot@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@rotate@init\spath@tmp
 %    \end{macrocode}
 % Now do the same for counting the total length.
 %    \begin{macrocode}

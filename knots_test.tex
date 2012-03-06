@@ -1,5 +1,23 @@
 \immediate\write18{tex spath.dtx}
 \immediate\write18{tex knots.dtx}
+\documentclass[border=10]{standalone}
+\usepackage{tikz}
+\usepackage{knots}
+\begin{document}
+\begin{tikzpicture}
+\tikzset{knot/only when rendering/.style={draw=white, double=red}}
+\node at (0,1) {\begin{tikzpicture}
+    \begin{knot}
+        \strand (1,0) to (0,1);
+        \strand (0,0) to (1,1);
+    \end{knot}
+\end{tikzpicture}};
+\node at (0,0) {\begin{tikzpicture}
+    \node at (0,0) {hello};
+\end{tikzpicture}};
+\end{tikzpicture}
+\end{document}
+
 \documentclass{article}
 \usepackage{tikz}
 \usepackage{knots}

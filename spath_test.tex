@@ -1,9 +1,21 @@
 \immediate\write18{tex spath.dtx}
 \documentclass{article}
 \usepackage{tikz}
+\usetikzlibrary{decorations}
 \usepackage{spath}
 
 \begin{document}
+\begin{tikzpicture}
+\path[decoration={curveto},decorate,save path=\tmppath] (2,0) to[bend right] (4,2) to[bend right] (5,0) to[bend right] (2,0);
+\pgfoonew \opath=new spath(\tmppath)
+\opath.prepare()
+\opath.spirograph(,0pt,0pt,36)
+\opath.use path with tikz(draw,blue)
+\end{tikzpicture}
+\end{document}
+
+
+
 \begin{tikzpicture}
 \draw[save path=\tmppath] \foreach \k in {0,...,1000} {(0,0) -- +(\k * 10:2)};
 \pgfoonew \mypath=new spath(\tmppath)
