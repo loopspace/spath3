@@ -245,6 +245,12 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
   \attribute taper line width;
 %    \end{macrocode}
+% We need to keep track of our bounding box
+%    \begin{macrocode}
+  \attribute min bb;
+  \attribute max bb;
+%    \end{macrocode}
+%
 % Our last attribute is a ``scratch'' attribute for saving some macro that relates to the object in some way.
 %    \begin{macrocode}
   \attribute scratch pad;
@@ -261,6 +267,14 @@ and the derived files           spath.ins,
     \else
      \pgfoolet{path}{#1}%
     \fi
+  }
+%    \end{macrocode}
+% Set path from current path
+%    \begin{macrocode}
+  \method use current path() {%
+    \pgfsyssoftpath@getcurrentpath{\spath@temp}%
+    \pgfoolet{path}{\spath@temp}%
+    \let\spath@temp=\pgfutil@empty
   }
 %    \end{macrocode}
 %
@@ -341,7 +355,9 @@ and the derived files           spath.ins,
       first action,
       last action,
       prepared,
-      taper line width%
+      taper line width,
+      min bb,
+      max bb%,
      } {
       \pgfooget{\attribute}{\spath@temp}%
       \spath@newpath.let(\attribute,\spath@temp)%
@@ -374,30 +390,169 @@ and the derived files           spath.ins,
      \pgfoovalueof{path}%
      \pgfoolet{path}{\spath@tmppath}%
      \let\spath@tmppath=\pgfutil@empty
-     \pgfooget{initial point}{\spath@temp}%
-     \ifx\spath@temp\pgfutil@empty
-     \else
-      \spath@temp
-      \advance\pgf@x by \spath@trx\relax
-      \advance\pgf@y by \spath@try\relax
-      \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@x}{\the\pgf@y}}%
-      \pgfoolet{initial point}{\spath@temp}%
-     \fi
-     \pgfooget{final point}{\spath@temp}%
-     \ifx\spath@temp\pgfutil@empty
-     \else
-      \spath@temp
-      \advance\pgf@x by \spath@trx\relax
-      \advance\pgf@y by \spath@try\relax
-      \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@x}{\the\pgf@y}}%
-      \pgfoolet{final point}{\spath@temp}%
-     \fi
+     \foreach \attribute in {
+      initial point,
+      final point,
+      min bb,
+      max bb%,
+     } {
+      \pgfooget{\attribute}{\spath@temp}%
+      \ifx\spath@temp\pgfutil@empty
+      \else
+       \spath@temp
+       \advance\pgf@x by \spath@trx\relax
+       \advance\pgf@y by \spath@try\relax
+       \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@x}{\the\pgf@y}}%
+       \pgfoolet{\attribute}{\spath@temp}%
+      \fi
+    }
     \endgroup
     \let\spath@tmppath=\pgfutil@empty
    \else
     \pgfoothis.clone(\spath@newpath)%
     \begingroup
     \spath@newpath.translate path(,#2,#3)%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+  }
+%    \end{macrocode}
+% Transform path according to an affine transformation
+%    \begin{macrocode}
+  \method transform path(#1,#2) {%
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \let\spath@tmppath=\pgfutil@empty
+    \begingroup
+     \pgftransformreset
+     \pgfsettransform{#2}%
+     \spath@transform@init
+     \pgfoovalueof{path}%
+     \pgfoolet{path}{\spath@tmppath}%
+     \let\spath@tmppath=\pgfutil@empty
+     \foreach \attribute in {
+      initial point,
+      final point,
+      min bb,
+      max bb,
+      prepared%,
+     } {
+      \pgfoolet{\attribute}{\pgfutil@empty}%
+     }%
+    \endgroup
+    \let\spath@tmppath=\pgfutil@empty
+   \else
+    \pgfoothis.clone(\spath@newpath)%
+    \begingroup
+    \spath@newpath.transform path(,#2)%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+  }
+%    \end{macrocode}
+% Scale all coordinates
+%    \begin{macrocode}
+  \method scale path(#1,#2,#3) {%
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \let\spath@tmppath=\pgfutil@empty
+    \begingroup
+     \edef\spath@scx{#2}%
+     \edef\spath@scy{#3}%
+     \ifx\spath@scy\pgfutil@empty
+      \edef\spath@scy{#2}%
+     \fi
+     \spath@scale@init
+     \pgfoovalueof{path}%
+     \pgfoolet{path}{\spath@tmppath}%
+     \let\spath@tmppath=\pgfutil@empty
+     \foreach \attribute in {
+      initial point,
+      final point,
+      min bb,
+      max bb%,
+     } {
+      \pgfooget{\attribute}{\spath@temp}%
+      \ifx\spath@temp\pgfutil@empty
+      \else
+       \spath@temp
+       \pgf@x=\spath@scx\pgf@x\relax
+       \pgf@y=\spath@scy\pgf@y\relax
+       \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@x}{\the\pgf@y}}%
+       \pgfoolet{\attribute}{\spath@temp}%
+      \fi
+    }
+    \endgroup
+    \let\spath@tmppath=\pgfutil@empty
+   \else
+    \pgfoothis.clone(\spath@newpath)%
+    \begingroup
+    \spath@newpath.scale path(,#2,#3)%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+  }
+%    \end{macrocode}
+% Round all the corners on the path
+%    \begin{macrocode}
+  \method round corners(#1,#2) {%
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \let\spath@tmppath=\pgfutil@empty
+    \begingroup
+     \spath@round@init
+     \edef\spath@roundcorners{#2}%
+     \pgfoovalueof{path}%
+     \pgfprocessround\spath@tmppath\spath@temppath
+     \pgfoolet{path}{\spath@temppath}%
+    \endgroup
+   \else
+    \pgfooget{path}{\spath@tmppath}%
+    \spath@newpath =new spath(\spath@tmppath)%
+    \begingroup
+    \spath@newpath.round corners(,#2)%
+    \endgroup
+    \let#1=\spath@newpath
+   \fi
+  }
+%    \end{macrocode}
+% This shrinks the path towards a particular point by a given number of points.
+% It doesn't scale the path, rather it adds a number of points to each coordinate depending on which quadrant the point is in relative to the given point.
+%    \begin{macrocode}
+  \method shrink path(#1,#2,#3,#4) {%
+    \let\spath@newpath=#1\relax
+    \ifx\spath@newpath\relax
+    \let\spath@tmppath=\pgfutil@empty
+    \begingroup
+     \spath@trx=#2\relax
+     \spath@try=#3\relax
+     \edef\spath@shrinkby{#4}%
+     \spath@shrink@init
+     \pgfoovalueof{path}%
+     \pgfoolet{path}{\spath@tmppath}%
+     \let\spath@tmppath=\pgfutil@empty
+     \foreach \attribute in {
+      initial point,
+      final point,
+      min bb,
+      max bb%,
+     } {
+      \pgfooget{\attribute}{\spath@temp}%
+      \ifx\spath@temp\pgfutil@empty
+      \else
+       \spath@temp
+       \pgfmathsetlength{\pgf@xa}{\pgf@x < \spath@trx ? \pgf@x + \spath@shrinkby : (\pgf@x > \spath@trx ? \pgf@x - \spath@shrinkby : \pgf@x)}%
+       \pgfmathsetlength{\pgf@ya}{\pgf@y < \spath@try ? \pgf@y + \spath@shrinkby : (\pgf@y > \spath@try ? \pgf@y - \spath@shrinkby : \pgf@y)}%
+       \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@xa}{\the\pgf@ya}}%
+       \pgfoolet{\attribute}{\spath@temp}%
+      \fi
+    }
+    \endgroup
+    \let\spath@tmppath=\pgfutil@empty
+   \else
+    \pgfoothis.clone(\spath@newpath)%
+    \begingroup
+    \spath@newpath.shrink path(,#2,#3)%
     \endgroup
     \let#1=\spath@newpath
    \fi
@@ -612,6 +767,64 @@ and the derived files           spath.ins,
     \spath@temp
   }
 %    \end{macrocode}
+% Get the bounding box of the path
+%    \begin{macrocode}
+  \method bounding box() {%
+    \pgfooget{min bb}{\spath@temp}%
+    \ifx\spath@temp\pgfutil@empty
+    \else
+     \pgfooget{min bb}{\spath@temp}%
+    \fi
+    \ifx\spath@temp\pgfutil@empty
+     \begingroup
+      \spath@boundingbox@init
+      \pgfoovalueof{path}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+      \pgfoolet{min bb}{\spath@temp}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@max}{\spath@may}}%
+      \pgfoolet{max bb}{\spath@temp}%
+     \endgroup
+    \fi
+  }
+%    \end{macrocode}
+% Get the bounding box of the path: minimum corner
+%    \begin{macrocode}
+  \method min bb() {%
+    \pgfooget{min bb}{\spath@temp}%
+    \ifx\spath@temp\pgfutil@empty
+     \pgfoothis.bounding box()%
+     \pgfooget{min bb}{\spath@temp}%
+    \fi
+    \spath@temp
+  }
+%    \end{macrocode}
+% Get the bounding box of the path: maximum corner
+%    \begin{macrocode}
+  \method max bb() {%
+    \pgfooget{max bb}{\spath@temp}%
+    \ifx\spath@temp\pgfutil@empty
+    \begingroup
+     \pgfoothis.bounding box()%
+     \pgfooget{max bb}{\spath@temp}%
+    \fi
+    \spath@temp
+  }
+%    \end{macrocode}
+% Get the mid point of the path (according to the bounding box)
+%    \begin{macrocode}
+  \method mid point() {%
+    \pgfoothis.min bb()%
+    \pgf@xa=.5\pgf@x
+    \pgf@ya=.5\pgf@y
+    \pgfoothis.max bb()%
+    \pgf@x=.5\pgf@x
+    \pgf@y=.5\pgf@y
+    \advance\pgf@xa by \pgf@x
+    \advance\pgf@ya by \pgf@y
+    \edef\spath@temp{\noexpand\pgfpoint{\the\pgf@xa}{\the\pgf@ya}}%
+    \spath@temp
+  }
+%    \end{macrocode}
 % Reverse the path.
 % If \#1 is given then it should be a macro and it will be an object with the reversed path, otherwise the current object is modified.
 %    \begin{macrocode}
@@ -667,6 +880,10 @@ and the derived files           spath.ins,
     \pgfoolet{initial point}{\spath@temp}%
     \edef\spath@temp{\noexpand\pgfpoint{\spath@ex}{\spath@ey}}%
     \pgfoolet{final point}{\spath@temp}%
+    \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+    \pgfoolet{min bb}{\spath@temp}%
+    \edef\spath@temp{\noexpand\pgfpoint{\spath@max}{\spath@may}}%
+    \pgfoolet{max bb}{\spath@temp}%
     \pgfoolet{first action}{\spath@first}%
     \pgfoolet{last action}{\spath@last}%
     \pgfoolet{prepared}{1}%
@@ -862,6 +1079,10 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
   \method use path(#1) {%
     \pgfooget{path}{\spath@tmppath}%
+    \pgfoothis.min bb()%
+    \pgf@protocolsizes\pgf@x\pgf@y
+    \pgfoothis.max bb()%
+    \pgf@protocolsizes\pgf@x\pgf@y
     \pgfsyssoftpath@setcurrentpath{\spath@tmppath}%
     \pgfsyssoftpath@flushcurrentpath
     \pgfusepath{#1}%
@@ -901,6 +1122,26 @@ and the derived files           spath.ins,
       \pgfoolet{final point}{\spath@temp}%
       \spath@other.get(last action,\spath@temp)%
       \pgfoolet{last action}{\spath@temp}%
+      \pgfooget{min bb}{\spath@temp}%
+      \spath@temp
+      \pgf@xa=\pgf@x
+      \pgf@ya=\pgf@y
+      \spath@other.get(min bb,\spath@temp)%
+      \spath@temp
+      \pgfmathsetmacro{\spath@mix}{min(\pgf@x,\pgf@xa)}%
+      \pgfmathsetmacro{\spath@miy}{min(\pgf@y,\pgf@ya)}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+      \pgfoolet{min bb}{\spath@temp}%
+      \pgfooget{max bb}{\spath@temp}%
+      \spath@temp
+      \pgf@xa=\pgf@x
+      \pgf@ya=\pgf@y
+      \spath@other.get(max bb,\spath@temp)%
+      \spath@temp
+      \pgfmathsetmacro{\spath@max}{max(\pgf@x,\pgf@xa)}%
+      \pgfmathsetmacro{\spath@may}{max(\pgf@y,\pgf@ya)}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+      \pgfoolet{max bb}{\spath@temp}%
       \foreach \attribute in {
         length,
         real length,
@@ -944,6 +1185,26 @@ and the derived files           spath.ins,
       \pgfoolet{final point}{\spath@temp}%
       \spath@other.get(last action,\spath@temp)%
       \pgfoolet{last action}{\spath@temp}%
+      \pgfooget{min bb}{\spath@temp}%
+      \spath@temp
+      \pgf@xa=\pgf@x
+      \pgf@ya=\pgf@y
+      \spath@other.get(min bb,\spath@temp)%
+      \spath@temp
+      \pgfmathsetmacro{\spath@mix}{min(\pgf@x,\pgf@xa)}%
+      \pgfmathsetmacro{\spath@miy}{min(\pgf@y,\pgf@ya)}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+      \pgfoolet{min bb}{\spath@temp}%
+      \pgfooget{max bb}{\spath@temp}%
+      \spath@temp
+      \pgf@xa=\pgf@x
+      \pgf@ya=\pgf@y
+      \spath@other.get(max bb,\spath@temp)%
+      \spath@temp
+      \pgfmathsetmacro{\spath@max}{max(\pgf@x,\pgf@xa)}%
+      \pgfmathsetmacro{\spath@may}{max(\pgf@y,\pgf@ya)}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+      \pgfoolet{max bb}{\spath@temp}%
       \foreach \attribute in {
         length,
         real length,
@@ -987,6 +1248,26 @@ and the derived files           spath.ins,
       \pgfoolet{final point}{\spath@temp}%
       \spath@other.get(last action,\spath@temp)%
       \pgfoolet{last action}{\spath@temp}%
+      \pgfooget{min bb}{\spath@temp}%
+      \spath@temp
+      \pgf@xa=\pgf@x
+      \pgf@ya=\pgf@y
+      \spath@other.get(min bb,\spath@temp)%
+      \spath@temp
+      \pgfmathsetmacro{\spath@mix}{min(\pgf@x,\pgf@xa)}%
+      \pgfmathsetmacro{\spath@miy}{min(\pgf@y,\pgf@ya)}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+      \pgfoolet{min bb}{\spath@temp}%
+      \pgfooget{max bb}{\spath@temp}%
+      \spath@temp
+      \pgf@xa=\pgf@x
+      \pgf@ya=\pgf@y
+      \spath@other.get(max bb,\spath@temp)%
+      \spath@temp
+      \pgfmathsetmacro{\spath@max}{max(\pgf@x,\pgf@xa)}%
+      \pgfmathsetmacro{\spath@may}{max(\pgf@y,\pgf@ya)}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+      \pgfoolet{max bb}{\spath@temp}%
       \foreach \attribute in {
         length,
         real length,
@@ -1043,6 +1324,25 @@ and the derived files           spath.ins,
       \pgfoolet{final point}{\spath@temp}%
       \spath@tempo.get(last action,\spath@temp)%
       \pgfoolet{last action}{\spath@temp}%
+      \pgfooget{min bb}{\spath@temp}%
+      \spath@temp
+      \pgf@xa=\pgf@x
+      \pgf@ya=\pgf@y
+      \spath@other.get(min bb,\spath@temp)%
+      \spath@temp
+      \pgfmathsetmacro{\spath@mix}{min(\pgf@x,\pgf@xa)}%
+      \pgfmathsetmacro{\spath@miy}{min(\pgf@y,\pgf@ya)}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+      \pgfoolet{min bb}{\spath@temp}%
+      \spath@temp
+      \pgf@xa=\pgf@x
+      \pgf@ya=\pgf@y
+      \spath@other.get(max bb,\spath@temp)%
+      \spath@temp
+      \pgfmathsetmacro{\spath@max}{max(\pgf@x,\pgf@xa)}%
+      \pgfmathsetmacro{\spath@may}{max(\pgf@y,\pgf@ya)}%
+      \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
+      \pgfoolet{max bb}{\spath@temp}%
       \foreach \attribute in {
         length,
         real length,
@@ -1441,6 +1741,51 @@ and the derived files           spath.ins,
   }
 }
 %    \end{macrocode}
+% Apply a transformation to the path
+%    \begin{macrocode}
+\def\spath@define@transform#1\relax{%
+  \expandafter\gdef\csname spath@trans@#1\endcsname##1##2{%
+    \pgf@xa=##1\relax
+    \pgf@ya=##2\relax
+    \pgf@process{\pgfpointtransformed{\pgfqpoint{\pgf@xa}{\pgf@ya}}}%
+    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{\the\pgf@x}{\the\pgf@y}}
+    \ge@addto@macro\spath@tmppath\spath@tmp
+  }
+}
+%    \end{macrocode}
+% Scale all coordinates
+%    \begin{macrocode}
+\def\spath@define@scale#1\relax{%
+  \expandafter\gdef\csname spath@sc@#1\endcsname##1##2{%
+    \pgf@xa=##1\relax
+    \pgf@ya=##2\relax
+    \pgf@xa=\spath@scx\pgf@xa\relax
+    \pgf@ya=\spath@scy\pgf@ya\relax
+    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{\the\pgf@xa}{\the\pgf@ya}}
+    \ge@addto@macro\spath@tmppath\spath@tmp
+  }
+}
+%    \end{macrocode}
+% Define the rounding macros
+%    \begin{macrocode}
+\def\spath@define@round#1\relax{%
+  \expandafter\gdef\csname spath@rnd@#1\endcsname##1##2{%
+    \edef\spath@tmp{\noexpand\pgfsyssoftpath@specialroundtoken{\spath@roundcorners}{\spath@roundcorners}\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{##1}{##2}}
+    \ge@addto@macro\spath@tmppath\spath@tmp
+  }
+}
+%    \end{macrocode}
+% Each soft path token shrinks its arguments towards the given point and then appends itself to the temporary path.
+%    \begin{macrocode}
+\def\spath@define@shrink#1\relax{%
+  \expandafter\gdef\csname spath@sh@#1\endcsname##1##2{%
+    \pgfmathsetlength{\pgf@xa}{##1 < \spath@trx ? ##1 + \spath@shrinkby : (##1 > \spath@trx ? ##1 - \spath@shrinkby : ##1)}%
+    \pgfmathsetlength{\pgf@ya}{##2 < \spath@try ? ##2 + \spath@shrinkby : (##2 > \spath@try ? ##2 - \spath@shrinkby : ##2)}%
+    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{\the\pgf@xa}{\the\pgf@ya}}
+    \ge@addto@macro\spath@tmppath\spath@tmp
+  }
+}
+%    \end{macrocode}
 % Each soft path token rotates its arguments about the given origin and then appends itself to the temporary path.
 % Then it increments the rotation counter.
 %    \begin{macrocode}
@@ -1560,12 +1905,27 @@ and the derived files           spath.ins,
   }
 }
 %    \end{macrocode}
+% This is for computing the bounding box
+%    \begin{macrocode}
+\def\spath@define@boundingbox#1{%
+  \expandafter\gdef\csname spath@boundingbox@#1\endcsname##1##2{%
+     \pgfmathsetmacro\spath@mix{min(\spath@mix,##1)}%
+     \pgfmathsetmacro\spath@miy{min(\spath@miy,##2)}%
+     \pgfmathsetmacro\spath@max{max(\spath@max,##1)}%
+     \pgfmathsetmacro\spath@may{max(\spath@may,##2)}%
+  }%
+}%
+%    \end{macrocode}
 % The next part of the code sets up the initialiser code for each of the routines.
 % We start with empty initialiser code.
 %    \begin{macrocode} 
 \let\spath@spirograph@init=\pgfutil@empty
 \let\spath@rotate@init=\pgfutil@empty
+\let\spath@round@init=\pgfutil@empty
 \let\spath@translate@init=\pgfutil@empty
+\let\spath@transform@init=\pgfutil@empty
+\let\spath@scale@init=\pgfutil@empty
+\let\spath@shrink@init=\pgfutil@empty
 \let\spath@length@init=\pgfutil@empty
 \let\spath@components@init=\pgfutil@empty
 \let\spath@reallength@init=\pgfutil@empty
@@ -1577,6 +1937,12 @@ and the derived files           spath.ins,
 \let\spath@prepare@init=\pgfutil@empty
 \let\spath@reprocess@init=\pgfutil@empty
 \let\spath@selfintersect@init=\pgfutil@empty
+\def\spath@boundingbox@init{%
+  \def\spath@mix{1600pt}%
+  \def\spath@miy{1600pt}%
+  \def\spath@max{-1600pt}%
+  \def\spath@may{-1600pt}%
+}
 %    \end{macrocode}
 % We now loop over the possible soft path tokens and define the different types of action each will expand to in the different circumstances.
 % These are the default actions, as defined by the above macros.
@@ -1590,7 +1956,8 @@ and the derived files           spath.ins,
   curveto,
   rectcorner,
   rectsize,
-  closepath%
+  closepath,
+  specialround%
 } {
 %    \end{macrocode}
 % Save token names for comparison
@@ -1606,6 +1973,46 @@ and the derived files           spath.ins,
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@tr@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@translate@init\spath@tmp
+%    \end{macrocode}
+% Define the transformation macros.
+%    \begin{macrocode}
+\expandafter\spath@define@transform\spath@cpt\relax
+%    \end{macrocode}
+% Add the ``redefinition'' code to the initialiser
+%    \begin{macrocode}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@trans@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@transform@init\spath@tmp
+%    \end{macrocode}
+% Define the scaling macros.
+%    \begin{macrocode}
+\expandafter\spath@define@scale\spath@cpt\relax
+%    \end{macrocode}
+% Add the ``redefinition'' code to the initialiser
+%    \begin{macrocode}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@sc@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@scale@init\spath@tmp
+%    \end{macrocode}
+% Define the rounding macros.
+%    \begin{macrocode}
+\expandafter\spath@define@round\spath@cpt\relax
+%    \end{macrocode}
+% Add the ``redefinition'' code to the initialiser
+%    \begin{macrocode}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rnd@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@round@init\spath@tmp
+%    \end{macrocode}
+% Define the shrinking macros.
+%    \begin{macrocode}
+\expandafter\spath@define@shrink\spath@cpt\relax
+%    \end{macrocode}
+% Add the ``redefinition'' code to the initialiser
+%    \begin{macrocode}
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@sh@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@shrink@init\spath@tmp
 %    \end{macrocode}
 % Define the spirograph macros.
 %    \begin{macrocode}
@@ -1713,6 +2120,14 @@ and the derived files           spath.ins,
 
 \ge@addto@macro\spath@selfintersect@init\spath@tmp
 %    \end{macrocode}
+% Bounding box
+%    \begin{macrocode}
+\expandafter\spath@define@boundingbox\expandafter{\spath@cpt}
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@boundingbox@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@boundingbox@init\spath@tmp
+%    \end{macrocode}
 % Phew!
 %    \begin{macrocode}
 }
@@ -1778,6 +2193,25 @@ and the derived files           spath.ins,
   \stepcounter{spath@array}%
 }
 %    \end{macrocode}
+% Correction for special rounds: almost nothing should touch these
+%    \begin{macrocode}
+\def\spath@tr@specialround#1#2{%
+  \edef\spath@tmp{\noexpand\pgfsyssoftpath@specialroundtoken{#1}{#2}}%
+  \ge@addto@macro\spath@tmppath\spath@tmp
+}  
+\def\spath@rev@specialround#1#2{%
+  \edef\spath@tmp{\noexpand\pgfsyssoftpath@specialroundtoken{#1}{#2}}%
+  \ge@addto@macro\spath@tmppath\spath@tmp
+}  
+\def\spath@sh@specialround#1#2{%
+  \edef\spath@tmp{\noexpand\pgfsyssoftpath@specialroundtoken{#1}{#2}}%
+  \ge@addto@macro\spath@tmppath\spath@tmp
+}  
+\def\spath@rot@specialround#1#2{%
+  \edef\spath@tmp{\noexpand\pgfsyssoftpath@specialroundtoken{#1}{#2}}%
+  \ge@addto@macro\spath@tmppath\spath@tmp
+}  
+%    \end{macrocode}
 % The ``prepare'' routine is too complicated to have defaults, so we need to set up them all here.
 % At the moment, this reverses the path as well.
 % This is now implemented in a different way so should be removed.
@@ -1787,8 +2221,16 @@ and the derived files           spath.ins,
   \g@addbefore@macro\spath@tmppath{{#1}{#2}}%
   \edef\spath@sx{#1}%
   \edef\spath@sy{#2}%
+  \edef\spath@mix{#1}%
+  \edef\spath@miy{#2}%
+  \edef\spath@max{#1}%
+  \edef\spath@may{#2}%
   \else
   \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@movetotoken}%
+  \pgfmathsetmacro{\spath@mix}{min(\spath@mix,#1)}%
+  \pgfmathsetmacro{\spath@max}{max(\spath@max,#1)}%
+  \pgfmathsetmacro{\spath@miy}{min(\spath@miy,#2)}%
+  \pgfmathsetmacro{\spath@may}{max(\spath@may,#2)}%
   \fi
   \edef\spath@ex{#1}%
   \edef\spath@ey{#2}%
@@ -1801,6 +2243,10 @@ and the derived files           spath.ins,
   \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@linetotoken}%
   \edef\spath@ex{#1}%
   \edef\spath@ey{#2}%
+  \pgfmathsetmacro{\spath@mix}{min(\spath@mix,#1)}%
+  \pgfmathsetmacro{\spath@max}{max(\spath@max,#1)}%
+  \pgfmathsetmacro{\spath@miy}{min(\spath@miy,#2)}%
+  \pgfmathsetmacro{\spath@may}{max(\spath@may,#2)}%
   \stepcounter{spath@length}%
   \stepcounter{spath@reallength}%
   \let\spath@last\spath@lineto
@@ -1813,6 +2259,10 @@ and the derived files           spath.ins,
   \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@curvetosupportatoken}%
   \edef\spath@ex{#1}%
   \edef\spath@ey{#2}%
+  \pgfmathsetmacro{\spath@mix}{min(\spath@mix,#1)}%
+  \pgfmathsetmacro{\spath@max}{max(\spath@max,#1)}%
+  \pgfmathsetmacro{\spath@miy}{min(\spath@miy,#2)}%
+  \pgfmathsetmacro{\spath@may}{max(\spath@may,#2)}%
   \stepcounter{spath@length}%
   \stepcounter{spath@reallength}%
   \let\spath@last\spath@curveto
@@ -1824,10 +2274,28 @@ and the derived files           spath.ins,
 \def\spath@prepare@curvetosupporta#1#2{%
   \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@curvetotoken}%
   \stepcounter{spath@length}%
+  \pgfmathsetmacro{\spath@mix}{min(\spath@mix,#1)}%
+  \pgfmathsetmacro{\spath@max}{max(\spath@max,#1)}%
+  \pgfmathsetmacro{\spath@miy}{min(\spath@miy,#2)}%
+  \pgfmathsetmacro{\spath@may}{max(\spath@may,#2)}%
 }
 
 \def\spath@prepare@curvetosupportb#1#2{%
   \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@curvetosupportbtoken}%
+  \stepcounter{spath@length}%
+  \pgfmathsetmacro{\spath@mix}{min(\spath@mix,#1)}%
+  \pgfmathsetmacro{\spath@max}{max(\spath@max,#1)}%
+  \pgfmathsetmacro{\spath@miy}{min(\spath@miy,#2)}%
+  \pgfmathsetmacro{\spath@may}{max(\spath@may,#2)}%
+}
+
+\def\spath@prepare@closepath#1#2{%
+  \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@closepathtoken}%
+  \stepcounter{spath@length}%
+}
+
+\def\spath@prepare@specialround#1#2{%
+  \g@addbefore@macro\spath@tmppath{{#1}{#2}\pgfsyssoftpath@specialroundtoken}%
   \stepcounter{spath@length}%
 }
 %    \end{macrocode}
