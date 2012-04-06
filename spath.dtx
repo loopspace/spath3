@@ -503,9 +503,11 @@ and the derived files           spath.ins,
      \spath@round@init
      \edef\spath@roundcorners{#2}%
      \pgfoovalueof{path}%
+     \pgfoolet{path}{\spath@tmppath}%
+    \endgroup
+     \pgfooget{path}{\spath@tmppath}%
      \pgfprocessround\spath@tmppath\spath@temppath
      \pgfoolet{path}{\spath@temppath}%
-    \endgroup
    \else
     \pgfooget{path}{\spath@tmppath}%
     \spath@newpath =new spath(\spath@tmppath)%
@@ -803,7 +805,6 @@ and the derived files           spath.ins,
   \method max bb() {%
     \pgfooget{max bb}{\spath@temp}%
     \ifx\spath@temp\pgfutil@empty
-    \begingroup
      \pgfoothis.bounding box()%
      \pgfooget{max bb}{\spath@temp}%
     \fi
@@ -1044,7 +1045,7 @@ and the derived files           spath.ins,
 %   \end{macrocode}
 % This reprocesses the path (it's another walker).
 % The purpose here is that we can set new conditions (via TikZ or PGF options) which might affect how the path should be built.
-% An obvious example is to turn on the \Verb+rounded cornders+ option.
+% An obvious example is to turn on the \Verb+rounded corners+ option.
 %   \begin{macrocode}
   \method reprocess path() {%
     \begingroup
@@ -1766,11 +1767,11 @@ and the derived files           spath.ins,
   }
 }
 %    \end{macrocode}
-% Define the rounding macros
+% Define the rounding macros, most do nothing
 %    \begin{macrocode}
 \def\spath@define@round#1\relax{%
   \expandafter\gdef\csname spath@rnd@#1\endcsname##1##2{%
-    \edef\spath@tmp{\noexpand\pgfsyssoftpath@specialroundtoken{\spath@roundcorners}{\spath@roundcorners}\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{##1}{##2}}
+    \edef\spath@tmp{\expandafter\noexpand\csname pgfsyssoftpath@#1token\endcsname{##1}{##2}}
     \ge@addto@macro\spath@tmppath\spath@tmp
   }
 }
@@ -2191,6 +2192,27 @@ and the derived files           spath.ins,
    \def\spath@tmppath{\pgfsyssoftpath@movetotoken{#1}{#2}}%
   \fi
   \stepcounter{spath@array}%
+}
+%    \end{macrocode}
+% Correction for rounding corners: lineto and curvetosupporta need to add the extra token
+%    \begin{macrocode}
+\def\spath@rnd@lineto#1#2{%
+  \edef\spath@tmp{%
+    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@roundcorners}{\spath@roundcorners}%
+    \noexpand\pgfsyssoftpath@linetotoken{#1}{#2}}%
+    \ge@addto@macro\spath@tmppath\spath@tmp
+}
+\def\spath@rnd@closepath#1#2{%
+  \edef\spath@tmp{%
+    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@roundcorners}{\spath@roundcorners}%
+    \noexpand\pgfsyssoftpath@closepathtoken{#1}{#2}}%
+    \ge@addto@macro\spath@tmppath\spath@tmp
+}
+\def\spath@rnd@curvetosupportatoken#1#2{%
+  \edef\spath@tmp{%
+    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@roundcorners}{\spath@roundcorners}%
+    \noexpand\pgfsyssoftpath@curvetosupportatoken{#1}{#2}}%
+    \ge@addto@macro\spath@tmppath\spath@tmp
 }
 %    \end{macrocode}
 % Correction for special rounds: almost nothing should touch these
