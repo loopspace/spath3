@@ -191,6 +191,13 @@ and the derived files           spath.ins,
   \ge@addbefore@macro{#1}{\@temp}}
 %    \end{macrocode}
 % \end{macro}
+%    \begin{macrocode}
+\tikzset{%
+  use path/.code={%
+    \pgfsyssoftpath@setcurrentpath{#1}%
+  }
+}
+%    \end{macrocode}
 % This is the \Verb+spath+ object.
 % It is defined using the \Verb+pgf.oo+ module.
 % It represents a ``soft path''.
@@ -1052,7 +1059,7 @@ and the derived files           spath.ins,
     \spath@reprocess@init
     \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}%
     \pgfoovalueof{path}%
-    \pgfsyssoftpath@getcurrenpath{\spath@tmppath}%
+    \pgfsyssoftpath@getcurrentpath{\spath@tmppath}%
     \pgfoolet{path}{\spath@tmppath}%
     \endgroup
     \let\spath@tmppath\pgfutil@empty
@@ -1092,16 +1099,21 @@ and the derived files           spath.ins,
 % This uses the path via a TikZ-like command, so can use TikZ style options (passed as the argument).
 %    \begin{macrocode}
   \method use path with tikz(#1) {%
+    \path[#1] \pgfextra{%
     \begingroup
-    \let\spath@save@cmd=\tikz@scan@next@command
-    \let\tikz@scan@next@command=\relax
-    \tikz@@command@path
-    \let\tikz@scan@next@command=\spath@save@cmd
-    \tikzset{#1}%
-    \pgfooget{path}{\spath@tmp}%
-    \pgfsyssoftpath@setcurrentpath{\spath@tmp}%
-    \tikz@finish
-    \endgroup
+    \spath@reprocess@init
+    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}%
+    \pgfoovalueof{path}%
+    \endgroup};
+  }
+%    \end{macrocode}
+% This produces a string representation of the path (mainly for preloading paths)
+%    \begin{macrocode}
+  \method to string() {%
+     \begingroup
+     \spath@string@init
+     \pgfoovalueof{path}%
+     \endgroup
   }
 %    \end{macrocode}
 % Now we get some methods which act on two paths and join them in some fashion.
@@ -1889,8 +1901,10 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 % This is for reprocessing the path.
 %    \begin{macrocode}
-\def\spath@define@reprocess#1{%
-  \expandafter\global\expandafter\let\csname spath@rep@#1\expandafter\endcsname\csname pgfsyssoftpath@#1\endcsname
+\def\spath@define@reprocess#1\relax{%
+  \expandafter\gdef\csname spath@rep@#1\endcsname##1##2{%
+    \csname pgfpath#1\endcsname{\pgfpoint{##1}{##2}}%
+  }%
 }
 %    \end{macrocode}
 % This is for splitting self-intersecting pieces.
@@ -1917,6 +1931,16 @@ and the derived files           spath.ins,
   }%
 }%
 %    \end{macrocode}
+% This is for converting the path into a string
+%    \begin{macrocode}
+\def\spath@define@string#1\relax{%
+  \expandafter\gdef\csname spath@str@#1\endcsname##1##2{%
+  \pgfmathsetmacro\spath@sx{##1/1cm}%
+  \pgfmathsetmacro\spath@sy{##2/1cm}%
+    \expandafter\string\csname pgfpath#1\endcsname\{\string\pgfpointxy\{\spath@sx\}\{\spath@sy\}\}\\%
+  }%
+}
+%    \end{macrocode}
 % The next part of the code sets up the initialiser code for each of the routines.
 % We start with empty initialiser code.
 %    \begin{macrocode} 
@@ -1937,12 +1961,13 @@ and the derived files           spath.ins,
 \let\spath@array@init=\pgfutil@empty
 \let\spath@prepare@init=\pgfutil@empty
 \let\spath@reprocess@init=\pgfutil@empty
+\let\spath@string@init=\pgfutil@empty
 \let\spath@selfintersect@init=\pgfutil@empty
 \def\spath@boundingbox@init{%
-  \def\spath@mix{1600pt}%
-  \def\spath@miy{1600pt}%
-  \def\spath@max{-1600pt}%
-  \def\spath@may{-1600pt}%
+  \def\spath@mix{16000pt}%
+  \def\spath@miy{16000pt}%
+  \def\spath@max{-16000pt}%
+  \def\spath@may{-16000pt}%
 }
 %    \end{macrocode}
 % We now loop over the possible soft path tokens and define the different types of action each will expand to in the different circumstances.
@@ -2107,7 +2132,7 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 % Reprocess a path
 %    \begin{macrocode}
-\spath@define@reprocess\spath@cpt
+\expandafter\spath@define@reprocess\spath@cpt\relax
 
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@rep@\spath@cpt \endcsname}
 
@@ -2128,6 +2153,14 @@ and the derived files           spath.ins,
 \edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@boundingbox@\spath@cpt \endcsname}
 
 \ge@addto@macro\spath@boundingbox@init\spath@tmp
+%    \end{macrocode}
+% To string
+%    \begin{macrocode}
+\expandafter\spath@define@string\spath@cpt\relax
+
+\edef\spath@tmp{\noexpand\let\expandafter\noexpand\csname pgfsyssoftpath@\spath@cpt token\endcsname=\expandafter\noexpand\csname spath@str@\spath@cpt \endcsname}
+
+\ge@addto@macro\spath@string@init\spath@tmp
 %    \end{macrocode}
 % Phew!
 %    \begin{macrocode}
@@ -2182,6 +2215,31 @@ and the derived files           spath.ins,
   \edef\spath@tmp{\noexpand\pgfsyssoftpath@closepathtoken{#1}{#2}}%
   \ge@addto@macro\spath@tmppath\spath@tmp
 }
+%    \end{macrocode}
+% Correction for reprocessing path: curvetos
+%    \begin{macrocode}
+\def\spath@rep@curvetosupporta#1#2\pgfsyssoftpath@curvetosupportbtoken#3#4\pgfsyssoftpath@curvetotoken#5#6{%
+    \pgfpathcurveto{\pgfpoint{#1}{#2}}{\pgfpoint{#3}{#4}}{\pgfpoint{#5}{#6}}%
+  }%
+%    \end{macrocode}
+% Correction for converting path to string: curvetos
+%    \begin{macrocode}
+\def\spath@str@curvetosupporta#1#2\pgfsyssoftpath@curvetosupportbtoken#3#4\pgfsyssoftpath@curvetotoken#5#6{%
+  \pgfmathsetmacro\spath@sx{#1/1cm}%
+  \pgfmathsetmacro\spath@sy{#2/1cm}%
+    \string\pgfpathcurveto\{\string\pgfpointxy\{\spath@sx\}\{\spath@sy\}\}%
+  \pgfmathsetmacro\spath@sx{#3/1cm}%
+  \pgfmathsetmacro\spath@sy{#4/1cm}%
+  \{\string\pgfpointxy\{\spath@sx\}\{\spath@sy\}\}%
+  \pgfmathsetmacro\spath@sx{#5/1cm}%
+  \pgfmathsetmacro\spath@sy{#6/1cm}%
+  \{\string\pgfpointxy\{\spath@sx\}\{\spath@sy\}\}\\%
+  }%
+%    \end{macrocode}
+% Closepath
+%    \begin{macrocode}
+\def\spath@str@closepath#1#2{%
+  \string\pgfclosepath\\}
 %    \end{macrocode}
 % Correction for splitting in to an array
 %    \begin{macrocode}
