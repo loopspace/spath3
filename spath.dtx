@@ -500,7 +500,7 @@ and the derived files           spath.ins,
    \fi
   }
 %    \end{macrocode}
-% Round all the corners on the path
+% Round all the corners on the path, ignoring any that are already set
 %    \begin{macrocode}
   \method round corners(#1,#2) {%
     \let\spath@newpath=#1\relax
@@ -2271,6 +2271,8 @@ and the derived files           spath.ins,
     \noexpand\pgfsyssoftpath@specialroundtoken{\spath@roundcorners}{\spath@roundcorners}%
     \noexpand\pgfsyssoftpath@curvetosupportatoken{#1}{#2}}%
     \ge@addto@macro\spath@tmppath\spath@tmp
+}
+\def\spath@rnd@specialround#1#2{%
 }
 %    \end{macrocode}
 % Correction for special rounds: almost nothing should touch these
