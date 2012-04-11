@@ -1,10 +1,22 @@
 \immediate\write18{tex spath.dtx}
-\documentclass{standalone}
+\documentclass{article}
 \usepackage{tikz}
 \usetikzlibrary{decorations}
 \usepackage{spath}
 
 \begin{document}
+\begin{tikzpicture}
+\draw[rounded corners,save path=\tmppath] (0,0) -- (3,0) -- (3,2)[sharp corners]  -- (0,2) -- cycle;
+\pgfoonew \mypath=new spath(\tmppath)
+\mypath.show(path)
+\mypath.round corners(,2pt)
+\mypath.show(path)
+\mypath.translate path(,0pt,-3cm)
+\mypath.use path(draw)
+\end{tikzpicture}
+\end{document}
+
+
 \begin{tikzpicture}
 \useasboundingbox (-5,-5) rectangle (5,5);
 \path[decoration={curveto},decorate,save path=\tmppath] (2,0) to[bend right] (4,2) to[bend right] (5,0) to[bend right] (2,0);
