@@ -502,13 +502,17 @@ and the derived files           spath.ins,
 %    \end{macrocode}
 % Round all the corners on the path, ignoring any that are already set
 %    \begin{macrocode}
-  \method round corners(#1,#2) {%
+  \method round corners(#1,#2,#3) {%
     \let\spath@newpath=#1\relax
     \ifx\spath@newpath\relax
     \let\spath@tmppath=\pgfutil@empty
     \begingroup
      \spath@round@init
-     \edef\spath@roundcorners{#2}%
+     \edef\spath@rndx{#2}%
+     \edef\spath@rndy{#3}%
+  \ifx\spath@rndy\pgfutil@empty
+   \let\spath@rndy\spath@rndx
+  \fi
      \pgfoovalueof{path}%
      \pgfoolet{path}{\spath@tmppath}%
     \endgroup
@@ -2256,19 +2260,19 @@ and the derived files           spath.ins,
 %    \begin{macrocode}
 \def\spath@rnd@lineto#1#2{%
   \edef\spath@tmp{%
-    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@roundcorners}{\spath@roundcorners}%
+    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@rndx}{\spath@rndy}%
     \noexpand\pgfsyssoftpath@linetotoken{#1}{#2}}%
     \ge@addto@macro\spath@tmppath\spath@tmp
 }
 \def\spath@rnd@closepath#1#2{%
   \edef\spath@tmp{%
-    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@roundcorners}{\spath@roundcorners}%
+    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@rndx}{\spath@rndy}%
     \noexpand\pgfsyssoftpath@closepathtoken{#1}{#2}}%
     \ge@addto@macro\spath@tmppath\spath@tmp
 }
 \def\spath@rnd@curvetosupportatoken#1#2{%
   \edef\spath@tmp{%
-    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@roundcorners}{\spath@roundcorners}%
+    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@rndx}{\spath@rndy}%
     \noexpand\pgfsyssoftpath@curvetosupportatoken{#1}{#2}}%
     \ge@addto@macro\spath@tmppath\spath@tmp
 }
@@ -2276,9 +2280,10 @@ and the derived files           spath.ins,
 % Whereas existing special round tokens should take the maximum of their rounding and the specified rounding, and also ensure that the next corner is not \emph{doubly} rounded.
 %    \begin{macrocode}
 \def\spath@rnd@specialround#1#2#3#4#5{%
-  \pgfmathparse{max(#1,\spath@roundcorners)}%
+  \pgfmathsetmacro{\spath@srndx}{max(#1,\spath@rndx)}%
+  \pgfmathsetmacro{\spath@srndy}{max(#1,\spath@rndy)}%
   \edef\spath@tmp{%
-    \noexpand\pgfsyssoftpath@specialroundtoken{\pgfmathresult pt}{\pgfmathresult pt}%
+    \noexpand\pgfsyssoftpath@specialroundtoken{\spath@srndx pt}{\spath@srndy pt}%
     \noexpand#3{#4}{#5}}%
     \ge@addto@macro\spath@tmppath\spath@tmp
 }

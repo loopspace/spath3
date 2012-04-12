@@ -1,15 +1,15 @@
 \immediate\write18{tex spath.dtx}
-\documentclass{article}
+\documentclass[border=10pt]{standalone}
 \usepackage{tikz}
 \usetikzlibrary{decorations}
 \usepackage{spath}
 
 \begin{document}
 \begin{tikzpicture}
-\draw[rounded corners,save path=\tmppath] (0,0) -- (3,0) -- (3,2)[sharp corners]  -- (0,2) -- cycle;
+\draw[rounded corners=14pt,save path=\tmppath] (0,0) -- (3,0) -- (3,2)[sharp corners]  -- (0,2) -- cycle;
 \pgfoonew \mypath=new spath(\tmppath)
 \mypath.show(path)
-\mypath.round corners(,2pt)
+\mypath.round corners(,7pt,14pt)
 \mypath.show(path)
 \mypath.translate path(,0pt,-3cm)
 \mypath.use path(draw)
