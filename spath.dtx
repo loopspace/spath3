@@ -969,10 +969,13 @@ and the derived files           spath.ins,
     \fi
     \ifx\spath@temp\spath@lineto
      \expandafter\spath@taper@lineto@out\spath@tmppath\relax
-    \else
-     \expandafter\spath@taper@curveto@out\spath@tmppath\relax
-    \fi
     \pgfoolet{path}{\spath@tapered@path}%
+    \else
+     \ifx\spath@temp\spath@curveto
+      \expandafter\spath@taper@curveto@out\spath@tmppath\relax
+      \pgfoolet{path}{\spath@tapered@path}%
+     \fi
+    \fi
   }
 %    \end{macrocode}
 % The next few methods split a path by various conditions.
@@ -2474,16 +2477,29 @@ and the derived files           spath.ins,
   \ifnum\spath@test=\spath@splitat\relax
    \def\spath@tmppath{\pgfsyssoftpath@movetotoken{#2}{#3}}%
    \edef\spath@last{\string#1}%
-  \ifx\spath@last\spath@curvetosupporta
-  \let\spath@last=\spath@curveto
-  \fi
+   \ifx\spath@last\spath@curvetosupporta
+    \let\spath@last=\spath@curveto
+   \fi
    \edef\spath@ex{#2}%
    \edef\spath@ey{#3}%
    \let\spath@next=\spath@lastgobble
   \else
    \let\spath@next=\spath@gobble
   \fi
-  \spath@next
+  \pgfutil@ifnextchar\relax{%
+    \ifx\spath@next\spath@gobble
+     \def\spath@tmppath{\pgfsyssoftpath@movetotoken{#2}{#3}}%
+     \edef\spath@last{\string#1}%
+     \ifx\spath@last\spath@curvetosupporta
+      \let\spath@last=\spath@curveto
+     \fi
+     \edef\spath@ex{#2}%
+     \edef\spath@ey{#3}%
+    \fi
+    \edef\spath@sx{#2}%
+    \edef\spath@sy{#3}%
+    \let\spath@first\spath@moveto
+    }{\spath@next}%
 }
 \def\spath@lastgobble#1#2#3#4\relax{%
   \g@addto@macro\spath@tmppath{#1{#2}{#3}#4}%
