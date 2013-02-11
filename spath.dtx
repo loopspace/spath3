@@ -173,6 +173,13 @@ and the derived files           spath.ins,
   \toks@\expandafter\expandafter\expandafter{\expandafter#1#2}%
   \xdef#1{\the\toks@}%
   \endgroup}
+
+\def\tikz@clear@foreach{%
+\let\pgffor@beginhook=\pgfutil@empty
+\let\pgffor@endhook=\pgfutil@empty
+\let\pgffor@afterhook=\pgfutil@empty
+}
+
 %    \end{macrocode}
 % \end{macro}
 % \begin{macro}{\ge@addbefore@macro}
@@ -352,6 +359,7 @@ and the derived files           spath.ins,
     \ifx\spath@newpath\relax
     \else
      \pgfoonew \spath@newpath =new spath()%
+  \tikz@clear@foreach
      \foreach \attribute in {
       path,
       length,
@@ -397,6 +405,7 @@ and the derived files           spath.ins,
      \pgfoovalueof{path}%
      \pgfoolet{path}{\spath@tmppath}%
      \let\spath@tmppath=\pgfutil@empty
+  \tikz@clear@foreach
      \foreach \attribute in {
       initial point,
       final point,
@@ -437,6 +446,7 @@ and the derived files           spath.ins,
      \pgfoovalueof{path}%
      \pgfoolet{path}{\spath@tmppath}%
      \let\spath@tmppath=\pgfutil@empty
+  \tikz@clear@foreach
      \foreach \attribute in {
       initial point,
       final point,
@@ -473,6 +483,7 @@ and the derived files           spath.ins,
      \pgfoovalueof{path}%
      \pgfoolet{path}{\spath@tmppath}%
      \let\spath@tmppath=\pgfutil@empty
+  \tikz@clear@foreach
      \foreach \attribute in {
       initial point,
       final point,
@@ -544,6 +555,7 @@ and the derived files           spath.ins,
      \pgfoovalueof{path}%
      \pgfoolet{path}{\spath@tmppath}%
      \let\spath@tmppath=\pgfutil@empty
+  \tikz@clear@foreach
      \foreach \attribute in {
       initial point,
       final point,
@@ -635,6 +647,7 @@ and the derived files           spath.ins,
      \pgfoothis.clone(\spath@tempa)%
      \pgfmathsetmacro{\spath@gna}{2*\spath@gn}%
      \pgfmathsetmacro{\spath@gnb}{360-\spath@gn}%
+  \tikz@clear@foreach
      \foreach \k in {\spath@gn,\spath@gna,...,\spath@gnb} {%
       \spath@tempa.rotate path(,\spath@gn)%
       \pgfoothis.weld(,\spath@tempa)%
@@ -1162,6 +1175,7 @@ and the derived files           spath.ins,
       \pgfmathsetmacro{\spath@may}{max(\pgf@y,\pgf@ya)}%
       \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
       \pgfoolet{max bb}{\spath@temp}%
+  \tikz@clear@foreach
       \foreach \attribute in {
         length,
         real length,
@@ -1225,6 +1239,7 @@ and the derived files           spath.ins,
       \pgfmathsetmacro{\spath@may}{max(\pgf@y,\pgf@ya)}%
       \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
       \pgfoolet{max bb}{\spath@temp}%
+  \tikz@clear@foreach
       \foreach \attribute in {
         length,
         real length,
@@ -1288,6 +1303,7 @@ and the derived files           spath.ins,
       \pgfmathsetmacro{\spath@may}{max(\pgf@y,\pgf@ya)}%
       \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
       \pgfoolet{max bb}{\spath@temp}%
+  \tikz@clear@foreach
       \foreach \attribute in {
         length,
         real length,
@@ -1363,6 +1379,7 @@ and the derived files           spath.ins,
       \pgfmathsetmacro{\spath@may}{max(\pgf@y,\pgf@ya)}%
       \edef\spath@temp{\noexpand\pgfpoint{\spath@mix}{\spath@miy}}%
       \pgfoolet{max bb}{\spath@temp}%
+  \tikz@clear@foreach
       \foreach \attribute in {
         length,
         real length,
@@ -1439,6 +1456,7 @@ and the derived files           spath.ins,
   \pgfintersectionofpaths{\pgfsetpath\spath@tmppatha}{\pgfsetpath\spath@tmppath}%
   \ifnum\pgfintersectionsolutions>0\relax
   \pgfsyssoftpath@setcurrentpath\pgfutil@empty
+  \tikz@clear@foreach
   \foreach \spath@k in {1,...,\pgfintersectionsolutions} {
     \pgfpointintersectionsolution{\spath@k}%
     \edef\spath@ix{\the\pgf@x}%
@@ -1981,6 +1999,7 @@ and the derived files           spath.ins,
 % These are the default actions, as defined by the above macros.
 % Specific actions can be redefined afterwards.
 %    \begin{macrocode}
+  \tikz@clear@foreach
 \foreach \spath@cpt in {
   moveto,
   lineto,
