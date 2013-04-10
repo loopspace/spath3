@@ -1,33 +1,16 @@
-\immediate\write18{tex spath.dtx}
-\immediate\write18{tex knots.dtx}
-\documentclass[border=10]{standalone}
-\usepackage{tikz}
-\usepackage{knots}
-\begin{document}
-\begin{tikzpicture}
-\tikzset{knot/only when rendering/.style={draw=white, double=red}}
-\node at (0,1) {\begin{tikzpicture}
-    \begin{knot}
-        \strand (1,0) to (0,1);
-        \strand (0,0) to (1,1);
-    \end{knot}
-\end{tikzpicture}};
-\node at (0,0) {\begin{tikzpicture}
-    \node at (0,0) {hello};
-\end{tikzpicture}};
-\end{tikzpicture}
-\end{document}
-
+\immediate\write18{tex spath3.dtx}
+%\immediate\write18{tex knots.dtx}
 \documentclass{article}
 \usepackage{tikz}
-\usepackage{knots}
+\usetikzlibrary{knots,intersections}
 \begin{document}
 \begin{tikzpicture}
 \node (A) at (0,4) [draw,minimum width=30pt,minimum height=10pt,thick] {};
 \begin{knot}[
-%  draft mode=crossings,
-  background colour=red,
+  draft mode=crossings,
+  background colour=white,
   clip width=5,
+  clip radius=8pt,
 %  consider self intersections,
 ]
 \strand [thick,knot/only when rendering/.style={dashed}] (0,0)
@@ -39,11 +22,10 @@ to [out=up, in=down] (-2,7);
 \strand [thick] (-1,0)
 to [out=up, in=down] (1,2)
 to [out=up, in=down] (A.south);
-\strand [thick] (1,0)
+\strand [thick,knot/only when rendering/.style={blue}] (1,0)
 to [out=up, in=down] (-1,2)
 to [out=up, in=down] (1.5,4)
-to [out=up, in=right] (0,5.5)
-to [out=left, in=up] (-2,4)
+to [out=up, in=right] (0,5.5)to [out=left, in=up] (-2,4)
 to [out=down, in=up] (-2,0);
 \strand [thick] (A.150)
 to [out=up, in=down] (0.7,5.5)
