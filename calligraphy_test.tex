@@ -7,6 +7,15 @@
 
 
 \begin{document}
+
+\begin{tikzpicture}
+\pen (-20:.15) -- (20:.15);
+\calligraphy[copperplate] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0);
+\draw[yshift=-.5cm] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0) .. controls +(1,.5) and +(-1,-.5) .. (4,0);
+\calligraphy[yshift=-1cm,copperplate] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0) .. controls +(1,.5) and +(-1,-.5) .. (4,0);
+\end{tikzpicture}
+\end{document}
+
 \begin{tikzpicture}
 \draw[decorate,decoration={calligraphic brace,amplitude=4mm},ultra thick] (0,0) -- (0,8);
 \draw[line width=2pt,decorate,decoration={brace,amplitude=10},line cap=round] (1,0) -- ++(0,8);

@@ -2431,12 +2431,17 @@ and the derived files           spath.ins,
   \pgfmathsetmacro{\spath@cy}{#4/28}
   \pgfmathsetmacro{\spath@dy}{#6/28}
   \pgfmathsetmacro{\spath@enum}{%
-    ( (\spath@ay - 3 * \spath@by + 3 * \spath@cy - \spath@dy) * (3 * \spath@cx - 3 * \spath@dx)
-    - (\spath@ax - 3 * \spath@bx + 3 * \spath@cx - \spath@dx) * (3 * \spath@cy - 3 * \spath@dy) )}
+    ( (\spath@ay - 3 * \spath@by + 3 * \spath@cy - \spath@dy) * (3 *
+\spath@cx - 3 * \spath@dx)
+    - (\spath@ax - 3 * \spath@bx + 3 * \spath@cx - \spath@dx) * (3 *
+\spath@cy - 3 * \spath@dy) )}
   \pgfmathsetmacro{\spath@denum}{%
-    ( (\spath@ax - 3 * \spath@bx + 3 * \spath@cx - \spath@dx) * (3 * \spath@by - 6 * \spath@cy + 3 * \spath@dy)
-    - (\spath@ay - 3 * \spath@by + 3 * \spath@cy - \spath@dy) * (3 * \spath@bx - 6 * \spath@cx + 3 * \spath@dx) )}
-  \pgfmathtruncatemacro{\spath@split}{\spath@enum > 0 ? (\spath@enum < 2 * \spath@denum) : (\spath@enum > 2 * \spath@denum)}
+    ( (\spath@ax - 3 * \spath@bx + 3 * \spath@cx - \spath@dx) * (3 *
+\spath@by - 6 * \spath@cy + 3 * \spath@dy)
+    - (\spath@ay - 3 * \spath@by + 3 * \spath@cy - \spath@dy) * (3 *
+\spath@bx - 6 * \spath@cx + 3 * \spath@dx) )}
+  \pgfmathtruncatemacro{\spath@split}{\spath@enum > 0 ? (\spath@enum <
+2 * \spath@denum) : (\spath@enum > 2 * \spath@denum)}
   \ifnum\spath@split=1\relax
   \pgfmathsetmacro{\spath@splitt}{.5*(\spath@enum)/(\spath@denum)}%
   \pgfsyssoftpath@setcurrentpath{\spath@tmppath}%

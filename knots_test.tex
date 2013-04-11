@@ -3,11 +3,77 @@
 \documentclass{article}
 \usepackage{tikz}
 \usetikzlibrary{knots,intersections}
+
+
 \begin{document}
+
+\begin{tikzpicture}
+\begin{knot}[
+  consider self intersections,
+  draft mode=crossings,
+]
+\strand (0,0) .. controls +(.5,1) and +(1,0) .. (0,0.5);
+\end{knot}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\begin{knot}[
+  consider self intersections,
+  draft mode=crossings,
+]
+\strand (0,0) .. controls +(3,1) and +(-3,1) .. (1,0);
+\end{knot}
+\end{tikzpicture}
+
+
+\begin{tikzpicture}
+\begin{knot}[
+  consider self intersections=no splits,
+  draft mode=crossings,
+]
+\strand (0,0) .. controls +(1.5,.5) and +(1,0) .. (.5,1) .. controls +(-1,0) and +(-1.5,.5) .. (1,0);
+\end{knot}
+\end{tikzpicture}
+
+
+\newcommand{\motif}[1]{ 
+  to ++(180+#1:0.50) arc (270+#1:150+#1:0.15) 
+  to ++( 60+#1:0.50) arc (-30+#1:150+#1:0.15) 
+  to ++(240+#1:0.25) arc (150+#1:330+#1:0.25)
+  to ++( 60+#1:0.55) arc (150+#1: 30+#1:0.20)
+}
+\newcommand{\celticknot}{\motif{0}\motif{120}\motif{240}}
+\begin{tikzpicture}
+\begin{knot}[
+  line width=6pt,
+  line join=round,
+  clip width=2,
+  clip radius=14pt,
+  end tolerance=20pt,
+  scale=8,
+  consider self intersections=no splits,
+  ignore endpoint intersections=false,
+  background color=white,
+  intersection 12/.style={/tikz/knot/clip radius=13pt},
+  every strand/.style={draw=none},
+  only when rendering/.style={
+    draw=red,
+    double=white,
+    line cap=round,
+    double distance=6pt
+  },
+%  draft mode=crossings,
+]
+\strand (0,0) \celticknot;
+\flipcrossings{1,3,6,8,10}
+\end{knot}
+\end{tikzpicture}
+\end{document}
+
 \begin{tikzpicture}
 \node (A) at (0,4) [draw,minimum width=30pt,minimum height=10pt,thick] {};
 \begin{knot}[
-  draft mode=crossings,
+%  draft mode=crossings,
   background colour=white,
   clip width=5,
   clip radius=8pt,

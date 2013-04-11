@@ -191,6 +191,8 @@ and the derived files           spath3.ins,
 \tl_new:N \l__spath_tmpa_tl
 \tl_new:N \l__spath_tmpb_tl
 \tl_new:N \l__spath_tmpc_tl
+\tl_new:N \l__spath_tmpd_tl
+\tl_new:N \l__spath_smuggle_tl
 \dim_new:N \l__spath_tmpa_dim
 \dim_new:N \l__spath_tmpb_dim
 \int_new:N \l__spath_tmpa_int
@@ -1460,14 +1462,46 @@ and the derived files           spath3.ins,
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\spath_map_segment:Nn}
+% \begin{macro}{\spath_map_segment_inline:Nn}
 % This iterates through the segments of the path, applying the inline function to each.
 %    \begin{macrocode}
-\cs_new_nopar:Npn \spath_map_segment:Nn #1#2
+\cs_new_nopar:Npn \spath_map_segment_inline:Nn #1#2
 {
   \int_gincr:N \g__prg_map_int
   \cs_gset:cpn { __prg_map_ \int_use:N \g__prg_map_int :w } ##1 ##2 {#2}
-  \tl_set:NV \l__spath_tmpa_tl #1
+  \spath_map_segment_function:Nc #1 { __prg_map_ \int_use:N \g__prg_map_int :w }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_map_segment_inline:nn}
+% This iterates through the segments of the path of the \Verb+spath+ object, applying the inline function to each.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_map_segment_inline:nn #1#2
+{
+  \int_gincr:N \g__prg_map_int
+  \cs_gset:cpn { __prg_map_ \int_use:N \g__prg_map_int :w } ##1 ##2 {#2}
+  \spath_get:nnN {#1} {path} \l__spath_tmpd_tl
+  \spath_map_segment_function:Nc \l__spath_tmpd_tl { __prg_map_ \int_use:N \g__prg_map_int :w }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_map_segment_function:nN}
+% This iterates through the segments of the path of the \Verb+spath+ object, applying the specified function to each.
+% The specified function should take two \Verb+N+ type arguments.
+% The first is a token representing the type of path segment, the second is the path segment itself.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_map_segment_function:nN #1#2
+{
+  \spath_get:nnN {#1} {path} \l__spath_tmpd_tl
+  \spath_map_segment_function:NN \l__spath_tmpd_tl #2
+}
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_map_segment_function:NN #1#2
+{
+  \tl_set_eq:NN \l__spath_tmpa_tl #1
   \tl_clear:N \l__spath_tmpb_tl
   \dim_zero:N \l__spath_tmpa_dim
   \dim_zero:N \l__spath_tmpb_dim
@@ -1542,11 +1576,12 @@ and the derived files           spath3.ins,
       
     }
 
-    \use:c { __prg_map_ \int_use:N \g__prg_map_int :w } \l__spath_tmpc_tl \l__spath_tmpb_tl
+    #2 \l__spath_tmpc_tl \l__spath_tmpb_tl
     \tl_clear:N \l__spath_tmpb_tl
 
   }
 }
+\cs_generate_variant:Nn \spath_map_segment_function:NN {Nc}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1702,6 +1737,109 @@ and the derived files           spath3.ins,
 %    \end{macrocode}
 % \end{macro}
 %
+% \subsection{Miscellaneous Commands}
+%
+% \begin{macro}{\spath_split_curve:nnNN}
+% Splits a Bezier cubic into pieces.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_split_curve:nnNN #1#2#3#4
+{
+  \group_begin:
+  \tl_gclear:N \l__spath_smuggle_tl
+  \tl_set_eq:NN \l__spath_tmpa_tl \g__spath_moveto_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl {
+    {\tl_item:nn {#2} {3}}
+    {\tl_item:nn {#2} {4}}
+  }
+  \tl_put_right:NV \l__spath_tmpa_tl \g__spath_curvetoa_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl
+  {
+    {\fp_to_dim:n
+    {
+      (1 - #1) * \tl_item:nn {#2} {2} + (#1) * \tl_item:nn {#2} {5}
+    }}
+    {\fp_to_dim:n
+    {
+      (1 - #1) * \tl_item:nn {#2} {3} + (#1) * \tl_item:nn {#2} {6}
+    }}
+  }
+  \tl_put_right:NV \l__spath_tmpa_tl \g__spath_curvetob_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl
+  {
+    {\fp_to_dim:n
+    {
+      (1 - #1)^2 * \tl_item:nn {#2} {2} + 2 * (1 - #1) * (#1) * \tl_item:nn {#2} {5} + (#1)^2 * \tl_item:nn {#2} {8}
+    }}
+    {\fp_to_dim:n
+    {
+      (1 - #1)^2 * \tl_item:nn {#2} {3} + 2 * (1 - #1) * (#1) * \tl_item:nn {#2} {6} + (#1)^2 * \tl_item:nn {#2} {9}
+    }}
+  }
+  \tl_put_right:NV \l__spath_tmpa_tl \g__spath_curveto_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl
+  {
+    {\fp_to_dim:n
+      {
+      (1 - #1)^3 * \tl_item:nn {#2} {2} + 3 * (1 - #1)^2 * (#1) * \tl_item:nn {#2} {5} + 3 * (1 - #1) * (#1)^2 * \tl_item:nn {#2} {8} + (#1)^3 * \tl_item:nn {#2} {11}
+    }}
+    {\fp_to_dim:n
+    {
+      (1 - #1)^3 * \tl_item:nn {#2} {3} + 3 * (1 - #1)^2 * (#1) * \tl_item:nn {#2} {6} + 3 * (1 - #1) * (#1)^2 * \tl_item:nn {#2} {9} + (#1)^3 * \tl_item:nn {#2} {12}
+    }}
+  }
+  \tl_gset_eq:NN \l__spath_smuggle_tl \l__spath_tmpa_tl
+  \group_end:
+  \tl_set_eq:NN #3 \l__spath_smuggle_tl
+  \group_begin:
+  \tl_set_eq:NN \l__spath_tmpa_tl \g__spath_moveto_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl
+  {
+    {\fp_to_dim:n
+      {
+      (1 - #1)^3 * \tl_item:nn {#2} {2} + 3 * (1 - #1)^2 * (#1) * \tl_item:nn {#2} {5} + 3 * (1 - #1) * (#1)^2 * \tl_item:nn {#2} {8} + (#1)^3 * \tl_item:nn {#2} {11}
+    }}
+    {\fp_to_dim:n
+    {
+      (1 - #1)^3 * \tl_item:nn {#2} {3} + 3 * (1 - #1)^2 * (#1) * \tl_item:nn {#2} {6} + 3 * (1 - #1) * (#1)^2 * \tl_item:nn {#2} {9} + (#1)^3 * \tl_item:nn {#2} {12}
+    }}
+  }
+  \tl_put_right:NV \l__spath_tmpa_tl \g__spath_curvetoa_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl
+  {
+    {\fp_to_dim:n
+    {
+      (1 - #1)^2 * \tl_item:nn {#2} {5} + 2 * (1 - #1) * (#1) * \tl_item:nn {#2} {8} + (#1)^2 * \tl_item:nn {#2} {11}
+    }}
+    {\fp_to_dim:n
+    {
+      (1 - #1)^2 * \tl_item:nn {#2} {6} + 2 * (1 - #1) * (#1) * \tl_item:nn {#2} {9} + (#1)^2 * \tl_item:nn {#2} {12}
+    }}
+  }
+  \tl_put_right:NV \l__spath_tmpa_tl \g__spath_curvetob_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl
+  {
+    {\fp_to_dim:n
+    {
+      (1 - #1) * \tl_item:nn {#2} {8} + (#1) * \tl_item:nn {#2} {11}
+    }}
+    {\fp_to_dim:n
+    {
+      (1 - #1) * \tl_item:nn {#2} {9} + (#1) * \tl_item:nn {#2} {12}
+    }}
+  }
+  \tl_put_right:NV \l__spath_tmpa_tl \g__spath_curveto_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl {
+    {\tl_item:nn {#2} {11}}
+    {\tl_item:nn {#2} {12}}
+  }
+  \tl_gset_eq:NN \l__spath_smuggle_tl \l__spath_tmpa_tl
+  \group_end:
+  \tl_set_eq:NN #4 \l__spath_smuggle_tl
+}
+
+\cs_generate_variant:Nn \spath_split_curve:nnNN {nVNN, VVNN}
+%    \end{macrocode}
+% \end{macro}
 % \iffalse
 %</spath3>
 % \fi
@@ -1749,8 +1887,8 @@ and the derived files           spath3.ins,
     \tikzset{pen~name=#1}
     \pgf@relevantforpicturesizefalse
     \tikz@addmode{
-      \pgfsyssoftpath@getcurrentpath\cal@tmp@path
-      \MakeSPathList{calligraphy pen \pgfkeysvalueof{/tikz/pen~name}}{\cal@tmp@path}
+      \pgfsyssoftpath@getcurrentpath\l__cal_tmpa_tl
+      \MakeSPathList{calligraphy pen \pgfkeysvalueof{/tikz/pen~name}}{\l__cal_tmpa_tl}
       \SPathListPrepare{calligraphy pen \pgfkeysvalueof{/tikz/pen~name}}
       \pgfusepath{discard}%
     }
@@ -1761,8 +1899,8 @@ and the derived files           spath3.ins,
     \int_gzero:N \l__cal_path_component_int
     \cs_set_eq:NN \pgfpathmoveto \cal_moveto:n
     \tikz@addmode{
-      \pgfsyssoftpath@getcurrentpath\cal@tmp@path
-      \MakeSPathList{calligraphy path}{\cal@tmp@path}
+      \pgfsyssoftpath@getcurrentpath\l__cal_tmpa_tl
+      \MakeSPathList{calligraphy path}{\l__cal_tmpa_tl}
       \SPathListPrepare{calligraphy path}
       \CalligraphyPathCreate{calligraphy path}{\pgfkeysvalueof{/tikz/pen~name}}
     }
@@ -1968,7 +2106,7 @@ and the derived files           spath3.ins,
   \int_compare:nTF {\l__cal_tmpa_tl = 1}
   {
     \spath_get:nnN {#1} {path} \l__cal_tmpa_tl
-    \spath_map_segment:Nn \l__cal_tmpa_tl
+    \spath_map_segment_inline:Nn \l__cal_tmpa_tl
     {
       \tl_case:Nnn ##1 {
         \g__spath_lineto_tl {
@@ -1988,7 +2126,7 @@ and the derived files           spath3.ins,
     \int_compare:nT {\l__cal_tmpa_tl = 2}
     {
       \spath_get:nnN {#1} {path} \l__cal_tmpa_tl
-      \spath_map_segment:Nn \l__cal_tmpa_tl
+      \spath_map_segment_inline:Nn \l__cal_tmpa_tl
       {
         \tl_case:Nnn ##1 {
           \g__spath_lineto_tl {
@@ -2097,82 +2235,15 @@ and the derived files           spath3.ins,
 %    \begin{macrocode}
 \cs_new_nopar:Npn \cal_split_curve_in_two:NN #1#2
 {
-  \tl_set_eq:NN \l__cal_tmpc_tl #2
-
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpa_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpb_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpc_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpd_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpe_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpf_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpg_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmph_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \tl_put_right:NV #1 \g__spath_curvetoa_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(\l__cal_tmpa_dim + \l__cal_tmpc_dim)/2}}
-    {\dim_eval:n {(\l__cal_tmpb_dim + \l__cal_tmpd_dim)/2}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curvetob_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(\l__cal_tmpa_dim + 2\l__cal_tmpc_dim + \l__cal_tmpe_dim)/4}}
-    {\dim_eval:n {(\l__cal_tmpb_dim + 2\l__cal_tmpd_dim + \l__cal_tmpf_dim)/4}}
-  }
-  
-  \tl_put_right:NV #1 \g__spath_curveto_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(\l__cal_tmpa_dim + 3\l__cal_tmpc_dim + 3\l__cal_tmpe_dim + \l__cal_tmpg_dim)/8}}
-    {\dim_eval:n {(\l__cal_tmpb_dim + 3\l__cal_tmpd_dim + 3\l__cal_tmpf_dim + \l__cal_tmph_dim)/8}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curvetoa_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(\l__cal_tmpc_dim + 2\l__cal_tmpe_dim + \l__cal_tmpg_dim)/4}}
-    {\dim_eval:n {(\l__cal_tmpd_dim + 2\l__cal_tmpf_dim + \l__cal_tmph_dim)/4}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curvetob_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(\l__cal_tmpe_dim + \l__cal_tmpg_dim)/2}}
-    {\dim_eval:n {(\l__cal_tmpf_dim + \l__cal_tmph_dim)/2}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curveto_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_use:N \l__cal_tmpg_dim}
-    {\dim_use:N \l__cal_tmph_dim}
-  }
-  
+  \spath_split_curve:nVNN {.5} #2 \l_tmpa_tl \l_tmpb_tl
+  \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+  \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+  \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+  \tl_set:Nx \l_tmpb_tl {\tl_tail:N \l_tmpb_tl}
+  \tl_set:Nx \l_tmpb_tl {\tl_tail:N \l_tmpb_tl}
+  \tl_set:Nx \l_tmpb_tl {\tl_tail:N \l_tmpb_tl}
+  \tl_put_right:NV #1 \l_tmpa_tl
+  \tl_put_right:NV #1 \l_tmpb_tl
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2182,103 +2253,22 @@ and the derived files           spath3.ins,
 %    \begin{macrocode}
 \cs_new_nopar:Npn \cal_split_curve_in_three:NN #1#2
 {
-  \tl_set_eq:NN \l__cal_tmpc_tl #2
+  \spath_split_curve:nVNN {1/3} #2 \l_tmpa_tl \l_tmpb_tl
 
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
+  \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+  \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+  \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+  \tl_put_right:NV #1 \l_tmpa_tl
 
-  \dim_set:Nn \l__cal_tmpa_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpb_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpc_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpd_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpe_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpf_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmpg_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \dim_set:Nn \l__cal_tmph_dim {\tl_head:N \l__cal_tmpc_tl}
-  \tl_set:Nx \l__cal_tmpc_tl {\tl_tail:N \l__cal_tmpc_tl}
-
-  \tl_put_right:NV #1 \g__spath_curvetoa_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(2\l__cal_tmpa_dim + \l__cal_tmpc_dim)/3}}
-    {\dim_eval:n {(2\l__cal_tmpb_dim + \l__cal_tmpd_dim)/3}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curvetob_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(4\l__cal_tmpa_dim + 4\l__cal_tmpc_dim + \l__cal_tmpe_dim)/9}}
-    {\dim_eval:n {(4\l__cal_tmpb_dim + 4\l__cal_tmpd_dim + \l__cal_tmpf_dim)/9}}
-  }
-  
-  \tl_put_right:NV #1 \g__spath_curveto_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(8\l__cal_tmpa_dim + 12\l__cal_tmpc_dim + 6\l__cal_tmpe_dim + \l__cal_tmpg_dim)/27}}
-    {\dim_eval:n {(8\l__cal_tmpb_dim + 12\l__cal_tmpd_dim + 6\l__cal_tmpf_dim + \l__cal_tmph_dim)/27}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curvetoa_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(4\l__cal_tmpa_dim + 12\l__cal_tmpc_dim + 9\l__cal_tmpe_dim + 2\l__cal_tmpg_dim)/27}}
-    {\dim_eval:n {(4\l__cal_tmpb_dim + 12\l__cal_tmpd_dim + 9\l__cal_tmpf_dim + 2\l__cal_tmph_dim)/27}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curvetob_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(2\l__cal_tmpa_dim + 9\l__cal_tmpc_dim + 12\l__cal_tmpe_dim + 4\l__cal_tmpg_dim)/27}}
-    {\dim_eval:n {(2\l__cal_tmpb_dim + 9\l__cal_tmpd_dim + 12\l__cal_tmpf_dim + 4\l__cal_tmph_dim)/27}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curveto_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(\l__cal_tmpa_dim + 6\l__cal_tmpc_dim + 12\l__cal_tmpe_dim + 8\l__cal_tmpg_dim)/27}}
-    {\dim_eval:n {(\l__cal_tmpb_dim + 6\l__cal_tmpd_dim + 12\l__cal_tmpf_dim + 8\l__cal_tmph_dim)/27}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curvetoa_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(\l__cal_tmpc_dim + 4\l__cal_tmpe_dim + 4\l__cal_tmpg_dim)/9}}
-    {\dim_eval:n {(\l__cal_tmpd_dim + 4\l__cal_tmpf_dim + 4\l__cal_tmph_dim)/9}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curvetob_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_eval:n {(\l__cal_tmpe_dim + 2\l__cal_tmpg_dim)/3}}
-    {\dim_eval:n {(\l__cal_tmpf_dim + 2\l__cal_tmph_dim)/3}}
-  }
-
-  \tl_put_right:NV #1 \g__spath_curveto_tl
-
-  \tl_put_right:Nx #1 {
-    {\dim_use:N \l__cal_tmpg_dim}
-    {\dim_use:N \l__cal_tmph_dim}
-  }
-
+  \spath_split_curve:nVNN {.5} \l_tmpb_tl \l_tmpa_tl \l_tmpb_tl
+  \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+  \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+  \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+  \tl_set:Nx \l_tmpb_tl {\tl_tail:N \l_tmpb_tl}
+  \tl_set:Nx \l_tmpb_tl {\tl_tail:N \l_tmpb_tl}
+  \tl_set:Nx \l_tmpb_tl {\tl_tail:N \l_tmpb_tl}
+  \tl_put_right:NV #1 \l_tmpa_tl
+  \tl_put_right:NV #1 \l_tmpb_tl
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2717,9 +2707,14 @@ and the derived files           spath3.ins,
 \tl_new:N \l__knot_tmpg_tl
 \tl_new:N \l__knot_redraws_tl
 \tl_new:N \l__knot_clip_width_tl
+\tl_new:N \l__knot_name_tl
+\tl_new:N \l__knot_node_tl
 
+\int_new:N \l__knot_tmpa_int
 \int_new:N \l__knot_strands_int
 \int_new:N \l__knot_intersections_int
+\int_new:N \l__knot_filaments_int
+\int_new:N \l__knot_component_start_int
 
 \dim_new:N \l__knot_tmpa_dim
 \dim_new:N \l__knot_tmpb_dim
@@ -2735,6 +2730,7 @@ and the derived files           spath3.ins,
 
 \bool_new:N \l__knot_prepend_prev_bool
 \bool_new:N \l__knot_append_next_bool
+\bool_new:N \l__knot_skip_bool
 
 \bool_set_true:N \l__knot_ignore_ends_bool
 
@@ -2755,12 +2751,14 @@ and the derived files           spath3.ins,
   },
   knot/.is~family,
   knot/.unknown/.code={%
-    \tl_set:NN \l__knot_tmpa_tl \pgfkeyscurrentname
+    \tl_set_eq:NN \l__knot_tmpa_tl \pgfkeyscurrentname
     \pgfkeysalso{%
       /tikz/\l__knot_tmpa_tl=#1
     }
   },
   knot,
+  name/.store~in=\l__knot_name_tl,
+  name={knot},
   every~ strand/.style={},
   only~ when~ rendering/.style={},
   ignore~ endpoint~ intersections/.code={
@@ -2786,6 +2784,7 @@ and the derived files           spath3.ins,
     \bool_set_true:N \l__knot_self_intersections_bool
     \bool_set_false:N \l__knot_splits_bool
   },
+  consider~ self~ intersections/.default={true},
   clip~ radius/.code={
     \dim_set:Nn \l__knot_clip_radius_dim {#1}
   },
@@ -2824,16 +2823,13 @@ and the derived files           spath3.ins,
   },
   draft/.is~ family,
   draft,
-  clip~ radius/.initial=10pt,
   crossing~ label/.style={
+    overlay,
     fill=white,
     fill~ opacity=.5,
     text~ opacity=1,
     text=blue,
-    anchor=south~ east,
-    append~ after~ command={
-      (\tikzlastnode.center) edge[blue,->] (\tikzlastnode.south~ east)
-    }
+    pin~ edge={blue,<-}
   },
   strand~ label/.style={
     overlay,
@@ -2866,203 +2862,344 @@ and the derived files           spath3.ins,
 \NewDocumentCommand \strand { O{} }
 {
   \int_incr:N \l__knot_strands_int
-  \tl_clear_new:c {l__knot_options_ \int_use:N \l__knot_strands_int}
-  \tl_set:cn {l__knot_options_ \int_use:N \l__knot_strands_int} {#1}
+  \tl_clear_new:c {l__knot_options_strand \int_use:N \l__knot_strands_int}
+  \tl_set:cn {l__knot_options_strand \int_use:N \l__knot_strands_int} {#1}
   \path[#1,save~ knot~ path=knot strand \int_use:N  \l__knot_strands_int]
 }
 
 \NewDocumentEnvironment{knot} { O{} }
 {
+  \knot_initialise:n {#1}
+}
+{
+  \knot_render:
+}
+
+\cs_new_protected_nopar:Npn \knot_initialise:n #1
+{
   \tikzset{knot/.cd,#1}
   \int_zero:N \l__knot_strands_int
   \tl_clear:N \l__knot_redraws_tl
 }
+
+\cs_new_protected_nopar:Npn \knot_render:
 {
   \pgfscope
   \pgftransformreset
-  \int_step_variable:nnnNn {1} {1} {\l__knot_strands_int} \l__knot_tmpa_tl
-  {
-    \pgfscope
-    \group_begin:
-    \tikzset{knot/every~ strand/.try}
-    \knot_apply_style:c {l__knot_options_ \tl_use:N \l__knot_tmpa_tl}
-    \tikzset{knot/only~ when~ rendering}
-    \spath_get:nnN {knot strand \tl_use:N  \l__knot_tmpa_tl} {min bb} \l__knot_tmpb_tl
-    \exp_last_unbraced:NV \pgf@protocolsizes\l__knot_tmpb_tl
-    \spath_get:nnN {knot strand \tl_use:N  \l__knot_tmpa_tl} {max bb} \l__knot_tmpb_tl
-    \exp_last_unbraced:NV \pgf@protocolsizes\l__knot_tmpb_tl
-    \spath_get:nnN {knot strand \tl_use:N  \l__knot_tmpa_tl} {path} \l__knot_tmpb_tl
-    \pgfsyssoftpath@setcurrentpath\l__knot_tmpb_tl
-    \tikz@options
-    \pgfusepath{stroke}
-    \group_end:
-    \endpgfscope
-  }
+  \int_step_function:nnnN {1} {1} {\l__knot_strands_int}  \knot_draw_strand:n
 
   \bool_if:NF \l__knot_super_draft_bool
   {
-    \int_step_variable:nnnNn {1} {1} {\l__knot_strands_int} \l__knot_tmpa_tl
+    \int_step_function:nnnN {1} {1} {\l__knot_strands_int} \knot_draw_labels:n
+
+    \bool_if:NTF \l__knot_self_intersections_bool
     {
-      \bool_if:NT \l__knot_draft_bool
-      {
-        \spath_get:nnN {knot strand \tl_use:N \l__knot_tmpa_tl} {final point} \l__knot_tmpb_tl
-        \dim_set:Nn \l__knot_tmpa_dim {\tl_item:Nn \l__knot_tmpb_tl {1}}
-        \dim_set:Nn \l__knot_tmpb_dim {\tl_item:Nn \l__knot_tmpb_tl {2}}
-        \node[knot/draft/strand~label] at (\l__knot_tmpa_dim,\l__knot_tmpb_dim) {\l__knot_tmpa_tl};
-        \spath_get:nnN {knot strand \tl_use:N \l__knot_tmpa_tl} {initial point} \l__knot_tmpb_tl
-        \dim_set:Nn \l__knot_tmpa_dim {\tl_item:Nn \l__knot_tmpb_tl {1}}
-        \dim_set:Nn \l__knot_tmpb_dim {\tl_item:Nn \l__knot_tmpb_tl {2}}
-        \node[knot/draft/strand~label] at        (\l__knot_tmpa_dim,\l__knot_tmpb_dim) {\l__knot_tmpa_tl};
-      }
-      \bool_if:nT {
-        \l__knot_self_intersections_bool
-        &&
-        \l__knot_splits_bool
-      }
-      {
-        % Do self intersection splits here
-      }
+      \knot_split_strands:
+      \int_set_eq:NN \l__knot_tmpa_int \l__knot_filaments_int
+      \tl_set:Nn \l__knot_prefix_tl {filament}
+    }
+    {
+      \int_set_eq:NN \l__knot_tmpa_int \l__knot_strands_int
+      \tl_set:Nn \l__knot_prefix_tl {strand}
     }
 
-  \bool_if:NT \l__knot_self_intersections_bool
-  {
-    % Split strands into components
-    % Need to hang on to the originals for redraws ... hmmm
+    \int_gzero:N \l__knot_intersections_int
+
+    \bool_if:NTF \l__knot_draft_bool
+    {
+      \tl_set:Nn \l__knot_node_tl 
+      {\node[coordinate,pin={[knot/draft/crossing~ label]{\int_use:N \l__knot_intersections_int}}]}
+    }
+    {
+      \tl_set:Nn \l__knot_node_tl {\node[coordinate]}
+    }
+
+    \int_step_variable:nnnNn {1} {1} {\l__knot_tmpa_int - 1} \l__knot_tmpa_tl
+    {
+      \int_step_variable:nnnNn {\tl_use:N \l__knot_tmpa_tl + 1} {1}     {\l__knot_tmpa_int} \l__knot_tmpb_tl
+      {
+        \knot_intersections:VV \l__knot_tmpa_tl \l__knot_tmpb_tl
+      }
+    }
+    \tl_use:N \l__knot_redraws_tl
   }
-  \int_gzero:N \l__knot_intersections_int
-  \int_step_variable:nnnNn {1} {1} {\l__knot_strands_int - 1} \l__knot_tmpa_tl
-  {
-    \int_step_variable:nnnNn {\tl_use:N \l__knot_tmpa_tl + 1} {1} {\l__knot_strands_int} \l__knot_tmpb_tl
+  \endpgfscope
+}
+
+\cs_new_protected_nopar:Npn \knot_draw_strand:n #1
 {
-  \spath_get:nnN {knot strand \tl_use:N \l__knot_tmpa_tl} {path} \l__knot_tmpc_tl
-  \spath_get:nnN {knot strand \tl_use:N \l__knot_tmpb_tl} {path} \l__knot_tmpd_tl
+  \pgfscope
+  \group_begin:
+  \tikzset{knot/every~ strand/.try}
+  \knot_apply_style:c {l__knot_options_strand #1}
+  \tikzset{knot/only~ when~ rendering}
+  \spath_get:nnN {knot strand #1} {min bb} \l__knot_tmpb_tl
+  \exp_last_unbraced:NV \pgf@protocolsizes\l__knot_tmpb_tl
+  \spath_get:nnN {knot strand #1} {max bb} \l__knot_tmpb_tl
+  \exp_last_unbraced:NV \pgf@protocolsizes\l__knot_tmpb_tl
+  \spath_get:nnN {knot strand #1} {path} \l__knot_tmpb_tl
+  \pgfsyssoftpath@setcurrentpath\l__knot_tmpb_tl
+  \tikz@options
+  \pgfusepath{stroke}
+  \group_end:
+  \endpgfscope
+}
+
+\cs_new_protected_nopar:Npn \knot_draw_labels:n #1
+{
+  \bool_if:NT \l__knot_draft_bool
+  {
+    \spath_get:nnN {knot strand #1} {final point} \l__knot_tmpb_tl
+    \dim_set:Nn \l__knot_tmpa_dim {\tl_item:Nn \l__knot_tmpb_tl {1}}
+    \dim_set:Nn \l__knot_tmpb_dim {\tl_item:Nn \l__knot_tmpb_tl {2}}
+    \node[knot/draft/strand~label] at (\l__knot_tmpa_dim,\l__knot_tmpb_dim) {#1};
+    \spath_get:nnN {knot strand #1} {initial point} \l__knot_tmpb_tl
+    \dim_set:Nn \l__knot_tmpa_dim {\tl_item:Nn \l__knot_tmpb_tl {1}}
+    \dim_set:Nn \l__knot_tmpb_dim {\tl_item:Nn \l__knot_tmpb_tl {2}}
+    \node[knot/draft/strand~label] at (\l__knot_tmpa_dim,\l__knot_tmpb_dim) {#1};
+  }
+  \bool_if:nT {
+    \l__knot_self_intersections_bool
+    &&
+    \l__knot_splits_bool
+  }
+  {
+    \tl_clear:N \l__knot_tmpa_tl
+    \spath_map_segment_function:nN {knot strand #1} \knot_split_self_intersects:NN
+    \spath_put:nnV {knot strand #1} {path} \l__knot_tmpa_tl
+  }
+}
+
+\cs_new_protected_nopar:Npn \knot_split_self_intersects:NN #1#2
+{
+  \tl_case:Nnn #1
+  {
+    \g__spath_curvetoa_tl
+    {
+      \fp_set:Nn \l_tmpa_fp
+      {
+        (\tl_item:Nn #2 {3} - 3 * \tl_item:Nn #2 {6} + 3 * \tl_item:Nn #2 {9} - \tl_item:Nn #2 {12})
+        *
+        (3 * \tl_item:Nn #2 {8} - 3 * \tl_item:Nn #2 {11})
+        -
+        (\tl_item:Nn #2 {2} - 3 * \tl_item:Nn #2 {5} + 3 * \tl_item:Nn #2 {8} - \tl_item:Nn #2 {11})
+        *
+        (3 * \tl_item:Nn #2 {9} - 3 * \tl_item:Nn #2 {12})
+      }
+      \fp_set:Nn \l_tmpb_fp
+      {
+        (\tl_item:Nn #2 {2} - 3 * \tl_item:Nn #2 {5} + 3 * \tl_item:Nn #2 {8} - \tl_item:Nn #2 {11})
+        *
+        (3 * \tl_item:Nn #2 {6} - 6 * \tl_item:Nn #2 {9} + 3 * \tl_item:Nn #2 {12})
+        -
+        (\tl_item:Nn #2 {3} - 3 * \tl_item:Nn #2 {6} + 3 * \tl_item:Nn #2 {9} - \tl_item:Nn #2 {12})
+        *
+        (3 * \tl_item:Nn #2 {5} - 6 * \tl_item:Nn #2 {8} + 3 * \tl_item:Nn #2 {11})
+      }
+      \fp_compare:nTF
+      {
+        \l_tmpb_fp != 0
+      }
+      {
+        \fp_set:Nn \l_tmpa_fp {.5 * \l_tmpa_fp / \l_tmpb_fp}
+        \fp_compare:nTF
+        {
+          0 < \l_tmpa_fp && \l_tmpa_fp < 1
+        }
+        {
+          \spath_split_curve:VVNN \l_tmpa_fp #2 \l_tmpa_tl \l_tmpb_tl
+          \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+          \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+          \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+          \tl_set:Nx \l_tmpb_tl {\tl_tail:N \l_tmpb_tl}
+          \tl_set:Nx \l_tmpb_tl {\tl_tail:N \l_tmpb_tl}
+          \tl_set:Nx \l_tmpb_tl {\tl_tail:N \l_tmpb_tl}
+          \tl_put_right:NV \l__knot_tmpa_tl \l_tmpa_tl
+          \tl_put_right:NV \l__knot_tmpa_tl \l_tmpb_tl
+        }
+        {
+          \tl_set_eq:NN \l_tmpa_tl #2
+          \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+          \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+          \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+          \tl_put_right:NV \l__knot_tmpa_tl \l_tmpa_tl
+        }
+      }
+      {
+        \tl_set_eq:NN \l_tmpa_tl #2
+        \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+        \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+        \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+        \tl_put_right:NV \l__knot_tmpa_tl \l_tmpa_tl
+      }
+    }
+    \g__spath_lineto_tl
+    {
+      \tl_set_eq:NN \l_tmpa_tl #2
+      \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+      \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+      \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
+      \tl_put_right:NV \l__knot_tmpa_tl \l_tmpa_tl
+    }
+  }
+  {
+    \tl_put_right:NV \l__knot_tmpa_tl #2
+  }
+}
+
+\cs_new_protected_nopar:Npn \knot_intersections:nn #1#2
+{
+  \group_begin:
+  \tl_set_eq:NN \l__knot_tmpa_tl \l__knot_prefix_tl
+  \tl_put_right:Nn \l__knot_tmpa_tl {#1}
+  \tl_set_eq:NN \l__knot_tmpb_tl \l__knot_prefix_tl
+  \tl_put_right:Nn \l__knot_tmpb_tl {#2}
+  \spath_get:nnN {knot \tl_use:N \l__knot_tmpa_tl} {path} \l__knot_tmpc_tl
+  \spath_get:nnN {knot \tl_use:N \l__knot_tmpb_tl} {path} \l__knot_tmpd_tl
 
   \pgfintersectionofpaths{\pgfsetpath\l__knot_tmpc_tl}{\pgfsetpath\l__knot_tmpd_tl}
 
   \int_compare:nT {\pgfintersectionsolutions > 0}
   {
-    \int_step_variable:nnnNn {1} {1} {\pgfintersectionsolutions} \l__knot_tmpc_tl
+    \int_step_function:nnnN {1} {1} {\pgfintersectionsolutions} \knot_do_intersection:n
+  }
+  \group_end:
+}
+
+\cs_new_protected_nopar:Npn \knot_do_intersection:n #1
+{
+  \pgfpointintersectionsolution{#1}
+  \dim_set:Nn \l__knot_tmpa_dim {\pgf@x}
+  \dim_set:Nn \l__knot_tmpb_dim {\pgf@y}
+
+  \bool_set_false:N \l__knot_skip_bool
+  \bool_if:NT \l__knot_self_intersections_bool
+  {
+
+    \tl_set:Nn \l_tmpa_tl {knot previous}
+    \tl_put_right:NV \l_tmpa_tl \l__knot_tmpa_tl
+    \tl_set:Nv \l_tmpa_tl \l_tmpa_tl
+    \tl_if_eq:NNT \l_tmpa_tl \l__knot_tmpb_tl
     {
-      \pgfpointintersectionsolution{\l__knot_tmpc_tl}
-      \dim_set:Nn \l__knot_tmpa_dim {\pgf@x}
-      \dim_set:Nn \l__knot_tmpb_dim {\pgf@y}
+      \knot_test_endpoint:Nn \l__knot_tmpb_tl {final point}
+    }
 
-      \int_compare:nTF {\l__knot_tmpa_tl + 1 == \l__knot_tmpb_tl} 
+    \tl_set:Nn \l_tmpa_tl {knot previous}
+    \tl_put_right:NV \l_tmpa_tl \l__knot_tmpb_tl
+    \tl_set:Nv \l_tmpa_tl \l_tmpa_tl
+    \tl_if_eq:NNT \l_tmpa_tl \l__knot_tmpa_tl
+    {
+      \knot_test_endpoint:Nn \l__knot_tmpa_tl {final point}
+    }
+  }
+
+  \bool_if:NT \l__knot_ignore_ends_bool
+  {
+    \knot_test_endpoint:Nn \l__knot_tmpa_tl {initial point}
+    \knot_test_endpoint:Nn \l__knot_tmpa_tl {final point}
+    \knot_test_endpoint:Nn \l__knot_tmpb_tl {initial point}
+    \knot_test_endpoint:Nn \l__knot_tmpb_tl {final point}
+  }
+
+  \bool_if:NF \l__knot_skip_bool
+  {
+
+    \int_gincr:N \l__knot_intersections_int
+    \bool_if:nTF
+    {
+      \tl_if_exist_p:c {l__knot_crossing_ \int_use:N
+        \l__knot_intersections_int}
+      &&
+      ! \tl_if_empty_p:c {l__knot_crossing_ \int_use:N
+        \l__knot_intersections_int}
+    }
+    {
+      \tl_set_eq:NN \l__knot_tmpg_tl \l__knot_tmpb_tl
+    }
+    {
+      \tl_set_eq:NN \l__knot_tmpg_tl \l__knot_tmpa_tl
+    }
+
+    \bool_if:NT \l__knot_self_intersections_bool
+    {
+      \spath_get:nnN {knot \tl_use:N \l__knot_tmpg_tl} {initial point} \l__knot_tmpd_tl
+      \bool_set:Nn \l__knot_prepend_prev_bool
       {
-        \spath_get:nnN {knot strand \tl_use:N \l__knot_tmpa_tl} {final point} \l__knot_tmpd_tl
-        \spath_get:nnN {knot strand \tl_use:N \l__knot_tmpb_tl} {initial point} \l__knot_tmpe_tl
-        \bool_set:Nn \l__knot_skip_bool
+        \dim_compare_p:n
         {
-          \dim_compare_p:n
-          {
-            \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpd_tl {1}}
-            +
-            \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpd_tl {2}}
-            <
-            \l__knot_tolerance_dim
-          }
-          &&
-          \dim_compare_p:n
-          {
-            \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpe_tl {1}}
-            +
-            \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpe_tl {2}}
-            <
-            \l__knot_tolerance_dim
-          }
+          \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpd_tl {1}}
+          +
+          \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpd_tl {2}}
+          <
+          \l__knot_tolerance_dim
         }
       }
+
+      \spath_get:nnN {knot \tl_use:N \l__knot_tmpg_tl} {final point} \l__knot_tmpd_tl
+      \bool_set:Nn \l__knot_append_next_bool
       {
-        \bool_set_false:N \l__knot_skip_bool
+        \dim_compare_p:n
+        {
+          \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpd_tl {1}}
+          +
+          \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpd_tl {2}}
+          <
+          \l__knot_tolerance_dim
+        }
       }
 
-      \bool_if:NF \l__knot_skip_bool
+      \bool_if:nT
       {
+        \l__knot_prepend_prev_bool || \l__knot_append_next_bool
+      }
+      {
+        \spath_clone:nn {knot \tl_use:N \l__knot_tmpg_tl}
+        {knot \tl_use:N \l__knot_prefix_tl -1}
 
-      % Need to use the above booleans if we've exploded our paths
-      % which we haven't implemented as yet ...
-        \int_gincr:N \l__knot_intersections_int
-        \bool_if:nTF
+        \tl_set_eq:cc {l__knot_options_ \tl_use:N \l__knot_prefix_tl -1} {l__knot_options_ \tl_use:N \l__knot_tmpg_tl}
+
+        \bool_if:NT \l__knot_prepend_prev_bool
         {
-          \tl_if_exist_p:c {l__knot_crossing_ \int_use:N
-            \l__knot_intersections_int}
-          &&
-          ! \tl_if_empty_p:c {l__knot_crossing_ \int_use:N
-            \l__knot_intersections_int}
-        }
-        {
-          \tl_set_eq:NN \l__knot_tmpg_tl \l__knot_tmpb_tl
-        }
-        {
-          \tl_set_eq:NN \l__knot_tmpg_tl \l__knot_tmpa_tl
+          \spath_prepend_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:N \l__knot_tmpg_tl}}
         }
 
-        \spath_get:nnN {knot strand \tl_use:N \l__knot_tmpg_tl} {initial point} \l__knot_tmpd_tl
-        \bool_set:Nn \l__knot_prepend_prev_bool
+        \bool_if:NT \l__knot_append_next_bool
         {
-          \dim_compare_p:n
-          {
-            \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpd_tl {1}}
-            +
-            \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpd_tl {2}}
-            <
-            \l__knot_tolerance_dim
-          }
+          \spath_append_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:N \l__knot_tmpg_tl}}
         }
 
-        \spath_get:nnN {knot strand \tl_use:N \l__knot_tmpg_tl} {final point} \l__knot_tmpd_tl
-        \bool_set:Nn \l__knot_append_next_bool
-        {
-          \dim_compare_p:n
-          {
-            \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpd_tl {1}}
-            +
-            \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpd_tl {2}}
-            <
-            \l__knot_tolerance_dim
-          }
-        }
+        \tl_set:Nn \l__knot_tmpg_tl {\tl_use:N \l__knot_prefix_tl -1}
+      }
+    }
 
-        \bool_if:nT
-        {
-          \l__knot_prepend_prev_bool || \l__knot_append_next_bool
-        }
-        {
+    \knot_draw_crossing:nVV {\tl_use:N \l__knot_tmpg_tl} \l__knot_tmpa_dim \l__knot_tmpb_dim
 
-          \spath_clone:nn {knot strand \tl_use:N \l__knot_tmpg_tl}
-          {knot strand -1}
-          \tl_set_eq:cc {l__knot_options_ \tl_use:N \l__knot_tmpg_tl} {l__knot_options_ -1}
+    \tl_use:N \l__knot_node_tl (\l__knot_name_tl \c_space_tl \int_use:N \l__knot_intersections_int) at (\l__knot_tmpa_dim, \l__knot_tmpb_dim) {};
 
-          \bool_if:NT \l__knot_prepend_prev_bool
-          {
-            \spath_prepend_no_move:nn {knot strand -1} {knot strand
-            \int_eval:n {\tl_use:N \l__knot_tmpg_tl - 1}}
-          }
+  }
+}
 
-          \bool_if:NT \l__knot_append_next_bool
-          {
-            \spath_append_no_move:nn {knot strand -1} {knot strand
-            \int_eval:n {\tl_use:N \l__knot_tmpg_tl + 1}}
-          }
+\cs_generate_variant:Nn \knot_intersections:nn {VV}
 
-          \tl_set:Nn \l__knot_tmpg_tl {-1}
-        }
 
-        \knot_draw_crossing:VVV \l__knot_tmpg_tl \l__knot_tmpa_dim \l__knot_tmpb_dim
-        \bool_if:NT \l__knot_draft_bool
-        {
-          \node[knot/draft/crossing~ label] at (\l__knot_tmpa_dim, \l__knot_tmpb_dim) {\int_use:N  \l__knot_intersections_int};
-        }
+\cs_new_protected_nopar:Npn \knot_test_endpoint:Nn #1#2
+{
+  \bool_if:NF \l__knot_skip_bool
+  {
+    \spath_get:nnN {knot #1} {#2} \l__knot_tmpd_tl
+    \bool_set:Nn \l__knot_skip_bool
+    {
+      \dim_compare_p:n
+      {
+        \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpd_tl {1}}
+        +
+        \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpd_tl {2}}
+        <
+        \l__knot_tolerance_dim
       }
     }
   }
 }
-  }
-  \tl_use:N \l__knot_redraws_tl
-  }
-  \endpgfscope
-}
-
 
 \cs_new_nopar:Npn \knot_draw_crossing:nnn #1#2#3
 {
@@ -3074,7 +3211,7 @@ and the derived files           spath3.ins,
   \knot_apply_style:c {l__knot_options_ #1}
   \tikzset{knot@bg,line~ width= \tl_use:N \l__knot_clip_width_tl * \pgflinewidth}
 
-  \spath_get:nnN {knot strand #1} {path} \l__knot_tmpd_tl
+  \spath_get:nnN {knot #1} {path} \l__knot_tmpd_tl
   \pgfsyssoftpath@setcurrentpath\l__knot_tmpd_tl
   \tikz@options
   \pgfusepath{stroke}
@@ -3088,7 +3225,7 @@ and the derived files           spath3.ins,
   \knot_apply_style:c {l__knot_options_ #1}
   \tikzset{knot/only~ when~ rendering}
 
-  \spath_get:nnN {knot strand #1} {path} \l__knot_tmpd_tl
+  \spath_get:nnN {knot #1} {path} \l__knot_tmpd_tl
   \pgfsyssoftpath@setcurrentpath\l__knot_tmpd_tl
   \tikz@options
   \pgfusepath{stroke}
@@ -3097,14 +3234,88 @@ and the derived files           spath3.ins,
   \group_end:
 }
 
-\cs_generate_variant:Nn \knot_draw_crossing:nnn {VVV}
+\cs_generate_variant:Nn \knot_draw_crossing:nnn {nVV}
+
+\cs_new_protected_nopar:Npn \knot_split_strands:
+{
+  \int_gzero:N \l__knot_filaments_int
+  \int_step_function:nnnN {1} {1} {\l__knot_strands_int} \knot_split_strand:n
+  \int_step_function:nnnN {1} {1} {\l__knot_filaments_int} \knot_compute_nexts:n
+}
+
+\cs_new_protected_nopar:Npn \knot_compute_nexts:n #1
+{
+  \tl_clear_new:c {knot next \tl_use:c {knot previous filament #1}}
+  \tl_set:cn {knot next \tl_use:c {knot previous filament #1}} {#1}
+}
+
+\cs_new_protected_nopar:Npn \knot_split_strand:n #1
+{
+  \int_set_eq:NN \l__knot_component_start_int \l__knot_filaments_int
+  \int_incr:N \l__knot_component_start_int
+  \spath_map_segment_function:nN {knot strand #1} \knot_save_filament:NN
+}
+
+\cs_new_protected_nopar:Npn \knot_save_filament:NN #1#2
+{
+  \tl_case:Nnn #1
+  {
+    \g__spath_moveto_tl
+    {
+      \int_compare:nT {\l__knot_component_start_int < \l__knot_filaments_int}
+      {
+        \int_set_eq:NN \l__knot_component_start_int \l__knot_filaments_int
+      }
+    }
+    \g__spath_lineto_tl
+    {
+      \int_gincr:N \l__knot_filaments_int
+      \spath_clear_new:n {knot filament \int_use:N \l__knot_filaments_int}
+      \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} #2
+      \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
+      \int_compare:nF {\l__knot_component_start_int == \l__knot_filaments_int}
+      {
+        \tl_set:cx {knot previous filament \int_use:N \l__knot_filaments_int} {filament \int_eval:n {\l__knot_filaments_int - 1}}
+      }
+    }
+    \g__spath_curvetoa_tl
+    {
+      \int_gincr:N \l__knot_filaments_int
+      \spath_clear_new:n {knot filament \int_use:N \l__knot_filaments_int}
+      \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} #2
+      \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
+      \int_compare:nF {\l__knot_component_start_int == \l__knot_filaments_int}
+      {
+        \tl_set:cx {knot previous filament \int_use:N \l__knot_filaments_int} {filament \int_eval:n {\l__knot_filaments_int - 1}}
+      }
+    }
+    \g__spath_close_tl
+    {
+      \int_gincr:N \l__knot_filaments_int
+      \spath_clear_new:n {knot filament \int_use:N \l__knot_filaments_int}
+      \tl_set_eq:NN \l_tmpa_tl #2
+      \tl_set:Nx \l_tmpa_tl {\tl_item:Nn #2 {1}\tl_item:Nn #2 {2}\tl_item:Nn #2 {3}}
+      \tl_put_right:NV \l_tmpa_tl \g__spath_lineto_tl
+      \tl_set:Nx \l_tmpa_tl {\tl_item:Nn #2 {5}\tl_item:Nn #2 {6}}
+      \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} \l_tmpa_tl
+      \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
+      \int_compare:nF {\l__knot_component_start_int == \l__knot_filaments_int}
+      {
+        \tl_set:cx {knot previous filament \int_use:N \l__knot_filaments_int} {filament \int_eval:n {\l__knot_filaments_int - 1}}
+      }
+      \tl_set:cx {knot previous filament \int_use:N \l__knot_component_start_int} {filament \int_use:N \l__knot_filaments_int}
+    }
+  }
+  {
+  }
+}
 
 \NewDocumentCommand \redraw { m m }
 {
   \tikz@scan@one@point\pgfutil@firstofone #2 \relax
   \tl_put_right:Nn \l__knot_redraws_tl {\knot_draw_crossing:nnn}
   \tl_put_right:Nx \l__knot_redraws_tl {
-    {#1} {\dim_use:N \pgf@x} {\dim_use:N \pgf@y}
+    {strand #1} {\dim_use:N \pgf@x} {\dim_use:N \pgf@y}
   }
 }
 
