@@ -11,6 +11,7 @@ See http://www.latex-project.org/lppl.txt
 ----------------------------------------------------------------
 
 This package defines some functions used to manipulate PGFs soft paths.
+As applications of its use, included are a package for drawing calligraphic paths and a package for drawing knot diagrams.
 %</readme>
 %<*internal>
 \fi
@@ -46,10 +47,17 @@ http://www.latex-project.org/lppl.txt
 This work is "maintained" (as per LPPL maintenance status) by
 Andrew Stacey.
 
-This work consists of the file  spath3.dtx
-and the derived files           spath3.ins,
-                                spath3.pdf, and
-                                spath3.sty.
+This work consists of the files  spath3.dtx
+                                 calligraphy_doc.tex
+                                 knot_doc.tex
+and the derived files            spath3.ins,
+                                 spath3.pdf,
+                                 spath3.sty,
+                                 tikzlibrarycalligraphy.code.tex
+                                 tikzlibraryknots.code.tex
+                                 calligraphy_doc.pdf
+                                 knots_doc.pdf
+                                 README.txt
 
 \endpostamble
 \usedir{tex/latex/spath3}
@@ -123,6 +131,7 @@ and the derived files           spath3.ins,
 %</driver>
 % \fi
 %
+% \CheckSum{4024}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -162,7 +171,9 @@ and the derived files           spath3.ins,
 % They can therefore still be manipulated by \TeX, and as they have a very rigid form (and limited vocabulary), they are relatively easy to modify.
 % This package provides some methods for working with these paths.
 % It is not really intended for use by end users but as a foundation on which other packages can be built.
-% As an example, the \Verb+calligraphy+ package is included which simulates a calligraphic pen stroking a path.
+% As examples, the \Verb+calligraphy+ package and the \Verb+knot+ package are included.
+% The first of these simulates a calligraphic pen stroking a path.
+% The second can be used to draw knot (and similar) diagrams.
 %
 % The format of a soft path is a sequence of triples of the form \Verb+\macro {dimension}{dimension}+.
 % The macro is one of a short list, the dimensions are coordinates in points.
@@ -182,7 +193,8 @@ and the derived files           spath3.ins,
 \NeedsTeXFormat{LaTeX2e}
 \RequirePackage{expl3}
 \RequirePackage{pgf}
-\ProvidesExplPackage {spath3} {2013/04/09} {1.0} {Functions for manipulating PGF soft paths}
+\ProvidesExplPackage {spath3} {2013/04/09} {1.0} {Functions for
+manipulating PGF soft paths}
 \RequirePackage{xparse}
 %    \end{macrocode}
 %
@@ -380,6 +392,70 @@ and the derived files           spath3.ins,
     }
   }
 }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_get_current_path:n}
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_get_current_path:n #1
+{
+  \pgfsyssoftpath@getcurrentpath\l__knot_tmpa_tl
+  \spath_clear_new:n {#1}
+  \spath_put:nnV {#1} {path} \l__knot_tmpa_tl
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_set_current_path:n}
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_set_current_path:n #1
+{
+  \spath_get:nnN {#1} {min bb} \l__spath_tmpa_tl
+  \exp_last_unbraced:NV \pgf@protocolsizes\l__spath_tmpa_tl
+
+  \spath_get:nnN {#1} {max bb} \l__spath_tmpa_tl
+  \exp_last_unbraced:NV \pgf@protocolsizes\l__spath_tmpa_tl
+
+  \spath_get:nnN {#1} {path} \l__spath_tmpa_tl
+  \pgfsyssoftpath@setcurrentpath\l__spath_tmpa_tl
+  \pgfsyssoftpath@flushcurrentpath
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_use_path:nn}
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_use_path:nn #1#2
+{
+  \spath_set_current_path:n {#1}
+  \pgfusepath{#2}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_protocol_path:n}
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_protocol_path:n #1
+{
+  \spath_get:nnN {#1} {min bb} \l__spath_tmpa_tl
+  \exp_last_unbraced:NV \pgf@protocolsizes\l__spath_tmpa_tl
+
+  \spath_get:nnN {#1} {max bb} \l__spath_tmpa_tl
+  \exp_last_unbraced:NV \pgf@protocolsizes\l__spath_tmpa_tl
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_tikz_path:nn}
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_tikz_path:nn #1#2
+{
+  \path[#1] \pgfextra{
+    \spath_get:nnN {#2} {path} \l__spath_tmpa_tl
+    \pgfsyssoftpath@setcurrentpath \l__spath_tmpa_tl
+  };
+}
+\cs_generate_variant:Nn \spath_tikz_path:nn {Vn}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1737,6 +1813,19 @@ and the derived files           spath3.ins,
 %    \end{macrocode}
 % \end{macro}
 %
+% Interfaces via TikZ keys.
+%     \begin{macrocode}
+\tikzset{
+  save~spath/.code={
+    \tikz@addmode{
+      \spath_get_current_path:n {#1}
+    }
+  },
+  restore~spath/.code={
+    \spath_set_current_path:n {#1}
+  },
+}
+%    \end{macrocode}
 % \subsection{Miscellaneous Commands}
 %
 % \begin{macro}{\spath_split_curve:nnNN}
@@ -2029,11 +2118,7 @@ and the derived files           spath3.ins,
       {
         \cal_at_least_three:n {calligraphy temp path}
 
-        \__spath_get:nnN {calligraphy temp path} {min bb} \l__spath_tmpa_tl
-        \exp_last_unbraced:NV \pgf@protocolsizes\l__spath_tmpa_tl
-
-        \__spath_get:nnN {calligraphy temp path} {max bb} \l__spath_tmpa_tl
-        \exp_last_unbraced:NV \pgf@protocolsizes\l__spath_tmpa_tl
+        \spath_protocol_path:n {calligraphy temp path}
 
         \__spath_get:nnN {calligraphy temp path} {path} \l__spath_tmpa_tl
 
@@ -2051,14 +2136,8 @@ and the derived files           spath3.ins,
         \spath_reverse:n {##1}
         \spath_reverse:n {####1}
 
-        \__spath_get:nnN {calligraphy temp path} {min bb} \l__spath_tmpa_tl
-        \exp_last_unbraced:NV \pgf@protocolsizes\l__spath_tmpa_tl
+        \spath_set_current_path:n {calligraphy temp path}
 
-        \__spath_get:nnN {calligraphy temp path} {max bb} \l__spath_tmpa_tl
-        \exp_last_unbraced:NV \pgf@protocolsizes\l__spath_tmpa_tl
-
-        \__spath_get:nnN {calligraphy temp path} {path} \l__spath_tmpa_tl
-        \pgfsyssoftpath@setcurrentpath\l__spath_tmpa_tl
         \tikz@options
         \pgfsetfillcolor{\pgfkeysvalueof{/tikz/pen~colour}}
         \pgfusepath{fill}
@@ -2684,15 +2763,9 @@ and the derived files           spath3.ins,
 %
 % \subsection{Initialisation}
 %
-% Test the version of PGF to see if it's what we expect.
-% If not, issue a warning (but continue anyway; after all, it \emph{might just work}).
+% We load the \Verb+spath3+ library and the \Verb+intersections+ TikZ library.
+% Then we get going.
 %    \begin{macrocode}
-\def\knot@pgfversion{2.10}%
-\ifx\pgfversion\knot@pgfversion
-\else
-\PackageWarning{knots}{This package was designed using PGF2.10; you are using \pgfversion.}%
-\fi
-
 \RequirePackage{spath3}
 \usetikzlibrary{intersections}
 
@@ -2733,34 +2806,52 @@ and the derived files           spath3.ins,
 \bool_new:N \l__knot_skip_bool
 
 \bool_set_true:N \l__knot_ignore_ends_bool
-
+%    \end{macrocode}
+%
+% Configuration is via TikZ keys and styles.
+%    \begin{macrocode}
 \tikzset{
-  save~knot~path/.code={
-    \tikz@addmode{
-      \pgfsyssoftpath@getcurrentpath\l__knot_tmpa_tl
-      \MakeSPath{#1}{\l__knot_tmpa_tl}
+  knot/.code={
+    \tl_if_eq:nnTF {#1} {none}
+    {
+      \tikz@addmode{\tikz@mode@doublefalse}
+    }
+    {
+      \tikz@addmode{\tikz@mode@doubletrue}
+      \tl_if_empty:nTF {#1}
+      {
+        \pgfsetinnerstrokecolor{\tikz@strokecolor}
+      }
+      {
+        \pgfsetinnerstrokecolor{#1}
+      }
+      \tikz@addoption{\pgfsetstrokecolor{knotbg}}
+      \tl_set:Nn \tikz@double@setup{
+        \pgfsetinnerlinewidth{\pgflinewidth}
+        \pgfsetlinewidth{\dim_eval:n {\tl_use:N \l__knot_gap_tl \pgflinewidth}}
+      }
     }
   },
-  restore~knot~path/.code={
-    \SPathInfoInto{#1}{min bb}{\l__knot_tmpa_tl}
-    \exp_last_unbraced:NV \pgf@protocolsizes \l__knot_tmpa_tl
-    \SPathInfoInto{#1}{maxbb}{\l__knot_tmpa_tl}
-    \exp_last_unbraced:NV \pgf@protocolsizes \l__knot_tmpa_tl
-    \SPathInfoInto{#1}{path}{\l__knot_tmpa_tl}
-    \pgfsyssoftpath@setcurrentpath\l__knot_tmpa_tl
-  },
-  knot/.is~family,
-  knot/.unknown/.code={%
+  knot~ gap/.store~ in=\l__knot_gap_tl,
+  knot~ gap=3,
+  knot~ diagram/.is~family,
+  knot~ diagram/.unknown/.code={
     \tl_set_eq:NN \l__knot_tmpa_tl \pgfkeyscurrentname
-    \pgfkeysalso{%
+    \pgfkeysalso{
       /tikz/\l__knot_tmpa_tl=#1
     }
   },
-  knot,
+  background~ colour/.code={%
+    \colorlet{knotbg}{#1}%
+  },
+  background~ color/.code={%
+    \colorlet{knotbg}{#1}%
+  },
+  background~ colour=white,
+  knot~ diagram,
   name/.store~in=\l__knot_name_tl,
   name={knot},
-  every~ strand/.style={},
-  only~ when~ rendering/.style={},
+  every~ strand/.style={draw},
   ignore~ endpoint~ intersections/.code={
     \tl_if_eq:nnTF {#1} {true}
     {
@@ -2801,13 +2892,6 @@ and the derived files           spath3.ins,
     \tl_clear_new:c {l__knot_crossing_#1}
     \tl_set:cn {l__knot_crossing_#1} {x}
   },
-  background~ colour/.code={%
-    \colorlet{knot@bg}{#1}%
-  },
-  background~ color/.code={%
-    \colorlet{knot@bg}{#1}%
-  },
-  background~ colour=white,
   draft~ mode/.is~ choice,
   draft~ mode/off/.code={%
     \bool_set_false:N \l__knot_draft_bool
@@ -2844,6 +2928,7 @@ and the derived files           spath3.ins,
 }
 %    \end{macrocode}
 %
+% Wrapper around \Verb+\tikzset+ for applying keys from a token list, checking for if the given token list exists.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \knot_apply_style:N #1
 {
@@ -2852,21 +2937,34 @@ and the derived files           spath3.ins,
   }
 }
 \cs_generate_variant:Nn \knot_apply_style:N {c}
-
-
+%    \end{macrocode}
+%
+%\begin{macro}{\flipcrossings}
+% The user can specify a comma separated list of crossings to flip.
+%    \begin{macrocode}
 \NewDocumentCommand \flipcrossings {m}
 {
-  \tikzset{knot/flip~ crossing/.list={#1}}%
+  \tikzset{knot~ diagram/flip~ crossing/.list={#1}}%
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\strand}
+% This is how the user specifies a strand of the knot.
+%    \begin{macrocode}
 \NewDocumentCommand \strand { O{} }
 {
   \int_incr:N \l__knot_strands_int
   \tl_clear_new:c {l__knot_options_strand \int_use:N \l__knot_strands_int}
   \tl_set:cn {l__knot_options_strand \int_use:N \l__knot_strands_int} {#1}
-  \path[#1,save~ knot~ path=knot strand \int_use:N  \l__knot_strands_int]
+  \path[#1,save~ spath=knot strand \int_use:N  \l__knot_strands_int]
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{knot}
+% This is the wrapper environment that calls the knot generation code.
+%    \begin{macrocode}
 \NewDocumentEnvironment{knot} { O{} }
 {
   \knot_initialise:n {#1}
@@ -2874,24 +2972,47 @@ and the derived files           spath3.ins,
 {
   \knot_render:
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_initialise:n}
+% Set up some stuff before loading in the strands.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_initialise:n #1
 {
-  \tikzset{knot/.cd,#1}
+  \tikzset{knot~ diagram/.cd,every~ knot~ diagram/.try,#1}
   \int_zero:N \l__knot_strands_int
   \tl_clear:N \l__knot_redraws_tl
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_render:}
+% This is the code that starts the work of rendering the knot.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_render:
 {
+%    \end{macrocode}
+% Start a scope and reset the transformation (since all transformations have already been taken into account when defining the strands).
+%    \begin{macrocode}
   \pgfscope
   \pgftransformreset
+%    \end{macrocode}
+% Loop through the strands drawing each one for the first time.
+%    \begin{macrocode}
   \int_step_function:nnnN {1} {1} {\l__knot_strands_int}  \knot_draw_strand:n
-
+%    \end{macrocode}
+% In super draft mode we don't do anything else.
+%    \begin{macrocode} 
   \bool_if:NF \l__knot_super_draft_bool
   {
+%    \end{macrocode}
+% In draft mode we draw labels at the ends of the strands; this also handles splitting curves to avoid self-intersections of Bezier curves if that's requested.
+%    \begin{macrocode}
     \int_step_function:nnnN {1} {1} {\l__knot_strands_int} \knot_draw_labels:n
-
+%    \end{macrocode}
+% If we're considering self intersections we need to split the strands into filaments.
+%    \begin{macrocode}
     \bool_if:NTF \l__knot_self_intersections_bool
     {
       \knot_split_strands:
@@ -2902,18 +3023,24 @@ and the derived files           spath3.ins,
       \int_set_eq:NN \l__knot_tmpa_int \l__knot_strands_int
       \tl_set:Nn \l__knot_prefix_tl {strand}
     }
-
+%    \end{macrocode}
+% Initialise the intersection count.
+%    \begin{macrocode}
     \int_gzero:N \l__knot_intersections_int
-
+%    \end{macrocode}
+% If in draft mode we label the intersections, otherwise we just stick a coordinate at each one.
+%    \begin{macrocode}
     \bool_if:NTF \l__knot_draft_bool
     {
       \tl_set:Nn \l__knot_node_tl 
-      {\node[coordinate,pin={[knot/draft/crossing~ label]{\int_use:N \l__knot_intersections_int}}]}
+      {\node[coordinate,pin={[knot~ diagram/draft/crossing~ label]{\int_use:N \l__knot_intersections_int}}]}
     }
     {
       \tl_set:Nn \l__knot_node_tl {\node[coordinate]}
     }
-
+%    \end{macrocode}
+% This double loop steps through the pieces (strands or filaments) and computes the intersections and does stuff with those.
+%    \begin{macrocode}
     \int_step_variable:nnnNn {1} {1} {\l__knot_tmpa_int - 1} \l__knot_tmpa_tl
     {
       \int_step_variable:nnnNn {\tl_use:N \l__knot_tmpa_tl + 1} {1}     {\l__knot_tmpa_int} \l__knot_tmpb_tl
@@ -2921,30 +3048,41 @@ and the derived files           spath3.ins,
         \knot_intersections:VV \l__knot_tmpa_tl \l__knot_tmpb_tl
       }
     }
+%    \end{macrocode}
+% If any redraws were requested, do them here.
+%    \begin{macrocode}
     \tl_use:N \l__knot_redraws_tl
   }
+%    \end{macrocode}
+% Close the scope
+%    \begin{macrocode}
   \endpgfscope
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_draw_strand:n}
+% This renders a strand using the options originally specified.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_draw_strand:n #1
 {
   \pgfscope
   \group_begin:
-  \tikzset{knot/every~ strand/.try}
-  \knot_apply_style:c {l__knot_options_strand #1}
-  \tikzset{knot/only~ when~ rendering}
-  \spath_get:nnN {knot strand #1} {min bb} \l__knot_tmpb_tl
-  \exp_last_unbraced:NV \pgf@protocolsizes\l__knot_tmpb_tl
-  \spath_get:nnN {knot strand #1} {max bb} \l__knot_tmpb_tl
-  \exp_last_unbraced:NV \pgf@protocolsizes\l__knot_tmpb_tl
-  \spath_get:nnN {knot strand #1} {path} \l__knot_tmpb_tl
-  \pgfsyssoftpath@setcurrentpath\l__knot_tmpb_tl
-  \tikz@options
-  \pgfusepath{stroke}
+  \tl_set:Nn \l_tmpa_tl {knot~ diagram/every~ strand/.try,}
+  \tl_put_right:Nv \l_tmpa_tl {l__knot_options_strand #1}
+  \tl_put_right:Nn \l_tmpa_tl {,knot~ diagram/only~ when~ rendering/.try,only~ when~ rendering/.try}
+  \spath_tikz_path:Vn \l_tmpa_tl {knot strand #1}
   \group_end:
   \endpgfscope
 }
-
+\cs_generate_variant:Nn \tl_put_right:Nn {Nv}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_draw_labels:n}
+% Draw a label at each end of each strand, if in draft mode.
+% Also, if requested, split potentially self intersecting Bezier curves.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_draw_labels:n #1
 {
   \bool_if:NT \l__knot_draft_bool
@@ -2952,11 +3090,11 @@ and the derived files           spath3.ins,
     \spath_get:nnN {knot strand #1} {final point} \l__knot_tmpb_tl
     \dim_set:Nn \l__knot_tmpa_dim {\tl_item:Nn \l__knot_tmpb_tl {1}}
     \dim_set:Nn \l__knot_tmpb_dim {\tl_item:Nn \l__knot_tmpb_tl {2}}
-    \node[knot/draft/strand~label] at (\l__knot_tmpa_dim,\l__knot_tmpb_dim) {#1};
+    \node[knot~ diagram/draft/strand~label] at (\l__knot_tmpa_dim,\l__knot_tmpb_dim) {#1};
     \spath_get:nnN {knot strand #1} {initial point} \l__knot_tmpb_tl
     \dim_set:Nn \l__knot_tmpa_dim {\tl_item:Nn \l__knot_tmpb_tl {1}}
     \dim_set:Nn \l__knot_tmpb_dim {\tl_item:Nn \l__knot_tmpb_tl {2}}
-    \node[knot/draft/strand~label] at (\l__knot_tmpa_dim,\l__knot_tmpb_dim) {#1};
+    \node[knot~ diagram/draft/strand~label] at (\l__knot_tmpa_dim,\l__knot_tmpb_dim) {#1};
   }
   \bool_if:nT {
     \l__knot_self_intersections_bool
@@ -2969,7 +3107,15 @@ and the derived files           spath3.ins,
     \spath_put:nnV {knot strand #1} {path} \l__knot_tmpa_tl
   }
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_split_self_intersects:NN}
+% This is the macro that does the split.
+% Figuring out whether a Bezier cubic self intersects is apparently a difficult problem so we don't bother.
+% We compute a point such that if there is an intersection then it lies on either side of the point.
+% I don't recall where the formula came from!
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_split_self_intersects:NN #1#2
 {
   \tl_case:Nnn #1
@@ -3046,7 +3192,12 @@ and the derived files           spath3.ins,
     \tl_put_right:NV \l__knot_tmpa_tl #2
   }
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_intersections:nn}
+% This computes the intersections of two pieces and steps through them.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_intersections:nn #1#2
 {
   \group_begin:
@@ -3065,23 +3216,38 @@ and the derived files           spath3.ins,
   }
   \group_end:
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_do_intersection:n}
+% This handles a specific intersection.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_do_intersection:n #1
 {
+%    \end{macrocode}
+% Get the intersection coordinates.
+%    \begin{macrocode}
   \pgfpointintersectionsolution{#1}
   \dim_set:Nn \l__knot_tmpa_dim {\pgf@x}
   \dim_set:Nn \l__knot_tmpb_dim {\pgf@y}
-
+%    \end{macrocode}
+% If we're dealing with filaments, we can get false positives from the end points.
+%    \begin{macrocode}
   \bool_set_false:N \l__knot_skip_bool
   \bool_if:NT \l__knot_self_intersections_bool
   {
-
+%    \end{macrocode}
+% If one filament preceded the other, test for the intersection being at the relevant end point.
+%    \begin{macrocode}
     \tl_set:Nn \l_tmpa_tl {knot previous}
     \tl_put_right:NV \l_tmpa_tl \l__knot_tmpa_tl
     \tl_set:Nv \l_tmpa_tl \l_tmpa_tl
     \tl_if_eq:NNT \l_tmpa_tl \l__knot_tmpb_tl
     {
-      \knot_test_endpoint:Nn \l__knot_tmpb_tl {final point}
+      \knot_test_endpoint:VnT \l__knot_tmpb_tl {final point}
+      {
+        \bool_set_true:N \l__knot_skip_bool
+      }
     }
 
     \tl_set:Nn \l_tmpa_tl {knot previous}
@@ -3089,22 +3255,46 @@ and the derived files           spath3.ins,
     \tl_set:Nv \l_tmpa_tl \l_tmpa_tl
     \tl_if_eq:NNT \l_tmpa_tl \l__knot_tmpa_tl
     {
-      \knot_test_endpoint:Nn \l__knot_tmpa_tl {final point}
+      \knot_test_endpoint:VnT \l__knot_tmpa_tl {final point}
+      {
+        \bool_set_true:N \l__knot_skip_bool
+      }
     }
   }
-
+%    \end{macrocode}
+% The can also say that end points of filaments (or strands) should simply be ignored anyway.
+%    \begin{macrocode}
   \bool_if:NT \l__knot_ignore_ends_bool
   {
-    \knot_test_endpoint:Nn \l__knot_tmpa_tl {initial point}
-    \knot_test_endpoint:Nn \l__knot_tmpa_tl {final point}
-    \knot_test_endpoint:Nn \l__knot_tmpb_tl {initial point}
-    \knot_test_endpoint:Nn \l__knot_tmpb_tl {final point}
+    \knot_test_endpoint:VnT \l__knot_tmpa_tl {initial point}
+    {
+      \bool_set_true:N \l__knot_skip_bool
+    }
+    \knot_test_endpoint:VnT \l__knot_tmpa_tl {final point}
+    {
+      \bool_set_true:N \l__knot_skip_bool
+    }
+    \knot_test_endpoint:VnT \l__knot_tmpb_tl {initial point}
+    {
+      \bool_set_true:N \l__knot_skip_bool
+    }
+    \knot_test_endpoint:VnT \l__knot_tmpb_tl {final point}
+    {
+      \bool_set_true:N \l__knot_skip_bool
+    }
   }
-
+%    \end{macrocode}
+% Assuming that we passed all the above tests, we render the crossing.
+%    \begin{macrocode}
   \bool_if:NF \l__knot_skip_bool
   {
 
     \int_gincr:N \l__knot_intersections_int
+%    \end{macrocode}
+% This is the flip test.
+% We only render one of the paths.
+% The ``flip'' swaps which one we render.
+%    \begin{macrocode}
     \bool_if:nTF
     {
       \tl_if_exist_p:c {l__knot_crossing_ \int_use:N
@@ -3119,35 +3309,29 @@ and the derived files           spath3.ins,
     {
       \tl_set_eq:NN \l__knot_tmpg_tl \l__knot_tmpa_tl
     }
-
+%    \end{macrocode}
+% Now we know which one we're rendering, we test to see if we should also render its predecessor or successor to ensure that we render a path through the entire crossing region.
+%    \begin{macrocode} 
     \bool_if:NT \l__knot_self_intersections_bool
     {
-      \spath_get:nnN {knot \tl_use:N \l__knot_tmpg_tl} {initial point} \l__knot_tmpd_tl
-      \bool_set:Nn \l__knot_prepend_prev_bool
+      \knot_test_endpoint:VnT \l__knot_tmpg_tl {initial point}
       {
-        \dim_compare_p:n
-        {
-          \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpd_tl {1}}
-          +
-          \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpd_tl {2}}
-          <
-          \l__knot_tolerance_dim
-        }
+        \bool_set_true:N \l__knot_prepend_prev_bool
+      }
+      {
+        \bool_set_false:N \l__knot_prepend_prev_bool
       }
 
-      \spath_get:nnN {knot \tl_use:N \l__knot_tmpg_tl} {final point} \l__knot_tmpd_tl
-      \bool_set:Nn \l__knot_append_next_bool
+      \knot_test_endpoint:VnT \l__knot_tmpg_tl {final point}
       {
-        \dim_compare_p:n
-        {
-          \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpd_tl {1}}
-          +
-          \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpd_tl {2}}
-          <
-          \l__knot_tolerance_dim
-        }
+        \bool_set_true:N \l__knot_append_next_bool
       }
-
+      {
+        \bool_set_false:N \l__knot_append_next_bool
+      }
+%    \end{macrocode}
+% If either of those tests succeeded, do the appending or prepending.
+%    \begin{macrocode}
       \bool_if:nT
       {
         \l__knot_prepend_prev_bool || \l__knot_append_next_bool
@@ -3161,101 +3345,178 @@ and the derived files           spath3.ins,
         \bool_if:NT \l__knot_prepend_prev_bool
         {
           \spath_prepend_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:N \l__knot_tmpg_tl}}
+%    \end{macrocode}
+% If we split potentially self intersecting curves, we test to see if we should prepend yet another segment.
+%    \begin{macrocode}
+          \bool_if:NT \l__knot_splits_bool
+          {
+            \knot_test_endpoint:vnT {knot previous \tl_use:N \l__knot_tmpg_tl} {initial point}
+            {
+              \spath_get:nnN {knot \tl_use:N \l__knot_prefix_tl -1} {path} \l_tmpa_tl
+              \spath_prepend_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:c {knot previous \tl_use:N \l__knot_tmpg_tl}}}
+              \spath_get:nnN {knot \tl_use:N \l__knot_prefix_tl -1} {path} \l_tmpa_tl
+              
+            }
+          }
         }
-
+%    \end{macrocode}
+% Now the same for appending.
+%    \begin{macrocode}
         \bool_if:NT \l__knot_append_next_bool
         {
           \spath_append_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:N \l__knot_tmpg_tl}}
+          \bool_if:NT \l__knot_splits_bool
+          {
+            \knot_test_endpoint:vnT {knot previous \tl_use:N \l__knot_tmpg_tl} {final point}
+            {
+              \spath_append_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:c {knot next \tl_use:N \l__knot_tmpg_tl}}}
+              
+            }
+          }
         }
 
         \tl_set:Nn \l__knot_tmpg_tl {\tl_use:N \l__knot_prefix_tl -1}
       }
     }
-
+%    \end{macrocode}
+% Now we render the crossing.
+%    \begin{macrocode}
+    \group_begin:
+    \tikzset{knot~ diagram/intersection~ \int_use:N \l__knot_intersections_int/.try}
     \knot_draw_crossing:nVV {\tl_use:N \l__knot_tmpg_tl} \l__knot_tmpa_dim \l__knot_tmpb_dim
-
+    \group_end:
+%    \end{macrocode}
+% And stick a coordinate possibly with a label at the crossing.
+%    \begin{macrocode}
     \tl_use:N \l__knot_node_tl (\l__knot_name_tl \c_space_tl \int_use:N \l__knot_intersections_int) at (\l__knot_tmpa_dim, \l__knot_tmpb_dim) {};
-
   }
 }
 
 \cs_generate_variant:Nn \knot_intersections:nn {VV}
-
-
-\cs_new_protected_nopar:Npn \knot_test_endpoint:Nn #1#2
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_test_endpoint:N}
+% Test whether the point is near the intersection point.
+%    \begin{macrocode}
+\prg_new_conditional:Npnn \knot_test_endpoint:N #1 {p,T,F,TF}
 {
-  \bool_if:NF \l__knot_skip_bool
+  \dim_compare:nTF
   {
-    \spath_get:nnN {knot #1} {#2} \l__knot_tmpd_tl
-    \bool_set:Nn \l__knot_skip_bool
-    {
-      \dim_compare_p:n
-      {
-        \dim_abs:n {\pgf@x - \tl_item:Nn \l__knot_tmpd_tl {1}}
-        +
-        \dim_abs:n {\pgf@y - \tl_item:Nn \l__knot_tmpd_tl {2}}
-        <
-        \l__knot_tolerance_dim
-      }
-    }
+    \dim_abs:n {\pgf@x - \tl_item:Nn #1 {1}}
+    +
+    \dim_abs:n {\pgf@y - \tl_item:Nn #1 {2}}
+    <
+    \l__knot_tolerance_dim
+  }
+  {
+    \prg_return_true:
+  }
+  {
+    \prg_return_false:
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_test_endpoint:nn}
+% Wrapper around the above.
+%    \begin{macrocode}
+\prg_new_protected_conditional:Npnn \knot_test_endpoint:nn #1#2 {T,F,TF}
+{
+  \spath_get:nnN {knot #1} {#2} \l__knot_tmpd_tl
+  \knot_test_endpoint:NTF \l__knot_tmpd_tl
+  {
+    \prg_return_true:
+  }
+  {
+    \prg_return_false:
   }
 }
 
+\cs_generate_variant:Nn \knot_test_endpoint:nnT {VnT,vnT}
+\cs_generate_variant:Nn \knot_test_endpoint:nnF {VnF,vnF}
+\cs_generate_variant:Nn \knot_test_endpoint:nnTF {VnTF,vnTF}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_draw_crossing:nnn}
+% This is the code that actually renders a crossing.
+%    \begin{macrocode}
 \cs_new_nopar:Npn \knot_draw_crossing:nnn #1#2#3
 {
   \group_begin:
   \pgfscope
   \clip (#2, #3) circle[radius=\l__knot_clip_radius_dim];
 
-  \tikzset{draw,knot/every~ strand/.try}
-  \knot_apply_style:c {l__knot_options_ #1}
-  \tikzset{knot@bg,line~ width= \tl_use:N \l__knot_clip_width_tl * \pgflinewidth}
-
-  \spath_get:nnN {knot #1} {path} \l__knot_tmpd_tl
-  \pgfsyssoftpath@setcurrentpath\l__knot_tmpd_tl
-  \tikz@options
-  \pgfusepath{stroke}
+  \tl_set:Nn \l_tmpa_tl {knot~ diagram/every~ strand/.try,}
+  \tl_if_exist:cT {l__knot_options_ #1}
+  {
+  \tl_put_right:Nv \l_tmpa_tl {l__knot_options_ #1}
+  }
+  \tl_put_right:Nn \l_tmpa_tl {,knotbg,line~ width= \tl_use:N \l__knot_clip_width_tl * \pgflinewidth}
+  \spath_tikz_path:Vn \l_tmpa_tl {knot #1}
 
   \endpgfscope
 
   \pgfscope
   \clip (#2, #3) circle[radius=1.1\l__knot_clip_radius_dim];
 
-  \tikzset{draw,knot/every~ strand/.try}
-  \knot_apply_style:c {l__knot_options_ #1}
-  \tikzset{knot/only~ when~ rendering}
-
-  \spath_get:nnN {knot #1} {path} \l__knot_tmpd_tl
-  \pgfsyssoftpath@setcurrentpath\l__knot_tmpd_tl
-  \tikz@options
-  \pgfusepath{stroke}
+  \tl_set:Nn \l_tmpa_tl {knot~ diagram/every~ strand/.try,}
+  \tl_if_exist:cT {l__knot_options_ #1}
+  {
+  \tl_put_right:Nv \l_tmpa_tl {l__knot_options_ #1}
+  }
+  \tl_put_right:Nn \l_tmpa_tl {,knot~ diagram/only~ when~ rendering/.try,only~ when~ rendering/.try}
+  \spath_tikz_path:Vn \l_tmpa_tl {knot #1}
 
   \endpgfscope
   \group_end:
 }
 
 \cs_generate_variant:Nn \knot_draw_crossing:nnn {nVV}
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_split_strands:}
+% This, and the following macros, are for splitting strands into filaments.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_split_strands:
 {
   \int_gzero:N \l__knot_filaments_int
   \int_step_function:nnnN {1} {1} {\l__knot_strands_int} \knot_split_strand:n
   \int_step_function:nnnN {1} {1} {\l__knot_filaments_int} \knot_compute_nexts:n
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_compute_nexts:n}
+% Each filament needs to know its predecessor and successor.
+% We work out the predecessors as we go along, this fills in the successors.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_compute_nexts:n #1
 {
   \tl_clear_new:c {knot next \tl_use:c {knot previous filament #1}}
-  \tl_set:cn {knot next \tl_use:c {knot previous filament #1}} {#1}
+  \tl_set:cn {knot next \tl_use:c {knot previous filament #1}} {filament #1}
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_split_strand:n}
+% Sets up the split for a single strand.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_split_strand:n #1
 {
   \int_set_eq:NN \l__knot_component_start_int \l__knot_filaments_int
   \int_incr:N \l__knot_component_start_int
   \spath_map_segment_function:nN {knot strand #1} \knot_save_filament:NN
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_save_filament:NN}
+% Saves a filament as a new \Verb+spath+ object.
+%    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_save_filament:NN #1#2
 {
   \tl_case:Nnn #1
@@ -3309,7 +3570,12 @@ and the derived files           spath3.ins,
   {
   }
 }
-
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\redraw}
+% The user can redraw segments of the strands at specific locations.
+%    \begin{macrocode}
 \NewDocumentCommand \redraw { m m }
 {
   \tikz@scan@one@point\pgfutil@firstofone #2 \relax
@@ -3318,10 +3584,251 @@ and the derived files           spath3.ins,
     {strand #1} {\dim_use:N \pgf@x} {\dim_use:N \pgf@y}
   }
 }
-
-\ExplSyntaxOff
-
 %    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% \begin{macro}{\pgf@sh@@knotanchor}
+% Add the extra anchors for the knot crossing nodes.
+%    \begin{macrocode}
+\def\pgf@sh@@knotanchor#1#2{%
+  \anchor{#2 north west}{%
+    \csname pgf@anchor@knot #1@north west\endcsname%
+    \pgf@x=#2\pgf@x%
+    \pgf@y=#2\pgf@y%
+  }%
+  \anchor{#2 north east}{%
+    \csname pgf@anchor@knot #1@north east\endcsname%
+    \pgf@x=#2\pgf@x%
+    \pgf@y=#2\pgf@y%
+  }%
+  \anchor{#2 south west}{%
+    \csname pgf@anchor@knot #1@south west\endcsname%
+    \pgf@x=#2\pgf@x%
+    \pgf@y=#2\pgf@y%
+  }%
+  \anchor{#2 south east}{%
+    \csname pgf@anchor@knot #1@south east\endcsname%
+    \pgf@x=#2\pgf@x%
+    \pgf@y=#2\pgf@y%
+  }%
+  \anchor{#2 north}{%
+    \csname pgf@anchor@knot #1@north\endcsname%
+    \pgf@x=#2\pgf@x%
+    \pgf@y=#2\pgf@y%
+  }%
+  \anchor{#2 east}{%
+    \csname pgf@anchor@knot #1@east\endcsname%
+    \pgf@x=#2\pgf@x%
+    \pgf@y=#2\pgf@y%
+  }%
+  \anchor{#2 west}{%
+    \csname pgf@anchor@knot #1@west\endcsname%
+    \pgf@x=#2\pgf@x%
+    \pgf@y=#2\pgf@y%
+  }%
+  \anchor{#2 south}{%
+    \csname pgf@anchor@knot #1@south\endcsname%
+    \pgf@x=#2\pgf@x%
+    \pgf@y=#2\pgf@y%
+  }%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{knot crossing}
+%    \begin{macrocode}
+\pgfdeclareshape{knot crossing}
+{
+  \inheritsavedanchors[from=circle] % this is nearly a circle
+  \inheritanchorborder[from=circle]
+  \inheritanchor[from=circle]{north}
+  \inheritanchor[from=circle]{north west}
+  \inheritanchor[from=circle]{north east}
+  \inheritanchor[from=circle]{center}
+  \inheritanchor[from=circle]{west}
+  \inheritanchor[from=circle]{east}
+  \inheritanchor[from=circle]{mid}
+  \inheritanchor[from=circle]{mid west}
+  \inheritanchor[from=circle]{mid east}
+  \inheritanchor[from=circle]{base}
+  \inheritanchor[from=circle]{base west}
+  \inheritanchor[from=circle]{base east}
+  \inheritanchor[from=circle]{south}
+  \inheritanchor[from=circle]{south west}
+  \inheritanchor[from=circle]{south east}
+  \inheritanchorborder[from=circle]
+  \pgf@sh@@knotanchor{crossing}{2}
+  \pgf@sh@@knotanchor{crossing}{3}
+  \pgf@sh@@knotanchor{crossing}{4}
+  \pgf@sh@@knotanchor{crossing}{8}
+  \pgf@sh@@knotanchor{crossing}{16}
+  \pgf@sh@@knotanchor{crossing}{32}
+  \backgroundpath{
+    \pgfutil@tempdima=\radius%
+    \pgfmathsetlength{\pgf@xb}{\pgfkeysvalueof{/pgf/outer xsep}}%  
+    \pgfmathsetlength{\pgf@yb}{\pgfkeysvalueof{/pgf/outer ysep}}%  
+    \ifdim\pgf@xb<\pgf@yb%
+      \advance\pgfutil@tempdima by-\pgf@yb%
+    \else%
+      \advance\pgfutil@tempdima by-\pgf@xb%
+    \fi%
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{knot over cross}
+%    \begin{macrocode}
+\pgfdeclareshape{knot over cross}
+{
+  \inheritsavedanchors[from=rectangle] % this is nearly a circle
+  \inheritanchorborder[from=rectangle]
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{north west}
+  \inheritanchor[from=rectangle]{north east}
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{east}
+  \inheritanchor[from=rectangle]{mid}
+  \inheritanchor[from=rectangle]{mid west}
+  \inheritanchor[from=rectangle]{mid east}
+  \inheritanchor[from=rectangle]{base}
+  \inheritanchor[from=rectangle]{base west}
+  \inheritanchor[from=rectangle]{base east}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{south west}
+  \inheritanchor[from=rectangle]{south east}
+  \inheritanchorborder[from=rectangle]
+  \backgroundpath{
+    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+    \pgfpathmoveto{\pgfqpoint{\pgf@xa}{\pgf@ya}}
+    \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@yb}}
+  }
+  \foregroundpath{
+% store lower right in xa/ya and upper right in xb/yb
+    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+    \pgfpathmoveto{\pgfqpoint{\pgf@xa}{\pgf@yb}}
+    \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@ya}}
+ }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{knot under cross}
+%    \begin{macrocode}
+\pgfdeclareshape{knot under cross}
+{
+  \inheritsavedanchors[from=rectangle] % this is nearly a circle
+  \inheritanchorborder[from=rectangle]
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{north west}
+  \inheritanchor[from=rectangle]{north east}
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{east}
+  \inheritanchor[from=rectangle]{mid}
+  \inheritanchor[from=rectangle]{mid west}
+  \inheritanchor[from=rectangle]{mid east}
+  \inheritanchor[from=rectangle]{base}
+  \inheritanchor[from=rectangle]{base west}
+  \inheritanchor[from=rectangle]{base east}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{south west}
+  \inheritanchor[from=rectangle]{south east}
+  \inheritanchorborder[from=rectangle]
+  \backgroundpath{
+    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+    \pgfpathmoveto{\pgfqpoint{\pgf@xa}{\pgf@yb}}
+    \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@ya}}
+  }
+  \foregroundpath{
+% store lower right in xa/ya and upper right in xb/yb
+    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+    \pgfpathmoveto{\pgfqpoint{\pgf@xa}{\pgf@ya}}
+    \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@yb}}
+ }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{knot vert}
+%    \begin{macrocode}
+\pgfdeclareshape{knot vert}
+{
+  \inheritsavedanchors[from=rectangle] % this is nearly a circle
+  \inheritanchorborder[from=rectangle]
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{north west}
+  \inheritanchor[from=rectangle]{north east}
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{east}
+  \inheritanchor[from=rectangle]{mid}
+  \inheritanchor[from=rectangle]{mid west}
+  \inheritanchor[from=rectangle]{mid east}
+  \inheritanchor[from=rectangle]{base}
+  \inheritanchor[from=rectangle]{base west}
+  \inheritanchor[from=rectangle]{base east}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{south west}
+  \inheritanchor[from=rectangle]{south east}
+  \inheritanchorborder[from=rectangle]
+  \backgroundpath{
+% store lower right in xa/ya and upper right in xb/yb
+    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+    \pgfpathmoveto{\pgfqpoint{\pgf@xa}{\pgf@ya}}
+    \pgfpathlineto{\pgfqpoint{\pgf@xa}{\pgf@yb}}
+    \pgfpathmoveto{\pgfqpoint{\pgf@xb}{\pgf@yb}}
+    \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@ya}}
+ }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{knot horiz}
+%    \begin{macrocode}
+\pgfdeclareshape{knot horiz}
+{
+  \inheritsavedanchors[from=rectangle] % this is nearly a circle
+  \inheritanchorborder[from=rectangle]
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{north west}
+  \inheritanchor[from=rectangle]{north east}
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{east}
+  \inheritanchor[from=rectangle]{mid}
+  \inheritanchor[from=rectangle]{mid west}
+  \inheritanchor[from=rectangle]{mid east}
+  \inheritanchor[from=rectangle]{base}
+  \inheritanchor[from=rectangle]{base west}
+  \inheritanchor[from=rectangle]{base east}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{south west}
+  \inheritanchor[from=rectangle]{south east}
+  \inheritanchorborder[from=rectangle]
+  \foregroundpath{
+% store lower right in xa/ya and upper right in xb/yb
+    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+    \pgfpathmoveto{\pgfqpoint{\pgf@xa}{\pgf@ya}}
+    \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@ya}}
+    \pgfpathmoveto{\pgfqpoint{\pgf@xa}{\pgf@yb}}
+    \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@yb}}
+ }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \iffalse
 %</knots>
 % \fi
