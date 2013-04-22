@@ -2818,14 +2818,16 @@ manipulating PGF soft paths}
     }
     {
       \tikz@addmode{\tikz@mode@doubletrue}
-      \tl_if_empty:nTF {#1}
+      \tl_if_eq:nnTF {\pgfkeysnovalue} {#1}
       {
-        \pgfsetinnerstrokecolor{\tikz@strokecolor}
+        \tikz@addoption{\pgfsetinnerstrokecolor{.}}
       }
       {
         \pgfsetinnerstrokecolor{#1}
       }
-      \tikz@addoption{\pgfsetstrokecolor{knotbg}}
+      \tikz@addoption{
+        \pgfsetstrokecolor{knotbg}
+      }
       \tl_set:Nn \tikz@double@setup{
         \pgfsetinnerlinewidth{\pgflinewidth}
         \pgfsetlinewidth{\dim_eval:n {\tl_use:N \l__knot_gap_tl \pgflinewidth}}
@@ -3509,6 +3511,7 @@ manipulating PGF soft paths}
 {
   \int_set_eq:NN \l__knot_component_start_int \l__knot_filaments_int
   \int_incr:N \l__knot_component_start_int
+  \tl_set_eq:Nc \l__knot_tmpa_tl {l__knot_options_strand #1}
   \spath_map_segment_function:nN {knot strand #1} \knot_save_filament:NN
 }
 %    \end{macrocode}
@@ -3533,6 +3536,8 @@ manipulating PGF soft paths}
       \int_gincr:N \l__knot_filaments_int
       \spath_clear_new:n {knot filament \int_use:N \l__knot_filaments_int}
       \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} #2
+      \tl_set_eq:cN {l__knot_options_filament \int_use:N \l__knot_filaments_int} \l__knot_tmpa_tl
+
       \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
       \int_compare:nF {\l__knot_component_start_int == \l__knot_filaments_int}
       {
@@ -3544,6 +3549,8 @@ manipulating PGF soft paths}
       \int_gincr:N \l__knot_filaments_int
       \spath_clear_new:n {knot filament \int_use:N \l__knot_filaments_int}
       \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} #2
+      \tl_set_eq:cN {l__knot_options_filament \int_use:N \l__knot_filaments_int} \l__knot_tmpa_tl
+
       \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
       \int_compare:nF {\l__knot_component_start_int == \l__knot_filaments_int}
       {
@@ -3559,6 +3566,7 @@ manipulating PGF soft paths}
       \tl_put_right:NV \l_tmpa_tl \g__spath_lineto_tl
       \tl_set:Nx \l_tmpa_tl {\tl_item:Nn #2 {5}\tl_item:Nn #2 {6}}
       \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} \l_tmpa_tl
+      \tl_set_eq:cN {l__knot_options_filament \int_use:N \l__knot_filaments_int} \l__knot_tmpa_tl
       \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
       \int_compare:nF {\l__knot_component_start_int == \l__knot_filaments_int}
       {
