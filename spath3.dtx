@@ -1502,6 +1502,19 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\spath_bake_round:n}
+% Ought to clear the reverse path, if set.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_bake_round:n #1
+{
+  \__spath_get:nnN {#1} {path} \l__spath_tmpa_tl
+  \pgf@@processround\l__spath_tmpa_tl\l__spath_tmpb_tl
+  \spath_put:nnV {#1} {path} \l__spath_tmpb_tl
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
 % \subsection{Iteration Functions}
 %
 % \begin{macro}{\spath_map_component:Nn}
@@ -1823,7 +1836,7 @@ manipulating PGF soft paths}
   },
   restore~spath/.code={
     \spath_set_current_path:n {#1}
-  },
+  }
 }
 %    \end{macrocode}
 % \subsection{Miscellaneous Commands}
@@ -3002,7 +3015,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % Loop through the strands drawing each one for the first time.
 %    \begin{macrocode}
-  \int_step_function:nnnN {1} {1} {\l__knot_strands_int}  \knot_draw_strand:n
+  \int_step_function:nnnN {1} {1} {\l__knot_strands_int} \knot_draw_strand:n
 %    \end{macrocode}
 % In super draft mode we don't do anything else.
 %    \begin{macrocode} 
@@ -3073,6 +3086,7 @@ manipulating PGF soft paths}
   \tl_set:Nn \l_tmpa_tl {knot~ diagram/every~ strand/.try,}
   \tl_put_right:Nv \l_tmpa_tl {l__knot_options_strand #1}
   \tl_put_right:Nn \l_tmpa_tl {,knot~ diagram/only~ when~ rendering/.try,only~ when~ rendering/.try}
+  \spath_bake_round:n {knot strand #1}
   \spath_tikz_path:Vn \l_tmpa_tl {knot strand #1}
   \group_end:
   \endpgfscope
