@@ -354,7 +354,10 @@ manipulating PGF soft paths}
 \prg_new_protected_conditional:Npnn \__spath_get:nnN #1#2#3 {T, F, TF}
 {
   \__prop_split:cnTF {l__spath_#1} {#2}
-  { \__prop_get_true:Nnnn #3 }
+  {
+    \tl_set:Nn #3 {##2}
+    \prg_return_true:
+  }
   { \prg_return_false: }
 }
 \cs_generate_variant:Nn \spath_put:nnn {nnV, nnx, nno}
