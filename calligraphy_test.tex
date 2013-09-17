@@ -8,13 +8,31 @@
 
 \begin{document}
 
+\begin{tikzpicture}[scale=2]
+\calligraphy[
+  copperplate,
+  heavy line width=8pt,
+  light line width=4pt,
+  weight=heavy,
+  annotate={draw,thick,red,->,shorten >=1ex,shorten <=1ex},
+  annotation shift={(1em,1em)},
+  annotation node style={1}{fill=white,fill opacity=.5,circle,text     opacity=1,anchor=south west},
+  annotation node style={2}{fill=white,fill opacity=.5,circle,text     opacity=1,anchor=south west},
+  annotation node style={3}{fill=white,fill opacity=.5,circle,text     opacity=1,anchor=south},
+]
+   (-.5,1.2) -- (-.5,-.3) .. controls +(60:.4) and +(120:.4) .. (.7,-.3)
+   (-.5,1.2) .. controls +(-60:.4) and +(-120:.4) .. (.7,1.2) -- (.7,-1.35) +(0,0) .. controls +(120:1) and +(140:1.5) .. (-.9,-1.7)
+;
+\end{tikzpicture}
+\end{document}
+
 \begin{tikzpicture}
 \pen (-20:.15) -- (20:.15);
 \calligraphy[copperplate] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0);
 \draw[yshift=-.5cm] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0) .. controls +(1,.5) and +(-1,-.5) .. (4,0);
 \calligraphy[yshift=-1cm,copperplate] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0) .. controls +(1,.5) and +(-1,-.5) .. (4,0);
 \end{tikzpicture}
-\end{document}
+
 
 \begin{tikzpicture}
 \draw[decorate,decoration={calligraphic brace,amplitude=4mm},ultra thick] (0,0) -- (0,8);

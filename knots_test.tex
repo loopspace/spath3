@@ -2,7 +2,7 @@
 %\immediate\write18{tex knots.dtx}
 \documentclass{article}
 \usepackage{tikz}
-\usetikzlibrary{knots,intersections,decorations.pathreplacing}
+\usetikzlibrary{knots,intersections,decorations.pathreplacing,hobby}
 
 \tikzset{
   path details/.style={
@@ -16,6 +16,24 @@
 }
 
 \begin{document}
+
+\begin{tikzpicture}[
+ use Hobby shortcut,
+ every path/.style={
+    line width=1mm,
+    white,
+    double=red,
+    double distance=.5mm
+ }
+]
+\def\nfoil{10}
+\draw ([closed]0,2)
+\foreach \k in {1,...,\nfoil} {
+ .. ([blank=soft]90+360*\k/\nfoil-180/\nfoil:-.5) .. (90+360*\k/\nfoil:2)
+};
+\draw[use previous Hobby path={invert soft blanks,disjoint}];
+\end{tikzpicture}
+
 \begin{tikzpicture}
 \begin{knot}[
   consider self intersections=true,
@@ -27,7 +45,7 @@
     (0,2.5) -- (1.5,2.5) -- (1.5,0.5) -- (0.5,0.5)-- (0.5,1.5) -- (3,1.5);
 \end{knot}
 \end{tikzpicture}
-\end{document}
+
 \begin{tikzpicture}
 \draw (1.5,.5) -- (1.5,-.5) (2.5,.5) -- (2.5,-.5);
 \draw (0,.2) -- (4,.2);
@@ -35,7 +53,7 @@
 \draw[thick] (2,0) -- (4,0);
 \end{tikzpicture}
 
-\end{document}
+
 \begin{tikzpicture}
 \begin{knot}
 \strand (0,0) .. controls +(1,0) and +(-1,0) .. (2,1) .. controls +(1,0) and +(-1,0) .. (4,0);
@@ -159,14 +177,14 @@ to [out=up, in=down] (2,7);
 %% \node at (1,0) {\usebox\secondbox};
 %% \end{tikzpicture}
 %% \end{document}
-\documentclass{article}
-\usepackage{nopageno,tikz,knots,geometry}
-\geometry{landscape}
+%\documentclass{article}
+%\usepackage{nopageno,tikz,knots,geometry}
+%\geometry{landscape}
 
 \definecolor{SafetyOrange}{rgb}{1,0.4,0}
 \definecolor{LuminousOrange}{rgb}{1,0.137255,0.00392157}
 
-\begin{document}
+%\begin{document}
 
 \hspace{-0.75in}
 \noindent
@@ -199,10 +217,10 @@ to [out=up, in=down] (2,7);
 
 \vfill
 
-\end{document}
+%\end{document}
 
-\documentclass{article}
-\usepackage{tikz,knots}
+%\documentclass{article}
+%\usepackage{tikz,knots}
 
 
 \newcommand{\motif}[1]{ to ++(180+#1:0.5) arc (270+#1:150+#1:0.15) to ++(60+#1:0.5) arc (-30+#1:150+#1:0.15) to ++(240+#1:0.25) arc (150+#1:330+#1:0.25) to ++(60+#1:0.5) arc (150+#1:30+#1:0.2) }
@@ -225,7 +243,7 @@ to [out=up, in=down] (2,7);
 \flipcrossings{9,7,5,2,4,11,12}
 \end{knot}
 \end{tikzpicture}
-\end{document}
+%\end{document}
 \begin{tikzpicture}
 \begin{knot}[
   consider self intersections,
@@ -233,11 +251,11 @@ to [out=up, in=down] (2,7);
 \strand (0,0) .. controls +(2,1) and +(-2,1) .. (1,0);
 \end{knot}
 \end{tikzpicture}
-\end{document}
-\documentclass{article}
-\usepackage{tikz}
-\usepackage{knots}
-\begin{document}
+%\end{document}
+%\documentclass{article}
+%\usepackage{tikz}
+%\usepackage{knots}
+%\begin{document}
 \begin{tikzpicture}
 \braid[
   rotate=90,

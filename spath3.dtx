@@ -362,6 +362,7 @@ manipulating PGF soft paths}
 }
 \cs_generate_variant:Nn \spath_put:nnn {nnV, nnx, nno}
 \cs_generate_variant:Nn \__spath_get:nn {Vn}
+\cs_generate_variant:Nn \__spath_get:nnN {VnN}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -490,7 +491,7 @@ manipulating PGF soft paths}
   }
   \__spath_get:nnN {#1} {#2} #3
 }
-\cs_generate_variant:Nn \spath_get:nnN {nnV}
+\cs_generate_variant:Nn \spath_get:nnN {nnV,VnN,VnV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -586,6 +587,7 @@ manipulating PGF soft paths}
   }
   \spath_put:nnV {#1} {final point} \l__spath_tmpb_tl    
 }
+\cs_generate_variant:Nn \spath_generate_finalpoint:n {V}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1965,6 +1967,7 @@ manipulating PGF soft paths}
 \int_new:N \l__cal_tmpa_int
 \int_new:N \l__cal_tmpb_int
 \int_new:N \l__cal_path_component_int
+\int_new:N \l__cal_label_int
 \dim_new:N \l__cal_tmpa_dim
 \dim_new:N \l__cal_tmpb_dim
 \dim_new:N \l__cal_tmpc_dim
@@ -1973,6 +1976,7 @@ manipulating PGF soft paths}
 \dim_new:N \l__cal_tmpf_dim
 \dim_new:N \l__cal_tmpg_dim
 \dim_new:N \l__cal_tmph_dim
+\bool_new:N \l__cal_annotate_bool
 \bool_new:N \l__cal_taper_start_bool
 \bool_new:N \l__cal_taper_end_bool
 \bool_new:N \l__cal_taperable_bool
@@ -1981,6 +1985,8 @@ manipulating PGF soft paths}
 
 \bool_set_true:N \l__cal_taper_start_bool
 \bool_set_true:N \l__cal_taper_end_bool
+
+\cs_generate_variant:Nn \tl_put_right:Nn {Nv}
 %    \end{macrocode}
 %
 % \subsection{TikZ Keys}
@@ -2082,6 +2088,50 @@ manipulating PGF soft paths}
     \tl_clear_new:c {l__cal_stroke_inline_style_ \int_use:N \l__cal_path_component_int}
     \tl_set:cn {l__cal_stroke_inline_style_ \int_use:N \l__cal_path_component_int} {#1}
   },
+  annotate/.style={
+    annotate~if,
+    annotate~reset,
+    annotation~style/.show~value,
+    annotation~style/.update~value={#1},
+    annotation~style/.show~value
+  },
+  annotate~if/.default={true},
+  annotate~if/.code={
+    \tl_if_eq:nnTF {#1} {true}
+    {
+      \bool_set_true:N \l__cal_annotate_bool
+    }
+    {
+      \bool_set_false:N \l__cal_annotate_bool
+    }
+  },
+  annotate~reset/.code={
+    \int_gzero:N \l__cal_label_int
+  },
+  annotation~style/.initial={draw,->},
+  annotation~shift/.initial={(0,1ex)},
+  annotation~nodes~style/.initial={anchor=south~west},
+  annotation~node~style/.code~2~args={
+    \tl_set:cn {l__cal_annotation_style_ #1 _tl}{#2}
+  },
+  tl~use:N/.code={
+    \exp_args:NV \pgfkeysalso #1
+  },
+  tl~use:c/.code={
+    \exp_args:Nv \pgfkeysalso {#1}
+  },
+  /handlers/.update~style/.code={
+    \tl_if_eq:nnF {#1} {\pgfkeysnovalue}
+    {
+      \pgfkeys{\pgfkeyscurrentpath/.code=\pgfkeysalso{#1}}
+    }
+  },
+  /handlers/.update~value/.code={
+    \tl_if_eq:nnF {#1} {\pgfkeysnovalue}
+    {
+      \pgfkeyssetvalue{\pgfkeyscurrentpath}{#1}
+    }
+  }
 }
 %    \end{macrocode}
 %
@@ -2119,28 +2169,30 @@ manipulating PGF soft paths}
     {
       \int_incr:N \l__cal_tmpb_int
       \group_begin:
+      \pgfsys@beginscope
+
       \cal_apply_style:c {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
       \cal_apply_style:c {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
       \cal_apply_style:c {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
 
       \spath_clone:nn {##1} {calligraphy temp path}
 
-      \__spath_get:nnN {####1} {initial point} \l__spath_tmpa_tl
-      \spath_translate:nV {calligraphy temp path} \l__spath_tmpa_tl
+      \__spath_get:nnN {####1} {initial point} \l__cal_tmpa_tl
+      \spath_translate:nV {calligraphy temp path} \l__cal_tmpa_tl
 
-      \__spath_get:nnN {####1} {length} \l__spath_tmpa_tl
+      \__spath_get:nnN {####1} {length} \l__cal_tmpa_tl
       
-      \int_compare:nTF {\l__spath_tmpa_tl = 1}
+      \int_compare:nTF {\l__cal_tmpa_tl = 1}
       {
         \cal_at_least_three:n {calligraphy temp path}
 
         \spath_protocol_path:n {calligraphy temp path}
 
-        \__spath_get:nnN {calligraphy temp path} {path} \l__spath_tmpa_tl
+        \__spath_get:nnN {calligraphy temp path} {path} \l__cal_tmpa_tl
 
         \tikz@options
         \dim_set:Nn \l__cal_line_width_dim {\pgflinewidth}
-        \cal_maybe_taper:N \l__spath_tmpa_tl
+        \cal_maybe_taper:N \l__cal_tmpa_tl
       }
       {
 
@@ -2152,13 +2204,47 @@ manipulating PGF soft paths}
         \spath_reverse:n {##1}
         \spath_reverse:n {####1}
 
-        \spath_set_current_path:n {calligraphy temp path}
+        \tl_clear:N \l__cal_tmpa_tl
+        \tl_set:Nn \l__cal_tmpa_tl {fill=\pgfkeysvalueof{/tikz/pen~colour},draw=none}
+        \tl_if_exist:cT  {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
+        {
+          \tl_put_right:Nv \l__cal_tmpa_tl {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
+        }
+        \tl_if_exist:cT  {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
+        {
+          \tl_put_right:Nn \l__cal_tmpa_tl {,}
+          \tl_put_right:Nv \l__cal_tmpa_tl {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
+        }
+        \tl_if_exist:cT  {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
+        {
+          \tl_put_right:Nn \l__cal_tmpa_tl {,}
+          \tl_put_right:Nv \l__cal_tmpa_tl {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
+        }
+        \spath_tikz_path:Vn \l__cal_tmpa_tl {calligraphy temp path}
 
-        \tikz@options
-        \pgfsetfillcolor{\pgfkeysvalueof{/tikz/pen~colour}}
-        \pgfusepath{fill}
       }
+      \pgfsys@endscope
       \group_end:
+    }
+    \bool_if:NT \l__cal_annotate_bool
+    {
+      \spath_clone:nn {##1} {calligraphy temp path}
+      \tl_set_eq:Nc \l_tmpa_tl {l__spath_list_calligraphy pen #2}
+      \tl_reverse:N \l_tmpa_tl
+      \tl_set:Nx \l_tmpa_tl {\tl_head:N \l_tmpa_tl}
+      \spath_generate_finalpoint:V \l_tmpa_tl
+      \spath_get:VnN \l_tmpa_tl {final point} \l_tmpa_tl
+      \spath_translate:nV {calligraphy temp path} \l_tmpa_tl
+      \tikz@scan@one@point\pgfutil@firstofone\pgfkeysvalueof{/tikz/annotation~shift}
+      \spath_translate:nnn {calligraphy temp path} {\pgf@x} {\pgf@y}
+      
+      \pgfkeysgetvalue{/tikz/annotation~style}{\l_tmpa_tl}
+      \spath_tikz_path:Vn \l_tmpa_tl {calligraphy temp path}
+      \spath_get:nnN {calligraphy temp path} {final point} \l_tmpa_tl
+      \exp_last_unbraced:NV \pgfqpoint \l_tmpa_tl
+      \begin{scope}[reset~ cm]
+      \node[annotation~nodes~style,tl~use:c =  {l__cal_annotation_style_ \int_use:N \l__cal_tmpa_int _tl}] at (\pgf@x,\pgf@y) {\int_use:N \l__cal_tmpa_int};
+      \end{scope}
     }
   }
 }
