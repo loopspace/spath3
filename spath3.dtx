@@ -2091,9 +2091,7 @@ manipulating PGF soft paths}
   annotate/.style={
     annotate~if,
     annotate~reset,
-    annotation~style/.show~value,
     annotation~style/.update~value={#1},
-    annotation~style/.show~value
   },
   annotate~if/.default={true},
   annotate~if/.code={
@@ -2110,7 +2108,7 @@ manipulating PGF soft paths}
   },
   annotation~style/.initial={draw,->},
   annotation~shift/.initial={(0,1ex)},
-  annotation~nodes~style/.initial={anchor=south~west},
+  every~annotation~node/.initial={anchor=south~west},
   annotation~node~style/.code~2~args={
     \tl_set:cn {l__cal_annotation_style_ #1 _tl}{#2}
   },
@@ -2118,7 +2116,10 @@ manipulating PGF soft paths}
     \exp_args:NV \pgfkeysalso #1
   },
   tl~use:c/.code={
-    \exp_args:Nv \pgfkeysalso {#1}
+    \tl_if_exist:cT {#1}
+    {
+      \exp_args:Nv \pgfkeysalso {#1}
+    }
   },
   /handlers/.update~style/.code={
     \tl_if_eq:nnF {#1} {\pgfkeysnovalue}
@@ -2139,17 +2140,17 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \NewDocumentCommand \pen { O{} }
 {
-  \path[define~ pen,#1]
+  \path[define~ pen,every~ calligraphy~ pen/.try,#1]
 }
 
 \NewDocumentCommand \definepen { O{} }
 {
-  \tikz \path[define~ pen,#1]
+  \tikz \path[define~ pen,every~ calligraphy~ pen/.try,#1]
 }
 
 \NewDocumentCommand \calligraphy { O{} }
 {
-  \path[use~ pen,#1]
+  \path[use~ pen,every~ calligraphy/.try,#1]
 }
 %    \end{macrocode}
 %
@@ -2243,7 +2244,7 @@ manipulating PGF soft paths}
       \spath_get:nnN {calligraphy temp path} {final point} \l_tmpa_tl
       \exp_last_unbraced:NV \pgfqpoint \l_tmpa_tl
       \begin{scope}[reset~ cm]
-      \node[annotation~nodes~style,tl~use:c =  {l__cal_annotation_style_ \int_use:N \l__cal_tmpa_int _tl}] at (\pgf@x,\pgf@y) {\int_use:N \l__cal_tmpa_int};
+      \node[every~annotation~node/.try,tl~use:c =  {l__cal_annotation_style_ \int_use:N \l__cal_tmpa_int _tl}] at (\pgf@x,\pgf@y) {\int_use:N \l__cal_tmpa_int};
       \end{scope}
     }
   }
