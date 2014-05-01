@@ -167,7 +167,7 @@ and the derived files            spath3.ins,
 % \section{Introduction}
 %
 % The \Verb+spath3+ package is intended as a library for manipulating PGF's \emph{soft paths}.
-% In between defining a path and using it, PGF stores a path as a \emph{soft path} were all the defining structure has been resolved into the basic operations but these have not yet been written to the output file.
+% In between defining a path and using it, PGF stores a path as a \emph{soft path} where all the defining structure has been resolved into the basic operations but these have not yet been written to the output file.
 % They can therefore still be manipulated by \TeX, and as they have a very rigid form (and limited vocabulary), they are relatively easy to modify.
 % This package provides some methods for working with these paths.
 % It is not really intended for use by end users but as a foundation on which other packages can be built.
@@ -348,7 +348,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\_spath_get:nnN}
+% \begin{macro}{\__spath_get:nnN}
 %    \begin{macrocode}
 \cs_generate_variant:Nn \__prop_split:NnTF {cnTF}
 \prg_new_protected_conditional:Npnn \__spath_get:nnN #1#2#3 {T, F, TF}
@@ -1042,6 +1042,86 @@ manipulating PGF soft paths}
     }
   }
 }
+\cs_generate_variant:Nn \spath_scale:nnn {nxx}
+%    \end{macrocode}
+%
+% This variant allows for passing the coordinates as a single braced group as it strips off the outer braces of the second argument.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_scale:nn #1#2
+{
+  \spath_scale:nnn {#1} #2
+}
+
+\cs_generate_variant:Nn \spath_scale:nn {nV}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_apply_matrix:nnnnn}
+% Applies a matrix to path.
+% The matrix is specified in rows first.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_apply_matrix:nnnnn #1#2#3#4#5
+{
+  \tl_map_inline:Nn \g__spath_moveable_attributes
+  {
+    \spath_if_in:nnT {#1} {##1}
+    {
+      \__spath_get:nnN {#1} {##1} \l__spath_tmpa_tl
+      \tl_set:Nx \l__spath_tmpb_tl {\tl_tail:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpb_tl {\tl_head:N \l__spath_tmpb_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_head:N \l__spath_tmpa_tl}
+      \dim_set:Nn \l__spath_tmpa_dim {\l__spath_tmpa_tl * #2 + \l__spath_tmpb_tl * #3}
+      \dim_set:Nn \l__spath_tmpb_dim {\l__spath_tmpa_tl * #4 + \l__spath_tmpb_tl * #5}
+      \tl_clear:N \l__spath_tmpb_tl
+      \tl_put_right:Nx \l__spath_tmpb_tl
+      {
+        {\dim_use:N \l__spath_tmpa_dim}
+        {\dim_use:N \l__spath_tmpb_dim}
+      }
+      \spath_put:nnV {#1} {##1} \l__spath_tmpb_tl
+    }
+  }
+  \tl_map_inline:Nn \g__spath_path_attributes
+  {
+    \spath_if_in:nnT {#1} {##1}
+    {
+      \__spath_get:nnN {#1} {##1} \l__spath_tmpa_tl
+      \tl_clear:N \l__spath_tmpb_tl
+      \bool_until_do:nn {
+        \tl_if_empty_p:N \l__spath_tmpa_tl
+      }
+      {
+        \tl_put_right:Nx \l__spath_tmpb_tl {\tl_head:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l_tmpa_tl {\tl_head:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l_tmpb_tl {\tl_head:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+        \dim_set:Nn \l__spath_tmpa_dim {\l_tmpa_tl * #2 + \l_tmpb_tl * #3}
+        \dim_set:Nn \l__spath_tmpb_dim {\l_tmpa_tl * #4 + \l_tmpb_tl * #5}
+        \tl_put_right:Nx \l__spath_tmpb_tl
+        {
+          {\dim_use:N \l__spath_tmpa_dim}
+          {\dim_use:N \l__spath_tmpb_dim}
+        }
+      }
+      \spath_put:nnV {#1} {##1} \l__spath_tmpb_tl
+    }
+  }
+}
+
+\cs_generate_variant:Nn \spath_apply_matrix:nnnnn {nxxxx}
+%    \end{macrocode}
+%
+% This variant allows for passing the coordinates as a single braced group as it strips off the outer braces of the second argument.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_apply_matrix:nn #1#2
+{
+  \spath_translate:nnnnn {#1} #2
+}
+
+\cs_generate_variant:Nn \spath_apply_matrix:nn {nV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1796,7 +1876,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathScale { m m m }
 {
-  \spath_translate:nnn {#1} {#2} {#3}
+  \spath_scale:nnn {#1} {#2} {#3}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1807,7 +1887,7 @@ manipulating PGF soft paths}
 \NewDocumentCommand \SPathScaleInto { m m m m }
 {
   \spath_clone:nn {#1} {#2}
-  \spath_translate:nnn {#2} {#3} {#4}
+  \spath_scale:nnn {#2} {#3} {#4}
 }
 %    \end{macrocode}
 % \end{macro}
