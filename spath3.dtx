@@ -405,9 +405,9 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_get_current_path:n #1
 {
-  \pgfsyssoftpath@getcurrentpath\l__knot_tmpa_tl
+  \pgfsyssoftpath@getcurrentpath\l__spath_tmpa_tl
   \spath_clear_new:n {#1}
-  \spath_put:nnV {#1} {path} \l__knot_tmpa_tl
+  \spath_put:nnV {#1} {path} \l__spath_tmpa_tl
 }
 %    \end{macrocode}
 % \end{macro}
