@@ -219,11 +219,13 @@ manipulating PGF soft paths}
 \tl_new:N \g__spath_curveto_tl
 \tl_new:N \g__spath_curvetoa_tl
 \tl_new:N \g__spath_curvetob_tl
+\tl_new:N \g__spath_closepath_tl
 \tl_set:Nn \g__spath_moveto_tl {\pgfsyssoftpath@movetotoken}
 \tl_set:Nn \g__spath_lineto_tl {\pgfsyssoftpath@linetotoken}
 \tl_set:Nn \g__spath_curveto_tl {\pgfsyssoftpath@curvetotoken}
 \tl_set:Nn \g__spath_curvetoa_tl {\pgfsyssoftpath@curvetosupportatoken}
 \tl_set:Nn \g__spath_curvetob_tl {\pgfsyssoftpath@curvetosupportbtoken}
+\tl_set:Nn \g__spath_closepath_tl {\pgfsyssoftpath@closepathtoken}
 %    \end{macrocode}
 %
 % \subsection{Basic Structure and Methods}
@@ -1601,6 +1603,29 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\spath_close_path:n}
+% Appends a close path to the end of the path, and to the end of the reverse path.
+% For now, the point is the initial or final point (respectively).
+% To be future proof, it ought to be the point of the adjacent move to.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_close_path:n #1
+{
+  \spath_get:nnN {#1} {initial point} \l__spath_tmpb_tl
+  \__spath_get:nnN {#1} {path} \l__spath_tmpa_tl
+  \tl_put_right:NV \l__spath_tmpa_tl \g__spath_closepath_tl
+  \tl_put_right:NV \l__spath_tmpa_tl \l__spath_tmpb_tl
+  \spath_put:nnV {#1} {path} \l__spath_tmpa_tl
+  \spath_if_in:nnT {#1} {reverse path}
+  {
+    \spath_get:nnN {#1} {final point} \l__spath_tmpb_tl
+    \__spath_get:nnN {#1} {reverse path} \l__spath_tmpa_tl
+    \tl_put_right:NV \l__spath_tmpa_tl \g__spath_closepath_tl
+    \tl_put_right:NV \l__spath_tmpa_tl \l__spath_tmpb_tl
+    \spath_put:nnV {#1} {reverse path} \l__spath_tmpa_tl
+  }
+}
+%    \end{macrocode}
+% \end{macro}
 %
 % \subsection{Iteration Functions}
 %
