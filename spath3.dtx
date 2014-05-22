@@ -1872,7 +1872,7 @@ manipulating PGF soft paths}
 %
 % \begin{macro}{\SPathShow}
 %    \begin{macrocode}
-\NewDocumentCommand \SPathShow { m m }
+\NewDocumentCommand \SPathShow { m }
 {
   \spath_show:n {#1}
 }
@@ -3594,10 +3594,12 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % Now we render the crossing.
 %    \begin{macrocode}
+    \pgfscope
     \group_begin:
-    \tikzset{knot~ diagram/intersection~ \int_use:N \l__knot_intersections_int/.try}
+    \tikzset{knot~ diagram/every~ intersection/.try, every~ intersection/.try, knot~ diagram/intersection~ \int_use:N \l__knot_intersections_int/.try}
     \knot_draw_crossing:nVV {\tl_use:N \l__knot_tmpg_tl} \l__knot_tmpa_dim \l__knot_tmpb_dim
     \group_end:
+    \endpgfscope
 %    \end{macrocode}
 % And stick a coordinate possibly with a label at the crossing.
 %    \begin{macrocode}
