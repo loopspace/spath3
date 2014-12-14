@@ -131,7 +131,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{4024}
+% \CheckSum{4316}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -3555,13 +3555,27 @@ manipulating PGF soft paths}
 
         \tl_set_eq:cc {l__knot_options_ \tl_use:N \l__knot_prefix_tl -1} {l__knot_options_ \tl_use:N \l__knot_tmpg_tl}
 
-        \bool_if:NT \l__knot_prepend_prev_bool
+        \bool_if:nT
+        {
+          \l__knot_prepend_prev_bool
+          &&
+          \tl_if_exist_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+          &&
+          !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+        }
         {
           \spath_prepend_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:N \l__knot_tmpg_tl}}
 %    \end{macrocode}
 % If we split potentially self intersecting curves, we test to see if we should prepend yet another segment.
 %    \begin{macrocode}
-          \bool_if:NT \l__knot_splits_bool
+          \bool_if:nT
+          {
+            \l__knot_splits_bool
+            &&
+            \tl_if_exist_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+            &&
+            !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+          }
           {
             \knot_test_endpoint:vnT {knot previous \tl_use:N \l__knot_tmpg_tl} {initial point}
             {
@@ -3575,10 +3589,25 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % Now the same for appending.
 %    \begin{macrocode}
-        \bool_if:NT \l__knot_append_next_bool
+        \bool_if:nT
+        {
+          \l__knot_append_next_bool
+          &&
+          \tl_if_exist_p:c {knot next \tl_use:N \l__knot_tmpg_tl}
+          &&
+          !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+        }
         {
           \spath_append_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:N \l__knot_tmpg_tl}}
-          \bool_if:NT \l__knot_splits_bool
+          \bool_if:nT
+          {
+            \l__knot_splits_bool
+            &&
+            \tl_if_exist_p:c {knot previous \tl_use:N
+              \l__knot_tmpg_tl}
+            &&
+            !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+          }
           {
             \knot_test_endpoint:vnT {knot previous \tl_use:N \l__knot_tmpg_tl} {final point}
             {
