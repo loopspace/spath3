@@ -619,7 +619,7 @@ manipulating PGF soft paths}
   {
     \tl_set:Nx \l__spath_tmpc_tl {\tl_head:N \l__spath_tmpa_tl}
     \tl_set:Nn \l__spath_tmpd_tl {}
-    \tl_case:Nnn \l__spath_tmpc_tl
+    \tl_case:NnF \l__spath_tmpc_tl
     {
       \g__spath_moveto_tl {\tl_set_eq:NN \l__spath_tmpd_tl \g__spath_moveto_tl }
       \g__spath_lineto_tl {\tl_set_eq:NN \l__spath_tmpd_tl \g__spath_lineto_tl }
@@ -843,7 +843,7 @@ manipulating PGF soft paths}
     \tl_set_eq:NN \l__spath_fa_tl \l__spath_tmpc_tl
     \int_incr:N \l__spath_l_int
 
-    \tl_case:Nnn \l__spath_tmpc_tl
+    \tl_case:NnF \l__spath_tmpc_tl
     {
       \g__spath_moveto_tl {
         \tl_set_eq:NN \l__spath_tmpd_tl \g__spath_moveto_tl
@@ -1713,7 +1713,7 @@ manipulating PGF soft paths}
   {
     \tl_set:Nx \l__spath_tmpc_tl {\tl_head:N \l__spath_tmpa_tl}
     \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
-    \tl_case:Nnn \l__spath_tmpc_tl
+    \tl_case:NnF \l__spath_tmpc_tl
     {
       \g__spath_lineto_tl
       {
@@ -2397,7 +2397,7 @@ manipulating PGF soft paths}
     \spath_get:nnN {#1} {path} \l__cal_tmpa_tl
     \spath_map_segment_inline:Nn \l__cal_tmpa_tl
     {
-      \tl_case:Nnn ##1 {
+      \tl_case:NnF ##1 {
         \g__spath_lineto_tl {
           \cal_split_line_in_three:NN \l__cal_tmpb_tl ##2
         }
@@ -2417,7 +2417,7 @@ manipulating PGF soft paths}
       \spath_get:nnN {#1} {path} \l__cal_tmpa_tl
       \spath_map_segment_inline:Nn \l__cal_tmpa_tl
       {
-        \tl_case:Nnn ##1 {
+        \tl_case:NnF ##1 {
           \g__spath_lineto_tl {
             \cal_split_line_in_two:NN \l__cal_tmpb_tl ##2
           }
@@ -2576,7 +2576,7 @@ manipulating PGF soft paths}
     \dim_set:Nn \l__cal_tmpb_dim {\tl_item:Nn \l__cal_tmpa_tl {3}}
     \tl_set:Nx \l__cal_tmpb_tl {\tl_item:Nn \l__cal_tmpa_tl {4}}
 
-    \tl_case:Nnn \l__cal_tmpb_tl
+    \tl_case:NnF \l__cal_tmpb_tl
     {
       \g__spath_lineto_tl
       {
@@ -2628,7 +2628,7 @@ manipulating PGF soft paths}
     \dim_set:Nn \l__cal_tmpb_dim {\tl_item:Nn \l__cal_tmpa_tl {-1}}
     \tl_set:Nx \l__cal_tmpb_tl {\tl_item:Nn \l__cal_tmpa_tl {-3}}
 
-    \tl_case:Nnn \l__cal_tmpb_tl
+    \tl_case:NnF \l__cal_tmpb_tl
     {
       \g__spath_lineto_tl
       {
@@ -3331,7 +3331,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_split_self_intersects:NN #1#2
 {
-  \tl_case:Nnn #1
+  \tl_case:NnF #1
   {
     \g__spath_curvetoa_tl
     {
@@ -3764,7 +3764,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_save_filament:NN #1#2
 {
-  \tl_case:Nnn #1
+  \tl_case:NnF #1
   {
     \g__spath_moveto_tl
     {
