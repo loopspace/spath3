@@ -1,0 +1,13 @@
+*.pdf
+*.aux
+*~
+*.idx
+*.log
+*.hd
+*.glo
+*.ins
+*.out
+README.txt
+spath3.sty
+tikzlibrarycalligraphy.code.tex
+tikzlibraryknots.code.tex
