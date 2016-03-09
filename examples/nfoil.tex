@@ -1,0 +1,24 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{knots,hobby}
+
+
+\begin{document}
+
+\begin{tikzpicture}[
+ use Hobby shortcut,
+ every path/.style={
+    line width=1mm,
+    white,
+    double=red,
+    double distance=.5mm
+ }
+]
+\def\nfoil{3}
+\draw ([closed]0,2)
+\foreach \k in {1,...,\nfoil} {
+ .. ([blank=soft]90+360*\k/\nfoil-180/\nfoil:-.5) .. (90+360*\k/\nfoil:2)
+};
+\draw[use previous Hobby path={invert soft blanks,disjoint}];
+\end{tikzpicture}
+\end{document}
