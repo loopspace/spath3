@@ -17,6 +17,22 @@
 
 \begin{document}
 
+\begin{tikzpicture}
+\begin{knot}[
+  draft mode=crossings,
+  flip crossing=2,
+  name=knot,
+  background colour=yellow,
+  save intersections,
+  ]
+\strand[red] (0,0) .. controls +(1,0) and +(-1,0) .. (3,2) .. controls +(1,0) and +(-1,0) .. (6,0);
+\strand[blue] (0,2) .. controls +(1,0) and +(-1,0) .. (3,0) .. controls +(1,0) and +(-1,0) .. (6,2);
+\redraw{1}{([xshift=-1.5cm,yshift=1cm]knot 2)}
+\end{knot}
+\end{tikzpicture}
+
+\end{document}
+
 \begin{tikzpicture}[
  use Hobby shortcut,
  every path/.style={

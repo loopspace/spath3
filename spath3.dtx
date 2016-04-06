@@ -2993,6 +2993,8 @@ manipulating PGF soft paths}
 \tl_new:N \l__knot_clip_width_tl
 \tl_new:N \l__knot_name_tl
 \tl_new:N \l__knot_node_tl
+\tl_new:N \l__knot_aux_tl
+\tl_new:N \l__knot_auxa_tl
 
 \int_new:N \l__knot_tmpa_int
 \int_new:N \l__knot_strands_int
@@ -3015,6 +3017,7 @@ manipulating PGF soft paths}
 \bool_new:N \l__knot_prepend_prev_bool
 \bool_new:N \l__knot_append_next_bool
 \bool_new:N \l__knot_skip_bool
+\bool_new:N \l__knot_save_bool
 
 \bool_set_true:N \l__knot_ignore_ends_bool
 %    \end{macrocode}
@@ -3062,8 +3065,16 @@ manipulating PGF soft paths}
   },
   background~ colour=white,
   knot~ diagram,
-  name/.store~in=\l__knot_name_tl,
+  name/.store~ in=\l__knot_name_tl,
   name={knot},
+  save~ intersections/.is~ choice,
+  save~ intersections/.default=true,
+  save~ intersections/true/.code={
+    \bool_set_true:N \l__knot_save_bool
+  },
+  save~ intersections/false/.code={
+    \bool_set_false:N \l__knot_save_bool
+  },
   every~ strand/.style={draw},
   ignore~ endpoint~ intersections/.code={
     \tl_if_eq:nnTF {#1} {true}
@@ -3422,14 +3433,68 @@ manipulating PGF soft paths}
   \spath_get:nnN {knot \tl_use:N \l__knot_tmpa_tl} {path} \l__knot_tmpc_tl
   \spath_get:nnN {knot \tl_use:N \l__knot_tmpb_tl} {path} \l__knot_tmpd_tl
 
-  \pgfintersectionofpaths{\pgfsetpath\l__knot_tmpc_tl}{\pgfsetpath\l__knot_tmpd_tl}
+  \bool_if:nTF {
+    \l__knot_save_bool
+    &&
+    \tl_if_exist_p:c {knot~ intersections~ \tl_use:N \l__knot_name_tl - \tl_use:N \l__knot_tmpa_tl -  \tl_use:N \l__knot_tmpb_tl}
+  }
+  {
+    \tl_use:c {knot~ intersections~ \tl_use:N \l__knot_name_tl - \tl_use:N \l__knot_tmpa_tl -  \tl_use:N \l__knot_tmpb_tl}
+  }
+  {
+\pgfintersectionofpaths{\pgfsetpath\l__knot_tmpc_tl}{\pgfsetpath\l__knot_tmpd_tl}
 
+  }
   \int_compare:nT {\pgfintersectionsolutions > 0}
   {
     \int_step_function:nnnN {1} {1} {\pgfintersectionsolutions} \knot_do_intersection:n
   }
+  \knot_save_intersections:VV \l__knot_tmpa_tl \l__knot_tmpb_tl
   \group_end:
 }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\knot_save_intersections:nn}
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \knot_save_intersections:nn #1#2
+{
+  \bool_if:NT \l__knot_save_bool
+  {
+    \tl_clear:N \l__knot_aux_tl
+    \tl_put_right:Nn \l__knot_aux_tl
+    {
+      \def\pgfintersectionsolutions
+    }
+    \tl_put_right:Nx \l__knot_aux_tl
+    {
+      {\int_eval:n {\pgfintersectionsolutions}}
+    }
+    \int_compare:nT {\pgfintersectionsolutions > 0}
+    {
+      \int_step_inline:nnnn {1} {1} {\pgfintersectionsolutions}
+      {
+        \pgfpointintersectionsolution{##1}
+        \dim_set:Nn \l__knot_tmpa_dim {\pgf@x}
+        \dim_set:Nn \l__knot_tmpb_dim {\pgf@y}
+        \tl_put_right:Nn \l__knot_aux_tl
+        {
+          \expandafter\def\csname pgfpoint@intersect@solution@##1\endcsname
+        }
+        \tl_put_right:Nx \l__knot_aux_tl
+        {
+          {\exp_not:N \pgf@x=\dim_use:N \l__knot_tmpa_dim\exp_not:N\relax\exp_not:N \pgf@y =\dim_use:N \l__knot_tmpb_dim\relax}
+        }
+      }
+      \tl_set:Nn \l__knot_auxa_tl {\expandafter \gdef \csname knot~ intersections~}
+      \tl_put_right:Nx \l__knot_auxa_tl {\tl_use:N \l__knot_name_tl - #1 - #2}
+      \tl_put_right:Nn \l__knot_auxa_tl {\endcsname}
+      \tl_put_right:Nx \l__knot_auxa_tl {{\tl_to_str:N \l__knot_aux_tl}}
+      \protected@write\@auxout{}{\tl_to_str:N \l__knot_auxa_tl}
+    }
+  }
+}
+\cs_generate_variant:Nn \knot_save_intersections:nn {VV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3720,6 +3785,12 @@ manipulating PGF soft paths}
 }
 
 \cs_generate_variant:Nn \knot_draw_crossing:nnn {nVV}
+
+\cs_new_nopar:Npn \knot_draw_crossing:nn #1#2
+{
+  \tikz@scan@one@point\pgfutil@firstofone #2 \relax
+  \knot_draw_crossing:nVV {#1} \pgf@x \pgf@y
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3829,10 +3900,10 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \NewDocumentCommand \redraw { m m }
 {
-  \tikz@scan@one@point\pgfutil@firstofone #2 \relax
-  \tl_put_right:Nn \l__knot_redraws_tl {\knot_draw_crossing:nnn}
+%  \tikz@scan@one@point\pgfutil@firstofone #2 \relax
+  \tl_put_right:Nn \l__knot_redraws_tl {\knot_draw_crossing:nn}
   \tl_put_right:Nx \l__knot_redraws_tl {
-    {strand #1} {\dim_use:N \pgf@x} {\dim_use:N \pgf@y}
+    {strand #1} {#2}% {\dim_use:N \pgf@x} {\dim_use:N \pgf@y}
   }
 }
 %    \end{macrocode}
