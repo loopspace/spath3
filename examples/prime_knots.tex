@@ -1,7 +1,13 @@
 \documentclass{article}
 \usepackage[scale=.9]{geometry}
 \usepackage{tikz}
-\usetikzlibrary{knots,hobby,external}
+\usetikzlibrary{
+  knots,
+  hobby,
+  external,
+  decorations.pathreplacing,
+  shapes.geometric,
+}
 
 \tikzset{
   external/figure name=knot,
@@ -33,6 +39,30 @@
   every picture/.style={
     execute at end picture={%
       \path ([shift={(-5pt,-5pt)}]current bounding box.south west)   ([shift={(5pt,5pt)}]current bounding box.north east);
+    }
+  },
+  show curve controls/.style={
+    postaction=decorate,
+    decoration={show path construction,
+      curveto code={
+        \draw [blue, dashed]
+        (\tikzinputsegmentfirst) -- (\tikzinputsegmentsupporta)
+        node [at end, draw, solid, red, inner sep=2pt]{};
+        \draw [blue, dashed]
+        (\tikzinputsegmentsupportb) -- (\tikzinputsegmentlast)
+        node [at start, draw, solid, red, inner sep=2pt]{}
+        node [at end, fill, blue, ellipse, inner sep=2pt]{}
+        ;
+      }
+    }
+  },
+  show curve endpoints/.style={
+    postaction=decorate,
+    decoration={show path construction,
+      curveto code={
+        \node [fill, blue, ellipse, inner sep=2pt] at (\tikzinputsegmentlast) {}
+        ;
+      }
     }
   }
 }
@@ -206,14 +236,133 @@
 %% 7_2
 \centering
 \tikzsetnextfilename{7-2}
-\tikzset{external/export next=false}
+%\tikzset{external/export next=false}
 \begin{tikzpicture}
 \begin{knot}[
+  consider self intersections=true,
+  ignore endpoint intersections=false,
+%  draft mode=crossings,
+  only when rendering/.style={
+%    show curve endpoints
+  },
+  flip crossing/.list={5,3,7}
 ]
-\strand ([closed]2,2) .. (2,-1) .. (1,-.5) .. (-2.3,-1) .. (.5,1) .. (-2,2) .. (-2,-1) .. (-1,-.5) .. (2.3,-1) .. (-.5,1) .. (2,2);
+\strand ([closed].75,.5) .. (2.5,-.5) .. (3.5,.5) .. (-.5,2) .. (2,3) .. (.75,-.5) .. (-.75,.5) .. (-2.5,-.5) .. (-3.5,.5) .. (.5,2) .. (-2,3) .. (-.75,-.5);
 \end{knot}
 \end{tikzpicture}
 \caption{\(7_2\)}
 \autolabel
 \end{figure}
+
+\begin{figure}
+%% 7_3
+\centering
+\tikzsetnextfilename{7-3}
+%\tikzset{external/export next=false}
+\begin{tikzpicture}
+\begin{knot}[
+  consider self intersections=true,
+%  ignore endpoint intersections=false,
+%  draft mode=crossings,
+  only when rendering/.style={
+%    show curve endpoints
+  },
+  flip crossing/.list={5,1,3,7}
+]
+\strand ([closed]0,0) .. (1,.75) .. (2,4) .. (-.5,3.5) .. (.5,2) .. (-2,1) .. (-2,0) .. (0,.5) .. (2,0) .. (2,1) .. (-.5,2) .. (.5,3.5) .. (-2,4) .. (-1,.75);
+\end{knot}
+\end{tikzpicture}
+\caption{\(7_3\)}
+\autolabel
+\end{figure}
+
+\begin{figure}
+%% 7_4
+\centering
+\tikzsetnextfilename{7-4}
+%\tikzset{external/export next=false}
+\begin{tikzpicture}
+\begin{knot}[
+  consider self intersections=true,
+%  ignore endpoint intersections=false,
+%  draft mode=crossings,
+  only when rendering/.style={
+%    show curve endpoints
+  },
+  flip crossing/.list={1,6,3}
+]
+\strand ([closed]-2,2) .. (-2,3) .. (-1,3) .. (2,0) .. (-1,-3) .. (-2,-3) .. (-2,-2) .. (2,2) .. (2,3) .. (1,3) .. (-2,0) .. (1,-3) .. (2,-3) .. (2,-2) .. (-2,2);
+\end{knot}
+\end{tikzpicture}
+\caption{\(7_4\)}
+\autolabel
+\end{figure}
+
+\begin{figure}
+%% 7_5
+\centering
+\tikzsetnextfilename{7-5}
+%\tikzset{external/export next=false}
+\begin{tikzpicture}
+\begin{knot}[
+  consider self intersections=true,
+%  ignore endpoint intersections=false,
+%  draft mode=crossings,
+  only when rendering/.style={
+%    show curve endpoints
+  },
+  flip crossing/.list={2,6,3}
+]
+\strand ([closed]0,0) .. (.5,-.1) .. (-1,-3.5) .. (3,-6) .. (3,-7) .. (2,-7) .. (-3,-2) .. (0,-1) .. (3,-2) .. (-2,-7) .. (-3,-7) .. (-3,-6) .. (1,-3.5) .. (-.5,-.1) .. (0,0);
+\end{knot}
+\end{tikzpicture}
+\caption{\(7_5\)}
+\autolabel
+\end{figure}
+
+\begin{figure}
+%% 7_6
+\centering
+\tikzsetnextfilename{7-6}
+%\tikzset{external/export next=false}
+\begin{tikzpicture}
+\begin{knot}[
+  consider self intersections=true,
+  ignore endpoint intersections=false,
+%  draft mode=crossings,
+  only when rendering/.style={
+%    show curve endpoints
+  },
+  flip crossing/.list={1,5,7,4}
+]
+\strand ([closed]0,5) .. (3,0) .. (-1,1) .. (4,5) .. (5,4) .. (4,3) .. (-2.6,5) .. (-4,5) .. (-4,3.6) .. (1,1) .. (-3,0);
+\end{knot}
+\end{tikzpicture}
+\caption{\(7_6\)}
+\autolabel
+\end{figure}
+
+\begin{figure}
+%% 7_7
+\centering
+\tikzsetnextfilename{7-7}
+\tikzset{external/export next=false}
+\begin{tikzpicture}
+\begin{knot}[
+  consider self intersections=true,
+%  ignore endpoint intersections=false,
+%  draft mode=crossings,
+  only when rendering/.style={
+%    show curve endpoints
+  },
+  flip crossing/.list={1,3,5,6,7}
+]
+\strand ([closed]3.5,-2.5) .. (4.5,-1.5) .. (0,0) .. (-4.5,-1.5) .. (-3.5,-2.5) .. (1,2) .. (4,1) .. (.3,-3.85) .. (0,-4) .. (-.3,-3.85) .. (-4,1) .. (-1,2);
+\end{knot}
+\end{tikzpicture}
+\caption{\(7_7\)}
+\autolabel
+\end{figure}
+
+
 \end{document}
