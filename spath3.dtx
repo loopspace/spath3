@@ -1764,7 +1764,28 @@ manipulating PGF soft paths}
         \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
 
       }
-    }
+
+      \g__spath_closepath_tl
+      {
+        \tl_set_eq:NN \l__spath_tmpb_tl \g__spath_moveto_tl
+        \tl_put_right:Nx \l__spath_tmpb_tl
+        {
+          {\dim_use:N \l__spath_tmpa_dim}
+          {\dim_use:N \l__spath_tmpb_dim}
+        }
+        \tl_put_right:NV \l__spath_tmpb_tl \g__spath_lineto_tl
+
+        \tl_put_right:Nx \l__spath_tmpb_tl {{\tl_head:N \l__spath_tmpa_tl}}
+        \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+        \tl_put_right:Nx \l__spath_tmpb_tl {{\tl_head:N \l__spath_tmpa_tl}}
+        \dim_set:Nn \l__spath_tmpb_dim {\tl_head:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+      }
+      
+    }    
     {
 
       \tl_set_eq:NN \l__spath_tmpb_tl \l__spath_tmpc_tl
@@ -3871,14 +3892,16 @@ manipulating PGF soft paths}
         \tl_set:cx {knot previous filament \int_use:N \l__knot_filaments_int} {filament \int_eval:n {\l__knot_filaments_int - 1}}
       }
     }
-    \g__spath_close_tl
+    \g__spath_closepath_tl
     {
+      \tl_show:N #2
       \int_gincr:N \l__knot_filaments_int
       \spath_clear_new:n {knot filament \int_use:N \l__knot_filaments_int}
-      \tl_set_eq:NN \l_tmpa_tl #2
-      \tl_set:Nx \l_tmpa_tl {\tl_item:Nn #2 {1}\tl_item:Nn #2 {2}\tl_item:Nn #2 {3}}
+      \tl_clear:N \l_tmpa_tl
+      \tl_put_right:Nx {\tl_item:Nn #2 {1}\tl_item:Nn #2 {2}\tl_item:Nn #2 {3}}
       \tl_put_right:NV \l_tmpa_tl \g__spath_lineto_tl
-      \tl_set:Nx \l_tmpa_tl {\tl_item:Nn #2 {5}\tl_item:Nn #2 {6}}
+      \tl_put_right:Nx {\tl_item:Nn #2 {5}\tl_item:Nn #2 {6}}
+      \tl_show:N \l_tmpa_tl
       \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} \l_tmpa_tl
       \tl_set_eq:cN {l__knot_options_filament \int_use:N \l__knot_filaments_int} \l__knot_tmpa_tl
       \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
