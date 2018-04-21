@@ -496,7 +496,7 @@ manipulating PGF soft paths}
   }
   \__spath_get:nnN {#1} {#2} #3
 }
-\cs_generate_variant:Nn \spath_get:nnN {nnV,VnN,VnV}
+\cs_generate_variant:Nn \spath_get:nnN {VnN}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1886,8 +1886,8 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathInfoInto { m m m }
 {
-  \tl_set:Nn \l_tmpa_tl #3
-  \spath_get:nnV {#1} {#2} \l_tmpa_tl
+  \tl_set:Nn \l_tmpa_tl {  \spath_get:nnN {#1} {#2} #3 }
+  \tl_use:N \l_tmpa_tl
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1984,8 +1984,8 @@ manipulating PGF soft paths}
   \tl_gclear:N \l__spath_smuggle_tl
   \tl_set_eq:NN \l__spath_tmpa_tl \g__spath_moveto_tl
   \tl_put_right:Nx \l__spath_tmpa_tl {
+    {\tl_item:nn {#2} {2}}
     {\tl_item:nn {#2} {3}}
-    {\tl_item:nn {#2} {4}}
   }
   \tl_put_right:NV \l__spath_tmpa_tl \g__spath_curvetoa_tl
   \tl_put_right:Nx \l__spath_tmpa_tl
@@ -3027,7 +3027,8 @@ manipulating PGF soft paths}
 \dim_new:N \l__knot_tmpb_dim
 \dim_new:N \l__knot_tmpc_dim
 \dim_new:N \l__knot_tolerance_dim
-\dim_new:N \l__knot_clip_radius_dim
+\dim_new:N \l__knot_clip_bg_radius_dim
+\dim_new:N \l__knot_clip_draw_radius_dim
 
 \bool_new:N \l__knot_draft_bool
 \bool_new:N \l__knot_ignore_ends_bool
@@ -3039,6 +3040,8 @@ manipulating PGF soft paths}
 \bool_new:N \l__knot_append_next_bool
 \bool_new:N \l__knot_skip_bool
 \bool_new:N \l__knot_save_bool
+
+\seq_new:N \l__knot_nodes_seq
 
 \bool_set_true:N \l__knot_ignore_ends_bool
 %    \end{macrocode}
@@ -3122,13 +3125,26 @@ manipulating PGF soft paths}
   },
   consider~ self~ intersections/.default={true},
   clip~ radius/.code={
-    \dim_set:Nn \l__knot_clip_radius_dim {#1}
+    \dim_set:Nn \l__knot_clip_bg_radius_dim {#1}
+    \dim_set:Nn \l__knot_clip_draw_radius_dim {#1+2pt}
+  },
+  clip~ draw~ radius/.code={
+    \dim_set:Nn \l__knot_clip_draw_radius_dim {#1}
+  },
+  clip~ background~ radius/.code={
+    \dim_set:Nn \l__knot_clip_bg_radius_dim {#1}
   },
   clip~ radius=10pt,
   end~ tolerance/.code={
     \dim_set:Nn \l__knot_tolerance_dim {#1}
   },
   end~ tolerance=14pt,
+  clip/.style={
+    clip
+  },
+  background~ clip/.style={
+    clip
+  },
   clip~ width/.code={
     \tl_set:Nn \l__knot_clip_width_tl {#1}
   },
@@ -3136,6 +3152,10 @@ manipulating PGF soft paths}
   flip~ crossing/.code={%
     \tl_clear_new:c {l__knot_crossing_#1}
     \tl_set:cn {l__knot_crossing_#1} {x}
+  },
+  ignore~ crossing/.code={%
+    \tl_clear_new:c {l__knot_ignore_crossing_#1}
+    \tl_set:cn {l__knot_ignore_crossing_#1} {x}
   },
   draft~ mode/.is~ choice,
   draft~ mode/off/.code={%
@@ -3228,6 +3248,7 @@ manipulating PGF soft paths}
   \tikzset{knot~ diagram/.cd,every~ knot~ diagram/.try,#1}
   \int_zero:N \l__knot_strands_int
   \tl_clear:N \l__knot_redraws_tl
+  \seq_gclear:N \l__knot_nodes_seq
 }
 %    \end{macrocode}
 % \end{macro}
@@ -3277,11 +3298,14 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
     \bool_if:NTF \l__knot_draft_bool
     {
-      \tl_set:Nn \l__knot_node_tl 
-      {\node[coordinate,pin={[knot~ diagram/draft/crossing~ label]{\int_use:N \l__knot_intersections_int}}]}
+      \tl_set:Nn \l__knot_node_tl {
+        \exp_not:N \node[coordinate,
+          pin={[knot~ diagram/draft/crossing~ label]
+            {\int_use:N \l__knot_intersections_int}}]
+      }
     }
     {
-      \tl_set:Nn \l__knot_node_tl {\node[coordinate]}
+      \tl_set:Nn \l__knot_node_tl {\exp_not:N \node[coordinate]}
     }
 %    \end{macrocode}
 % This double loop steps through the pieces (strands or filaments) and computes the intersections and does stuff with those.
@@ -3297,6 +3321,10 @@ manipulating PGF soft paths}
 % If any redraws were requested, do them here.
 %    \begin{macrocode}
     \tl_use:N \l__knot_redraws_tl
+%    \end{macrocode}
+% Draw the crossing nodes
+%    \begin{macrocode}
+    \seq_use:Nn \l__knot_nodes_seq {}
   }
 %    \end{macrocode}
 % Close the scope
@@ -3562,7 +3590,7 @@ manipulating PGF soft paths}
     }
   }
 %    \end{macrocode}
-% The can also say that end points of filaments (or strands) should simply be ignored anyway.
+% The user can also say that end points of filaments (or strands) should simply be ignored anyway.
 %    \begin{macrocode}
   \bool_if:NT \l__knot_ignore_ends_bool
   {
@@ -3591,135 +3619,152 @@ manipulating PGF soft paths}
 
     \int_gincr:N \l__knot_intersections_int
 %    \end{macrocode}
+% This is the intersection test.
+% If the intersection finder finds too many, it might be useful to ignore some.
+%    \begin{macrocode}
+    \bool_if:nF
+    {
+      \tl_if_exist_p:c {l__knot_ignore_crossing_ \int_use:N
+        \l__knot_intersections_int}
+      &&
+      ! \tl_if_empty_p:c {l__knot_ignore_crossing_ \int_use:N
+        \l__knot_intersections_int}
+    }
+    {
+%    \end{macrocode}
 % This is the flip test.
 % We only render one of the paths.
 % The ``flip'' swaps which one we render.
 %    \begin{macrocode}
-    \bool_if:nTF
-    {
-      \tl_if_exist_p:c {l__knot_crossing_ \int_use:N
-        \l__knot_intersections_int}
-      &&
-      ! \tl_if_empty_p:c {l__knot_crossing_ \int_use:N
-        \l__knot_intersections_int}
-    }
-    {
-      \tl_set_eq:NN \l__knot_tmpg_tl \l__knot_tmpb_tl
-    }
-    {
-      \tl_set_eq:NN \l__knot_tmpg_tl \l__knot_tmpa_tl
-    }
+      \bool_if:nTF
+      {
+        \tl_if_exist_p:c {l__knot_crossing_ \int_use:N
+          \l__knot_intersections_int}
+        &&
+        ! \tl_if_empty_p:c {l__knot_crossing_ \int_use:N
+          \l__knot_intersections_int}
+      }
+      {
+        \tl_set_eq:NN \l__knot_tmpg_tl \l__knot_tmpb_tl
+      }
+      {
+        \tl_set_eq:NN \l__knot_tmpg_tl \l__knot_tmpa_tl
+      }
 %    \end{macrocode}
 % Now we know which one we're rendering, we test to see if we should also render its predecessor or successor to ensure that we render a path through the entire crossing region.
 %    \begin{macrocode} 
-    \bool_if:NT \l__knot_self_intersections_bool
-    {
-      \knot_test_endpoint:VnT \l__knot_tmpg_tl {initial point}
+      \bool_if:NT \l__knot_self_intersections_bool
       {
-        \bool_set_true:N \l__knot_prepend_prev_bool
-      }
-      {
-        \bool_set_false:N \l__knot_prepend_prev_bool
-      }
-
-      \knot_test_endpoint:VnT \l__knot_tmpg_tl {final point}
-      {
-        \bool_set_true:N \l__knot_append_next_bool
-      }
-      {
-        \bool_set_false:N \l__knot_append_next_bool
-      }
+        \knot_test_endpoint:VnT \l__knot_tmpg_tl {initial point}
+        {
+          \bool_set_true:N \l__knot_prepend_prev_bool
+        }
+        {
+          \bool_set_false:N \l__knot_prepend_prev_bool
+        }
+        \knot_test_endpoint:VnT \l__knot_tmpg_tl {final point}
+        {
+          \bool_set_true:N \l__knot_append_next_bool
+        }
+        {
+          \bool_set_false:N \l__knot_append_next_bool
+        }
 %    \end{macrocode}
 % If either of those tests succeeded, do the appending or prepending.
 %    \begin{macrocode}
-      \bool_if:nT
-      {
-        \l__knot_prepend_prev_bool || \l__knot_append_next_bool
-      }
-      {
-        \spath_clone:nn {knot \tl_use:N \l__knot_tmpg_tl}
-        {knot \tl_use:N \l__knot_prefix_tl -1}
-
-        \tl_set_eq:cc {l__knot_options_ \tl_use:N \l__knot_prefix_tl -1} {l__knot_options_ \tl_use:N \l__knot_tmpg_tl}
-
         \bool_if:nT
         {
-          \l__knot_prepend_prev_bool
-          &&
-          \tl_if_exist_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
-          &&
-          !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+          \l__knot_prepend_prev_bool || \l__knot_append_next_bool
         }
         {
-          \spath_prepend_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:N \l__knot_tmpg_tl}}
-%    \end{macrocode}
-% If we split potentially self intersecting curves, we test to see if we should prepend yet another segment.
-%    \begin{macrocode}
+          \spath_clone:nn {knot \tl_use:N \l__knot_tmpg_tl}
+          {knot \tl_use:N \l__knot_prefix_tl -1}
+
+          \tl_set_eq:cc {l__knot_options_ \tl_use:N \l__knot_prefix_tl -1} {l__knot_options_ \tl_use:N \l__knot_tmpg_tl}
+
           \bool_if:nT
           {
-            \l__knot_splits_bool
+            \l__knot_prepend_prev_bool
             &&
             \tl_if_exist_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
             &&
             !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
           }
           {
-            \knot_test_endpoint:vnT {knot previous \tl_use:N \l__knot_tmpg_tl} {initial point}
+            \spath_prepend_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:N \l__knot_tmpg_tl}}
+%    \end{macrocode}
+% If we split potentially self intersecting curves, we test to see if we should prepend yet another segment.
+%    \begin{macrocode}
+            \bool_if:nT
             {
-              \spath_get:nnN {knot \tl_use:N \l__knot_prefix_tl -1} {path} \l_tmpa_tl
-              \spath_prepend_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:c {knot previous \tl_use:N \l__knot_tmpg_tl}}}
-              \spath_get:nnN {knot \tl_use:N \l__knot_prefix_tl -1} {path} \l_tmpa_tl
+              \l__knot_splits_bool
+              &&
+              \tl_if_exist_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+              &&
+              !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+            }
+            {
+              \knot_test_endpoint:vnT {knot previous \tl_use:N \l__knot_tmpg_tl} {initial point}
+              {
+                \spath_get:nnN {knot \tl_use:N \l__knot_prefix_tl -1} {path} \l_tmpa_tl
+                \spath_prepend_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:c {knot previous \tl_use:N \l__knot_tmpg_tl}}}
+                \spath_get:nnN {knot \tl_use:N \l__knot_prefix_tl -1} {path} \l_tmpa_tl
               
+              }
             }
           }
-        }
 %    \end{macrocode}
 % Now the same for appending.
 %    \begin{macrocode}
-        \bool_if:nT
-        {
-          \l__knot_append_next_bool
-          &&
-          \tl_if_exist_p:c {knot next \tl_use:N \l__knot_tmpg_tl}
-          &&
-          !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
-        }
-        {
-          \spath_append_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:N \l__knot_tmpg_tl}}
           \bool_if:nT
           {
-            \l__knot_splits_bool
+            \l__knot_append_next_bool
             &&
-            \tl_if_exist_p:c {knot previous \tl_use:N
-              \l__knot_tmpg_tl}
+            \tl_if_exist_p:c {knot next \tl_use:N \l__knot_tmpg_tl}
             &&
             !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
           }
           {
-            \knot_test_endpoint:vnT {knot previous \tl_use:N \l__knot_tmpg_tl} {final point}
+            \spath_append_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:N \l__knot_tmpg_tl}}
+            \bool_if:nT
             {
-              \spath_append_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:c {knot next \tl_use:N \l__knot_tmpg_tl}}}
-              
+              \l__knot_splits_bool
+              &&
+              \tl_if_exist_p:c {knot previous \tl_use:N
+                \l__knot_tmpg_tl}
+              &&
+              !\tl_if_empty_p:c {knot previous \tl_use:N \l__knot_tmpg_tl}
+            }
+            {
+              \knot_test_endpoint:vnT {knot previous \tl_use:N \l__knot_tmpg_tl} {final point}
+              {
+                \spath_append_no_move:nn {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:c {knot next \tl_use:N \l__knot_tmpg_tl}}}
+                
+              }
             }
           }
-        }
 
-        \tl_set:Nn \l__knot_tmpg_tl {\tl_use:N \l__knot_prefix_tl -1}
+          \tl_set:Nn \l__knot_tmpg_tl {\tl_use:N \l__knot_prefix_tl -1}
+        }
       }
-    }
 %    \end{macrocode}
 % Now we render the crossing.
 %    \begin{macrocode}
-    \pgfscope
-    \group_begin:
-    \tikzset{knot~ diagram/every~ intersection/.try, every~ intersection/.try, knot~ diagram/intersection~ \int_use:N \l__knot_intersections_int/.try}
-    \knot_draw_crossing:nVV {\tl_use:N \l__knot_tmpg_tl} \l__knot_tmpa_dim \l__knot_tmpb_dim
-    \group_end:
-    \endpgfscope
+      \pgfscope
+      \group_begin:
+      \tikzset{knot~ diagram/every~ intersection/.try, every~ intersection/.try, knot~ diagram/intersection~ \int_use:N \l__knot_intersections_int/.try}
+      \knot_draw_crossing:nVV {\tl_use:N \l__knot_tmpg_tl} \l__knot_tmpa_dim \l__knot_tmpb_dim
+      \group_end:
+      \endpgfscope
+%    \end{macrocode}
+% This ends the boolean as to whether to consider the intersection at all      
+%    \begin{macrocode}
+    }
 %    \end{macrocode}
 % And stick a coordinate possibly with a label at the crossing.
 %    \begin{macrocode}
-    \tl_use:N \l__knot_node_tl (\l__knot_name_tl \c_space_tl \int_use:N \l__knot_intersections_int) at (\l__knot_tmpa_dim, \l__knot_tmpb_dim) {};
+    \seq_gpush:Nx \l__knot_nodes_seq { \l__knot_node_tl (\l__knot_name_tl \c_space_tl \int_use:N \l__knot_intersections_int) at (\dim_use:N \l__knot_tmpa_dim, \dim_use:N \l__knot_tmpb_dim) {};}
+
   }
 }
 
@@ -3734,9 +3779,9 @@ manipulating PGF soft paths}
 {
   \dim_compare:nTF
   {
-    \dim_abs:n {\pgf@x - \tl_item:Nn #1 {1}}
+    \dim_abs:n { \l__knot_tmpa_dim - \tl_item:Nn #1 {1}}
     +
-    \dim_abs:n {\pgf@y - \tl_item:Nn #1 {2}}
+    \dim_abs:n { \l__knot_tmpb_dim - \tl_item:Nn #1 {2}}
     <
     \l__knot_tolerance_dim
   }
@@ -3778,7 +3823,7 @@ manipulating PGF soft paths}
 {
   \group_begin:
   \pgfscope
-  \clip (#2, #3) circle[radius=\l__knot_clip_radius_dim];
+  \path[knot~ diagram/background~ clip] (#2, #3) circle[radius=\l__knot_clip_bg_radius_dim];
 
   \tl_set:Nn \l_tmpa_tl {knot~ diagram/every~ strand/.try,}
   \tl_if_exist:cT {l__knot_options_ #1}
@@ -3791,7 +3836,7 @@ manipulating PGF soft paths}
   \endpgfscope
 
   \pgfscope
-  \clip (#2, #3) circle[radius=1.1\l__knot_clip_radius_dim];
+  \path[knot~ diagram/clip] (#2, #3) circle[radius=\l__knot_clip_draw_radius_dim];
 
   \tl_set:Nn \l_tmpa_tl {knot~ diagram/every~ strand/.try,}
   \tl_if_exist:cT {l__knot_options_ #1}
