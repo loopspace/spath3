@@ -1635,8 +1635,8 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_component:Nn #1#2
 {
-  \int_gincr:N \g__prg_map_int
-  \cs_gset:cpn { __prg_map_ \int_use:N \g__prg_map_int :w } ##1 {#2}
+  \int_gincr:N \g__kernel_prg_map_int
+  \cs_gset:cpn { __spath_map_ \int_use:N \g__kernel_prg_map_int :w } ##1 {#2}
   \tl_set:NV \l__spath_tmpa_tl #1
   \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
   \tl_put_right:NV \l__spath_tmpa_tl \g__spath_moveto_tl
@@ -1648,7 +1648,7 @@ manipulating PGF soft paths}
     \tl_set:Nx \l__spath_tmpc_tl {\tl_head:N \l__spath_tmpa_tl}
     \tl_if_eq:NNT \l__spath_tmpc_tl \g__spath_moveto_tl
     {
-      \exp_args:NnV \use:c { __prg_map_ \int_use:N \g__prg_map_int :w } \l__spath_tmpb_tl
+      \exp_args:NnV \use:c { __spath_map_ \int_use:N \g__kernel_prg_map_int :w } \l__spath_tmpb_tl
 \tl_clear:N \l__spath_tmpb_tl
     }
     \tl_if_single:NTF \l__spath_tmpc_tl
@@ -1669,9 +1669,9 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_segment_inline:Nn #1#2
 {
-  \int_gincr:N \g__prg_map_int
-  \cs_gset:cpn { __prg_map_ \int_use:N \g__prg_map_int :w } ##1 ##2 {#2}
-  \spath_map_segment_function:Nc #1 { __prg_map_ \int_use:N \g__prg_map_int :w }
+  \int_gincr:N \g__kernel_prg_map_int
+  \cs_gset:cpn { __spath_map_ \int_use:N \g__kernel_prg_map_int :w } ##1 ##2 {#2}
+  \spath_map_segment_function:Nc #1 { __spath_map_ \int_use:N \g__kernel_prg_map_int :w }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1681,10 +1681,10 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_segment_inline:nn #1#2
 {
-  \int_gincr:N \g__prg_map_int
-  \cs_gset:cpn { __prg_map_ \int_use:N \g__prg_map_int :w } ##1 ##2 {#2}
+  \int_gincr:N \g__kernel_prg_map_int
+  \cs_gset:cpn { __spath_map_ \int_use:N \g__kernel_prg_map_int :w } ##1 ##2 {#2}
   \spath_get:nnN {#1} {path} \l__spath_tmpd_tl
-  \spath_map_segment_function:Nc \l__spath_tmpd_tl { __prg_map_ \int_use:N \g__prg_map_int :w }
+  \spath_map_segment_function:Nc \l__spath_tmpd_tl { __spath_map_ \int_use:N \g__kernel_prg_map_int :w }
 }
 %    \end{macrocode}
 % \end{macro}
