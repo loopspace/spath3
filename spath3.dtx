@@ -3300,8 +3300,8 @@ manipulating PGF soft paths}
     {
       \tl_set:Nn \l__knot_node_tl {
         \exp_not:N \node[coordinate,
-          pin={[knot~ diagram/draft/crossing~ label]
-            {\int_use:N \l__knot_intersections_int}}]
+          pin={[node~ contents={\int_use:N \l__knot_intersections_int},knot~ diagram/draft/crossing~ label, knot~ diagram/draft/crossing~ \int_use:N \l__knot_intersections_int \c_space_tl label/.try]
+            }]
       }
     }
     {
