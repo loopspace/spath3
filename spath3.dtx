@@ -211,7 +211,7 @@ manipulating PGF soft paths}
 \fp_new:N \l__spath_tmpa_fp
 \fp_new:N \l__spath_tmpb_fp
 \int_new:N \l__spath_tmpa_int
-\int_new:N \l__spath_map_int
+\int_new:N \g__spath_map_int
 %    \end{macrocode}
 %
 % We need to be able to compare against the macros that can occur in  a soft path so these token lists contain them.
@@ -1887,8 +1887,8 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathInfoInto { m m m }
 {
-  \spath_get:nnN {#1} {#2} \l_tmpa_tl
-  \cs_set_eq:NN #3 \l_tmpa_tl
+  \tl_clear_new:N #3
+  \spath_get:nnN {#1} {#2} #3
 }
 %    \end{macrocode}
 % \end{macro}
