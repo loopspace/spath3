@@ -35,7 +35,7 @@ See http://www.latex-project.org/lppl.txt
 \endpreamble
 \postamble
 
-Copyright (C) 2011 by Andrew Stacey <stacey@math.ntnu.no>
+Copyright (C) 2011-2019 by Andrew Stacey <stacey@math.ntnu.no>
 
 This work may be distributed and/or modified under the
 conditions of the LaTeX Project Public License (LPPL), either
@@ -131,7 +131,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{4316}
+% \CheckSum{4488}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -152,6 +152,7 @@ and the derived files            spath3.ins,
 %
 % \changes{1.0}{2011/05/03}{Converted to DTX file}
 % \changes{1.1}{2016/02/19}{Fixes due to changes in LaTeX3}
+% \changes{1.2}{2019/02/12}{More fixes due to changes in LaTeX3}
 %
 % \DoNotIndex{\newcommand,\newenvironment}
 %
@@ -194,7 +195,7 @@ and the derived files            spath3.ins,
 \NeedsTeXFormat{LaTeX2e}
 \RequirePackage{expl3}
 \RequirePackage{pgf}
-\ProvidesExplPackage {spath3} {2016/02/19} {1.1} {Functions for
+\ProvidesExplPackage {spath3} {2019/02/12} {1.2} {Functions for
 manipulating PGF soft paths}
 \RequirePackage{xparse}
 %    \end{macrocode}
@@ -205,6 +206,7 @@ manipulating PGF soft paths}
 \tl_new:N \l__spath_tmpb_tl
 \tl_new:N \l__spath_tmpc_tl
 \tl_new:N \l__spath_tmpd_tl
+\tl_new:N \l__spath_tmpe_tl
 \tl_new:N \l__spath_smuggle_tl
 \dim_new:N \l__spath_tmpa_dim
 \dim_new:N \l__spath_tmpb_dim
@@ -212,6 +214,7 @@ manipulating PGF soft paths}
 \fp_new:N \l__spath_tmpb_fp
 \int_new:N \l__spath_tmpa_int
 \int_new:N \g__spath_map_int
+\bool_new:N \l__spath_closed_bool
 %    \end{macrocode}
 %
 % We need to be able to compare against the macros that can occur in  a soft path so these token lists contain them.
@@ -222,12 +225,17 @@ manipulating PGF soft paths}
 \tl_new:N \g__spath_curvetoa_tl
 \tl_new:N \g__spath_curvetob_tl
 \tl_new:N \g__spath_closepath_tl
-\tl_set:Nn \g__spath_moveto_tl {\pgfsyssoftpath@movetotoken}
-\tl_set:Nn \g__spath_lineto_tl {\pgfsyssoftpath@linetotoken}
-\tl_set:Nn \g__spath_curveto_tl {\pgfsyssoftpath@curvetotoken}
-\tl_set:Nn \g__spath_curvetoa_tl {\pgfsyssoftpath@curvetosupportatoken}
-\tl_set:Nn \g__spath_curvetob_tl {\pgfsyssoftpath@curvetosupportbtoken}
-\tl_set:Nn \g__spath_closepath_tl {\pgfsyssoftpath@closepathtoken}
+\tl_gset:Nn \g__spath_moveto_tl {\pgfsyssoftpath@movetotoken}
+\tl_gset:Nn \g__spath_lineto_tl {\pgfsyssoftpath@linetotoken}
+\tl_gset:Nn \g__spath_curveto_tl {\pgfsyssoftpath@curvetotoken}
+\tl_gset:Nn \g__spath_curvetoa_tl {\pgfsyssoftpath@curvetosupportatoken}
+\tl_gset:Nn \g__spath_curvetob_tl {\pgfsyssoftpath@curvetosupportbtoken}
+\tl_gset:Nn \g__spath_closepath_tl {\pgfsyssoftpath@closepathtoken}
+%    \end{macrocode}
+%
+% And some error messages
+%    \begin{macrocode}
+\msg_new:nnn { spath3 } { unknown path construction } { The~ path~ construction~ element~ #1~ is~ not~ currently~ supported.}
 %    \end{macrocode}
 %
 % \subsection{Basic Structure and Methods}
@@ -604,47 +612,106 @@ manipulating PGF soft paths}
 \cs_new_nopar:Npn \spath_generate_reversepath:n #1
 {
   \__spath_get:nnN {#1} {path} \l__spath_tmpa_tl
+
   \tl_clear:N \l__spath_tmpb_tl
   \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
   \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
   \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
   \dim_set:Nn \l__spath_tmpb_dim {\tl_head:N \l__spath_tmpa_tl}
   \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+  
   \tl_put_left:Nx \l__spath_tmpb_tl
   {
     {\dim_use:N \l__spath_tmpa_dim}
     {\dim_use:N \l__spath_tmpb_dim}
   }
+  
+  \bool_set_false:N \l__spath_closed_bool
+  
   \bool_until_do:nn {
     \tl_if_empty_p:N \l__spath_tmpa_tl
   }
   {
     \tl_set:Nx \l__spath_tmpc_tl {\tl_head:N \l__spath_tmpa_tl}
-    \tl_set:Nn \l__spath_tmpd_tl {}
-    \tl_case:NnF \l__spath_tmpc_tl
+
+    \tl_case:NnTF \l__spath_tmpc_tl
     {
-      \g__spath_moveto_tl {\tl_set_eq:NN \l__spath_tmpd_tl \g__spath_moveto_tl }
-      \g__spath_lineto_tl {\tl_set_eq:NN \l__spath_tmpd_tl \g__spath_lineto_tl }
-      \g__spath_curveto_tl {\tl_set_eq:NN \l__spath_tmpd_tl \g__spath_curvetoa_tl }
-      \g__spath_curvetoa_tl {\tl_set_eq:NN \l__spath_tmpd_tl \g__spath_curveto_tl }
-      \g__spath_curvetob_tl {\tl_set_eq:NN \l__spath_tmpd_tl \g__spath_curvetob_tl }
+      \g__spath_moveto_tl {
+        
+        \bool_if:NT \l__spath_closed_bool
+        {
+          \tl_put_right:NV \l__spath_tmpd_tl \g__spath_closepath_tl
+          \tl_set:Nx \l__spath_tmpe_tl {\tl_tail:N \l__spath_tmpd_tl}
+          \tl_put_right:Nx \l__spath_tmpd_tl
+          {
+            { \tl_head:N \l__spath_tmpd_tl }
+            { \tl_head:N \l__spath_tmpe_tl }
+          }
+        }
+        \bool_set_false:N \l__spath_closed_bool
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_moveto_tl
+        \tl_put_left:NV \l__spath_tmpb_tl \l__spath_tmpd_tl
+        \tl_clear:N \l__spath_tmpd_tl
+      }
+      \g__spath_lineto_tl {
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_lineto_tl
+      }
+      \g__spath_curveto_tl {
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_curvetoa_tl
+      }
+      \g__spath_curvetoa_tl {
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_curveto_tl
+      }
+      \g__spath_curvetob_tl {
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_curvetob_tl
+      }
     }
     {
-      \tl_show:N \l__spath_tmpc_tl
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+      \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+      \dim_set:Nn \l__spath_tmpb_dim {\tl_head:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+      \tl_put_left:Nx \l__spath_tmpd_tl
+      {
+        {\dim_use:N \l__spath_tmpa_dim}
+        {\dim_use:N \l__spath_tmpb_dim}
+      }
+
     }
-    \tl_put_left:NV \l__spath_tmpb_tl \l__spath_tmpd_tl
-    \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
-    \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
-    \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
-    \dim_set:Nn \l__spath_tmpb_dim {\tl_head:N \l__spath_tmpa_tl}
-    \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
-    \tl_put_left:Nx \l__spath_tmpb_tl
     {
-      {\dim_use:N \l__spath_tmpa_dim}
-      {\dim_use:N \l__spath_tmpb_dim}
+      \tl_if_eq:NNTF \l__spath_tmpc_tl \g__spath_closepath_tl
+      {
+        \bool_set_true:N \l__spath_closed_bool
+      }
+      {
+        \msg_warning:nnx { spath3 } { unknown path construction } {\l__spath_tmpc_tl }
+      }
+
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
     }
   }
-  \tl_put_left:NV \l__spath_tmpb_tl \g__spath_moveto_tl
+
+  \bool_if:NT \l__spath_closed_bool
+  {
+    \tl_put_right:NV \l__spath_tmpd_tl \g__spath_closepath_tl
+    \tl_set:Nx \l__spath_tmpe_tl {\tl_tail:N \l__spath_tmpd_tl}
+    \tl_put_right:Nx \l__spath_tmpd_tl
+    {
+      { \tl_head:N \l__spath_tmpd_tl }
+      { \tl_head:N \l__spath_tmpe_tl }
+    }
+  }
+
+  \bool_set_false:N \l__spath_closed_bool
+  \tl_put_left:NV \l__spath_tmpd_tl \g__spath_moveto_tl
+  \tl_put_left:NV \l__spath_tmpb_tl \l__spath_tmpd_tl
+
   \spath_put:nnV {#1} {reverse path} \l__spath_tmpb_tl
 }
 %    \end{macrocode}
@@ -822,13 +889,20 @@ manipulating PGF soft paths}
     {\dim_use:N \l__spath_tmpa_dim}
     {\dim_use:N \l__spath_tmpb_dim}
   }
+  \tl_put_right:Nx \l__spath_fp_tl
+  {
+    {\dim_use:N \l__spath_tmpa_dim}
+    {\dim_use:N \l__spath_tmpb_dim}
+  }
 
   \dim_set_eq:NN \l__spath_minx_dim \l__spath_tmpa_dim
   \dim_set_eq:NN \l__spath_miny_dim \l__spath_tmpb_dim
   \dim_set_eq:NN \l__spath_maxx_dim \l__spath_tmpa_dim
   \dim_set_eq:NN \l__spath_maxy_dim \l__spath_tmpb_dim
 
-  \tl_put_left:Nx \l__spath_rp_tl
+  \tl_set:Nn \l__spath_tmpd_tl {}
+  \bool_set_false:N \l__spath_closed_bool
+  \tl_put_left:Nx \l__spath_tmpd_tl
   {
     {\dim_use:N \l__spath_tmpa_dim}
     {\dim_use:N \l__spath_tmpb_dim}
@@ -841,62 +915,99 @@ manipulating PGF soft paths}
   }
   {
     \tl_set:Nx \l__spath_tmpc_tl {\tl_head:N \l__spath_tmpa_tl}
-    \tl_set:Nn \l__spath_tmpd_tl {}
     \tl_set_eq:NN \l__spath_fa_tl \l__spath_tmpc_tl
     \int_incr:N \l__spath_l_int
 
-    \tl_case:NnF \l__spath_tmpc_tl
+    \tl_case:NnTF \l__spath_tmpc_tl
     {
       \g__spath_moveto_tl {
-        \tl_set_eq:NN \l__spath_tmpd_tl \g__spath_moveto_tl
+        
+        \bool_if:NT \l__spath_closed_bool
+        {
+          \tl_put_right:NV \l__spath_tmpd_tl \g__spath_closepath_tl
+          \tl_set:Nx \l__spath_tmpb_tl {\tl_tail:N \l__spath_tmpd_tl}
+          \tl_put_right:Nx \l__spath_tmpd_tl
+          {
+            { \tl_head:N \l__spath_tmpd_tl }
+            { \tl_head:N \l__spath_tmpb_tl }
+          }
+        }
+        \bool_set_false:N \l__spath_closed_bool
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_moveto_tl
+        \tl_put_left:NV \l__spath_rp_tl \l__spath_tmpd_tl
+        \tl_clear:N \l__spath_tmpd_tl
         \int_incr:N \l__spath_nc_int
       }
       \g__spath_lineto_tl {
-        \tl_set_eq:NN \l__spath_tmpd_tl \g__spath_lineto_tl
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_lineto_tl
         \int_incr:N \l__spath_rl_int
       }
       \g__spath_curveto_tl {
-        \tl_set_eq:NN \l__spath_tmpd_tl \g__spath_curvetoa_tl
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_curvetoa_tl
         \int_incr:N \l__spath_rl_int
       }
       \g__spath_curvetoa_tl {
-        \tl_set_eq:NN \l__spath_tmpd_tl \g__spath_curveto_tl
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_curveto_tl
       }
       \g__spath_curvetob_tl {
-        \tl_set_eq:NN \l__spath_tmpd_tl \g__spath_curvetob_tl
+        \tl_put_left:NV \l__spath_tmpd_tl \g__spath_curvetob_tl
       }
     }
     {
-      \tl_show:N \l__spath_tmpc_tl
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+      \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+      \dim_set:Nn \l__spath_tmpb_dim {\tl_head:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+      \dim_set:Nn \l__spath_minx_dim {\dim_min:nn { \l__spath_minx_dim} {\l__spath_tmpa_dim}}
+      \dim_set:Nn \l__spath_miny_dim {\dim_min:nn { \l__spath_miny_dim} {\l__spath_tmpb_dim}}
+      \dim_set:Nn \l__spath_maxx_dim {\dim_max:nn { \l__spath_maxx_dim} {\l__spath_tmpa_dim}}
+      \dim_set:Nn \l__spath_maxy_dim {\dim_max:nn { \l__spath_maxy_dim} {\l__spath_tmpb_dim}}
+
+      \tl_put_left:Nx \l__spath_tmpd_tl
+      {
+        {\dim_use:N \l__spath_tmpa_dim}
+        {\dim_use:N \l__spath_tmpb_dim}
+      }
+
+      \tl_set:Nx \l__spath_fp_tl
+      {
+        {\dim_use:N \l__spath_tmpa_dim}
+        {\dim_use:N \l__spath_tmpb_dim}
+      }
     }
-    \tl_put_left:NV \l__spath_rp_tl \l__spath_tmpd_tl
-    \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
-
-    \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
-    \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
-    \dim_set:Nn \l__spath_tmpb_dim {\tl_head:N \l__spath_tmpa_tl}
-    \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
-
-    \dim_set:Nn \l__spath_minx_dim {\dim_min:nn { \l__spath_minx_dim} {\l__spath_tmpa_dim}}
-    \dim_set:Nn \l__spath_miny_dim {\dim_min:nn { \l__spath_miny_dim} {\l__spath_tmpb_dim}}
-    \dim_set:Nn \l__spath_maxx_dim {\dim_max:nn { \l__spath_maxx_dim} {\l__spath_tmpa_dim}}
-    \dim_set:Nn \l__spath_maxy_dim {\dim_max:nn { \l__spath_maxy_dim} {\l__spath_tmpb_dim}}
-
-    \tl_put_left:Nx \l__spath_rp_tl
     {
-      {\dim_use:N \l__spath_tmpa_dim}
-      {\dim_use:N \l__spath_tmpb_dim}
-    }
+      \tl_if_eq:NNTF \l__spath_tmpc_tl \g__spath_closepath_tl
+      {
+        \bool_set_true:N \l__spath_closed_bool
+      }
+      {
+        \msg_warning:nnx { spath3 } { unknown path construction } {\l__spath_tmpc_tl }
+      }
 
-    \tl_set:Nx \l__spath_fp_tl
-    {
-      {\dim_use:N \l__spath_tmpa_dim}
-      {\dim_use:N \l__spath_tmpb_dim}
-    }
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
 
+    }
   }
 
-  \tl_put_left:NV \l__spath_rp_tl \g__spath_moveto_tl
+  \bool_if:NT \l__spath_closed_bool
+  {
+    \tl_put_right:NV \l__spath_tmpd_tl \g__spath_closepath_tl
+    \tl_set:Nx \l__spath_tmpb_tl {\tl_tail:N \l__spath_tmpd_tl}
+    \tl_put_right:Nx \l__spath_tmpd_tl
+    {
+      { \tl_head:N \l__spath_tmpd_tl }
+      { \tl_head:N \l__spath_tmpb_tl }
+    }
+  }
+
+  \bool_set_false:N \l__spath_closed_bool
+  \tl_put_left:NV \l__spath_tmpd_tl \g__spath_moveto_tl
+  \tl_put_left:NV \l__spath_rp_tl \l__spath_tmpd_tl
 
   \spath_put:nnV {#1} {reverse path} \l__spath_rp_tl
   \spath_put:nnV {#1} {length} \l__spath_l_int
@@ -2117,6 +2228,8 @@ manipulating PGF soft paths}
 \bool_set_true:N \l__cal_taper_end_bool
 
 \cs_generate_variant:Nn \tl_put_right:Nn {Nv}
+
+\msg_new:nnn { calligraphy } { undefined pen } { The~ pen~ "#1"~ is~ not~ defined. }
 %    \end{macrocode}
 %
 % \subsection{TikZ Keys}
@@ -2291,92 +2404,100 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \NewDocumentCommand \CalligraphyPathCreate { m m }
 {
-  \int_zero:N \l__cal_tmpa_int
-  \tl_map_inline:cn {l__spath_list_#1}
+  \tl_if_exist:cTF {l__spath_list_calligraphy pen #2}
   {
-    \int_incr:N \l__cal_tmpa_int
-    \int_zero:N \l__cal_tmpb_int
-    \tl_map_inline:cn {l__spath_list_calligraphy pen #2}
+    \int_zero:N \l__cal_tmpa_int
+    \tl_map_inline:cn {l__spath_list_#1}
     {
-      \int_incr:N \l__cal_tmpb_int
-      \group_begin:
-      \pgfsys@beginscope
 
-      \cal_apply_style:c {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
-      \cal_apply_style:c {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
-      \cal_apply_style:c {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
+      \int_incr:N \l__cal_tmpa_int
+      \int_zero:N \l__cal_tmpb_int
 
-      \spath_clone:nn {##1} {calligraphy temp path}
-
-      \__spath_get:nnN {####1} {initial point} \l__cal_tmpa_tl
-      \spath_translate:nV {calligraphy temp path} \l__cal_tmpa_tl
-
-      \__spath_get:nnN {####1} {length} \l__cal_tmpa_tl
-      
-      \int_compare:nTF {\l__cal_tmpa_tl = 1}
+      \tl_map_inline:cn {l__spath_list_calligraphy pen #2}
       {
-        \cal_at_least_three:n {calligraphy temp path}
+        \int_incr:N \l__cal_tmpb_int
+        \group_begin:
+        \pgfsys@beginscope
 
-        \spath_protocol_path:n {calligraphy temp path}
+        \cal_apply_style:c {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
+        \cal_apply_style:c {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
+        \cal_apply_style:c {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
 
-        \__spath_get:nnN {calligraphy temp path} {path} \l__cal_tmpa_tl
+        \spath_clone:nn {##1} {calligraphy temp path}
 
-        \tikz@options
-        \dim_set:Nn \l__cal_line_width_dim {\pgflinewidth}
-        \cal_maybe_taper:N \l__cal_tmpa_tl
-      }
-      {
+        \__spath_get:nnN {####1} {initial point} \l__cal_tmpa_tl
+        \spath_translate:nV {calligraphy temp path} \l__cal_tmpa_tl
 
-        \spath_weld:nn {calligraphy temp path} {####1}
-        \spath_reverse:n {##1}
-        \spath_reverse:n {####1}
-        \spath_weld:nn {calligraphy temp path} {##1}
-        \spath_weld:nn {calligraphy temp path} {####1}
-        \spath_reverse:n {##1}
-        \spath_reverse:n {####1}
-
-        \tl_clear:N \l__cal_tmpa_tl
-        \tl_set:Nn \l__cal_tmpa_tl {fill=\pgfkeysvalueof{/tikz/pen~colour},draw=none}
-        \tl_if_exist:cT  {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
-        {
-          \tl_put_right:Nv \l__cal_tmpa_tl {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
-        }
-        \tl_if_exist:cT  {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
-        {
-          \tl_put_right:Nn \l__cal_tmpa_tl {,}
-          \tl_put_right:Nv \l__cal_tmpa_tl {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
-        }
-        \tl_if_exist:cT  {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
-        {
-          \tl_put_right:Nn \l__cal_tmpa_tl {,}
-          \tl_put_right:Nv \l__cal_tmpa_tl {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
-        }
-        \spath_tikz_path:Vn \l__cal_tmpa_tl {calligraphy temp path}
-
-      }
-      \pgfsys@endscope
-      \group_end:
-    }
-    \bool_if:NT \l__cal_annotate_bool
-    {
-      \spath_clone:nn {##1} {calligraphy temp path}
-      \tl_set_eq:Nc \l_tmpa_tl {l__spath_list_calligraphy pen #2}
-      \tl_reverse:N \l_tmpa_tl
-      \tl_set:Nx \l_tmpa_tl {\tl_head:N \l_tmpa_tl}
-      \spath_generate_finalpoint:V \l_tmpa_tl
-      \spath_get:VnN \l_tmpa_tl {final point} \l_tmpa_tl
-      \spath_translate:nV {calligraphy temp path} \l_tmpa_tl
-      \tikz@scan@one@point\pgfutil@firstofone\pgfkeysvalueof{/tikz/annotation~shift}
-      \spath_translate:nnn {calligraphy temp path} {\pgf@x} {\pgf@y}
+        \__spath_get:nnN {####1} {length} \l__cal_tmpa_tl
       
-      \pgfkeysgetvalue{/tikz/annotation~style}{\l_tmpa_tl}
-      \spath_tikz_path:Vn \l_tmpa_tl {calligraphy temp path}
-      \spath_get:nnN {calligraphy temp path} {final point} \l_tmpa_tl
-      \exp_last_unbraced:NV \pgfqpoint \l_tmpa_tl
-      \begin{scope}[reset~ cm]
-      \node[every~annotation~node/.try,tl~use:c =  {l__cal_annotation_style_ \int_use:N \l__cal_tmpa_int _tl}] at (\pgf@x,\pgf@y) {\int_use:N \l__cal_tmpa_int};
-      \end{scope}
+        \int_compare:nTF {\l__cal_tmpa_tl = 1}
+        {
+          \cal_at_least_three:n {calligraphy temp path}
+
+          \spath_protocol_path:n {calligraphy temp path}
+
+          \__spath_get:nnN {calligraphy temp path} {path} \l__cal_tmpa_tl
+
+          \tikz@options
+          \dim_set:Nn \l__cal_line_width_dim {\pgflinewidth}
+          \cal_maybe_taper:N \l__cal_tmpa_tl
+        }
+        {
+          \spath_weld:nn {calligraphy temp path} {####1}
+          \spath_reverse:n {##1}
+          \spath_reverse:n {####1}
+          \spath_weld:nn {calligraphy temp path} {##1}
+          \spath_weld:nn {calligraphy temp path} {####1}
+          \spath_reverse:n {##1}
+          \spath_reverse:n {####1}
+
+          \tl_clear:N \l__cal_tmpa_tl
+          \tl_set:Nn \l__cal_tmpa_tl {fill=\pgfkeysvalueof{/tikz/pen~colour},draw=none}
+          \tl_if_exist:cT  {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
+          {
+            \tl_put_right:Nv \l__cal_tmpa_tl {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
+          }
+          \tl_if_exist:cT  {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
+          {
+            \tl_put_right:Nn \l__cal_tmpa_tl {,}
+            \tl_put_right:Nv \l__cal_tmpa_tl {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
+          }
+          \tl_if_exist:cT  {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
+          {
+            \tl_put_right:Nn \l__cal_tmpa_tl {,}
+            \tl_put_right:Nv \l__cal_tmpa_tl {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
+          }
+          \spath_tikz_path:Vn \l__cal_tmpa_tl {calligraphy temp path}
+
+        }
+        \pgfsys@endscope
+        \group_end:
+      }
+
+      \bool_if:NT \l__cal_annotate_bool
+      {
+        \spath_clone:nn {##1} {calligraphy temp path}
+        \tl_set_eq:Nc \l_tmpa_tl {l__spath_list_calligraphy pen #2}
+        \tl_reverse:N \l_tmpa_tl
+        \tl_set:Nx \l_tmpa_tl {\tl_head:N \l_tmpa_tl}
+        \spath_generate_finalpoint:V \l_tmpa_tl
+        \spath_get:VnN \l_tmpa_tl {final point} \l_tmpa_tl
+        \spath_translate:nV {calligraphy temp path} \l_tmpa_tl
+        \tikz@scan@one@point\pgfutil@firstofone\pgfkeysvalueof{/tikz/annotation~shift}
+        \spath_translate:nnn {calligraphy temp path} {\pgf@x} {\pgf@y}
+      
+        \pgfkeysgetvalue{/tikz/annotation~style}{\l_tmpa_tl}
+        \spath_tikz_path:Vn \l_tmpa_tl {calligraphy temp path}
+        \spath_get:nnN {calligraphy temp path} {final point} \l_tmpa_tl
+        \exp_last_unbraced:NV \pgfqpoint \l_tmpa_tl
+        \begin{scope}[reset~ cm]
+        \node[every~annotation~node/.try,tl~use:c =  {l__cal_annotation_style_ \int_use:N \l__cal_tmpa_int _tl}] at (\pgf@x,\pgf@y) {\int_use:N \l__cal_tmpa_int};
+        \end{scope}
+      }
     }
+  }
+  {
+    \msg_warning:nnx { calligraphy } { undefined pen } { #2 }
   }
 }
 %    \end{macrocode}
@@ -3940,14 +4061,13 @@ manipulating PGF soft paths}
     }
     \g__spath_closepath_tl
     {
-      \tl_show:N #2
       \int_gincr:N \l__knot_filaments_int
       \spath_clear_new:n {knot filament \int_use:N \l__knot_filaments_int}
       \tl_clear:N \l_tmpa_tl
       \tl_put_right:Nx {\tl_item:Nn #2 {1}\tl_item:Nn #2 {2}\tl_item:Nn #2 {3}}
       \tl_put_right:NV \l_tmpa_tl \g__spath_lineto_tl
       \tl_put_right:Nx {\tl_item:Nn #2 {5}\tl_item:Nn #2 {6}}
-      \tl_show:N \l_tmpa_tl
+
       \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} \l_tmpa_tl
       \tl_set_eq:cN {l__knot_options_filament \int_use:N \l__knot_filaments_int} \l__knot_tmpa_tl
       \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
