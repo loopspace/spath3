@@ -2409,7 +2409,10 @@ manipulating PGF soft paths}
     \int_zero:N \l__cal_tmpa_int
     \tl_map_inline:cn {l__spath_list_#1}
     {
-
+      \__spath_get:nnN {##1} {length} \l__cal_tmpa_tl
+      \int_compare:nT {\l__cal_tmpa_tl > 1}
+      {
+      
       \int_incr:N \l__cal_tmpa_int
       \int_zero:N \l__cal_tmpb_int
 
@@ -2429,7 +2432,7 @@ manipulating PGF soft paths}
         \spath_translate:nV {calligraphy temp path} \l__cal_tmpa_tl
 
         \__spath_get:nnN {####1} {length} \l__cal_tmpa_tl
-      
+
         \int_compare:nTF {\l__cal_tmpa_tl = 1}
         {
           \cal_at_least_three:n {calligraphy temp path}
@@ -2493,6 +2496,7 @@ manipulating PGF soft paths}
         \begin{scope}[reset~ cm]
         \node[every~annotation~node/.try,tl~use:c =  {l__cal_annotation_style_ \int_use:N \l__cal_tmpa_int _tl}] at (\pgf@x,\pgf@y) {\int_use:N \l__cal_tmpa_int};
         \end{scope}
+      }
       }
     }
   }
