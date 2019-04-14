@@ -1,0 +1,76 @@
+\RequirePackage{shellesc}
+\immediate\write18{cd ..; tex spath3.dtx}
+\documentclass{article}
+%\url{https://tex.stackexchange.com/q/484027/86}
+\usepackage{tikz}
+\usetikzlibrary{hobby}
+\usetikzlibrary{calc}
+\usepackage{spath3}
+
+\begin{document}
+
+\begin{tikzpicture}[use Hobby shortcut]
+
+\path[save spath=test] (0,0) -- (1,1) -- (2,0) -- (0,0) -- cycle (0,1) -- +(1,1) -- +(2,0) -- cycle;
+\SPathShow{test}
+\SPathOpen{test}
+\SPathShow{test}
+
+
+ \path[save spath = A]
+  (3.18, 1.05)..
+  (2.7,.58)..
+  (2.45,-.95)..
+  (1.81,-1.35)
+  ;
+ \path[save spath = B]
+  (3.18, 1.05)..
+  (1.73,1.01)..
+  (0,.57)..
+  (-1.07,0)..
+  (-1.43, -.26)..
+  (-1.76,-.61)..
+  (-1.81,-.89)..
+  (-1.56,-.91)..
+  (-.95, -.78)..
+  (0,-.66)..
+  (.79,-.7)..
+  (1.23,-.88)..
+  (1.81,-1.35)
+  ;
+
+\SPathReverse{B}
+\SPathWeld{A}{B}
+\SPathClose{A}
+
+\filldraw[restore spath=A,fill=blue,draw=black,ultra thick];
+\end{tikzpicture}
+
+\begin{tikzpicture}[use Hobby shortcut]
+
+ \path[overlay,save spath = A]
+  (3.18, 1.05)..
+  (2.7,.58)..
+  (2.45,-.95)..
+  (1.81,-1.35)
+  ;
+
+
+\filldraw[fill=blue, draw=black, ultra thick]
+  (3.18, 1.05)..
+  (1.73,1.01)..
+  (0,.57)..
+  (-1.07,0)..
+  (-1.43, -.26)..
+  (-1.76,-.61)..
+  (-1.81,-.89)..
+  (-1.56,-.91)..
+  (-.95, -.78)..
+  (0,-.66)..
+  (.79,-.7)..
+  (1.23,-.88)..
+  ([Hobby finish]1.81,-1.35) % needed to trigger hobby path generation before adding the new path
+[insert reverse spath=A] -- cycle
+  ;
+\end{tikzpicture}
+\end{document}

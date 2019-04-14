@@ -1,4 +1,5 @@
-\immediate\write18{tex spath3.dtx}
+\RequirePackage{shellesc}
+\immediate\write18{cd ..; tex spath3.dtx}
 \documentclass{article}
 \usepackage{tabularx}
 \usepackage{tikz}
@@ -41,6 +42,9 @@
   }%
   \def\pgfsyssoftpath@curvetosupportbtoken##1##2{%
     \string\pgfsyssoftpath@curvetosupportbtoken\{##1\}\{##2\}
+  }%
+  \def\pgfsyssoftpath@closepathtoken##1##2{%
+    \string\pgfsyssoftpath@closepathtoken\{##1\}\{##2\}
   }%
 }
 
@@ -100,25 +104,51 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff 
 \end{tikzpicture}
 
 
-
 \begin{tikzpicture}
-\draw[save as spath=my path] (0,0) -- (1,1) .. controls +(1,0) and +(-1,0) .. (3,0);
+\draw[save as spath=circular path] (0,0) circle[radius=1cm];
 \end{tikzpicture}
 
-\bigskip
+\newpage
+
+\SPathPrepare{circular path}
+
+\displaypath{circular path}
+
+\newpage
+
+\begin{tikzpicture}
+\draw[save as spath=circular path] (0,0) arc[start angle=0, end angle=360, radius=1cm] -- cycle;
+\end{tikzpicture}
+
+\newpage
+
+\SPathPrepare{circular path}
+
+\displaypath{circular path}
+
+\newpage
+
+\begin{tikzpicture}
+\draw[save as spath=my path] (0,0) -- (1,1) .. controls +(1,0) and +(-1,0) .. (3,0) -- cycle (4,0) -- (5,1) -- (6,0) -- cycle;
+\end{tikzpicture}
+
+\newpage
 
 \SPathPrepare{my path}
 
 \displaypath{my path}
 
+\newpage
 \SPathTranslateInto {my path} {translated path} {10pt} {-10pt}
 
 \displaypath{translated path}
 
+\newpage
 \SPathWeldInto {my path} {weld path} {translated path}
 
 \displaypath{weld path}
 
+\newpage
 \begin{tikzpicture}
 \draw[restore spath=my path];
 \end{tikzpicture}
@@ -126,6 +156,7 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff 
 \begin{tikzpicture}
 \draw[restore spath=weld path];
 \end{tikzpicture}
+\newpage
 
 \begin{tikzpicture}
 \draw[define pen,red,ultra thick] (0,0) -- (.2,.2) (.3,.3) (.4,.4) -- (.6,.6);

@@ -1,4 +1,5 @@
-\immediate\write18{tex spath3.dtx}
+\RequirePackage{shellesc}
+\immediate\write18{cd ..; tex spath3.dtx}
 %\immediate\write18{tex knots.dtx}
 \documentclass{article}
 \usepackage{tikz}

@@ -1,0 +1,157 @@
+\documentclass[a4paper,11pt]{report}
+%\url{https://tex.stackexchange.com/q/478294/86}
+\usepackage{shellesc}
+\usepackage{graphicx,amssymb,amstext,amsmath}
+\usepackage{tikz}
+\usetikzlibrary{
+  decorations.pathreplacing,
+  decorations.markings,
+  hobby,
+  knots,
+  celtic,
+  shapes.geometric,
+  calc,
+  external
+}
+
+\tikzexternalize
+
+\begin{document}
+
+\tikzset{
+  knot diagram/every strand/.append style={
+    line width=1.5pt,violet
+  },
+}
+
+\tikzset{
+  my style/.style={
+    dashed
+  }
+}
+
+Demonstration of the problem: the clipping circles are big enough that the circle associated with the crossing between the violet line and the dashed grey line overlaps the problematic crossing.
+
+\tikzsetnextfilename{problem}
+\begin{tikzpicture}[scale=0.9, use Hobby shortcut, add arrow/.style={postaction={decorate}, decoration={
+  markings,
+  mark=at position 0.25 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.653 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.75 with {\arrow[line width=1.5pt]{<}}}}]
+\begin{knot}[
+  consider self intersections=true,
+  ignore endpoint intersections=false,
+  flip crossing=3,
+  background clip/.append style={
+    preaction={
+      fill=gray,
+      fill opacity=.5,
+    }
+  },
+  rotate=180]
+  \strand ([closed]0,0) .. (0.7,-0.7) .. (0,-1) .. (-1.7,0) .. (-1.5,2.2) .. (0,2.5) .. (.5,2) .. (-.5,1) [add arrow,violet] .. (.5,0) .. (0,-.5) .. (-.5,0) .. (.5,1) .. (-.5,2) .. (-1.5,1) .. (0,0);
+  \strand[knot diagram/only when rendering/.style={my style}, lightgray] (-0.7,-1.2) -- (-0.7,-.9); 
+  \strand[knot diagram/only when rendering/.style={my style}, lightgray] (-0.7,-.75) -- (-0.7,2.5);
+\end{knot}
+\path (0,-.7);
+\end{tikzpicture}
+
+%---------------------------------------------------------------
+
+Fix one: shrink the clipping circles using the \verb+clip radius+ key.
+
+\tikzsetnextfilename{fix-one}
+\begin{tikzpicture}[scale=0.9, use Hobby shortcut, add arrow/.style={postaction={decorate}, decoration={
+  markings,
+  mark=at position 0.25 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.653 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.75 with {\arrow[line width=1.5pt]{<}}}}]
+\begin{knot}[
+  consider self intersections=true,
+  ignore endpoint intersections=false,
+  flip crossing=3,
+  clip radius=3pt,
+  background clip/.append style={
+    preaction={
+      fill=gray,
+      fill opacity=.5,
+    }
+  },
+  rotate=180]
+  \strand ([closed]0,0) .. (0.7,-0.7) .. (0,-1) .. (-1.7,0) .. (-1.5,2.2) .. (0,2.5) .. (.5,2) .. (-.5,1) [add arrow,violet] .. (.5,0) .. (0,-.5) .. (-.5,0) .. (.5,1) .. (-.5,2) .. (-1.5,1) .. (0,0);
+  \strand[knot diagram/only when rendering/.style={my style}, lightgray] (-0.7,-1.2) -- (-0.7,-.9); 
+  \strand[knot diagram/only when rendering/.style={my style}, lightgray] (-0.7,-.75) -- (-0.7,2.5);
+\end{knot}
+\path (0,-.7);
+\end{tikzpicture}
+
+Fix two: the dashed grey lines don't appear to actually be anything to do with the knot, so draw them separately.
+This means that there aren't two crossings near to each other any more.
+
+\tikzsetnextfilename{fix-two}
+\begin{tikzpicture}[scale=0.9, use Hobby shortcut, add arrow/.style={postaction={decorate}, decoration={
+  markings,
+  mark=at position 0.25 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.653 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.75 with {\arrow[line width=1.5pt]{<}}}}]
+\draw[
+  line width=1.5pt,
+  my style,
+  lightgray,
+  rotate=180
+] (-0.7,-1.2) -- (-0.7,2.5);
+\begin{knot}[
+  consider self intersections=true,
+  ignore endpoint intersections=false,
+%  flip crossing=6,
+  rotate=180]
+  \strand ([closed]0,0) .. (0.7,-0.7) .. (0,-1) .. (-1.7,0) .. (-1.5,2.2) .. (0,2.5) .. (.5,2) .. (-.5,1) [add arrow,violet] .. (.5,0) .. (0,-.5) .. (-.5,0) .. (.5,1) .. (-.5,2) .. (-1.5,1) .. (0,0);
+\end{knot}
+\path (0,-.7);
+\end{tikzpicture}
+
+Fix three: you specify a lot of \emph{nodes} in your Hobby path.
+If you aren't wedded to that specific path then reducing the number of nodes can simplify the knot algorithm.
+
+\tikzsetnextfilename{fix-three}
+\begin{tikzpicture}[scale=0.9, use Hobby shortcut, add arrow/.style={postaction={decorate}, decoration={
+  markings,
+  mark=at position 0.2 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.28 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.8 with {\arrow[line width=1.5pt]{<}}}}]
+\draw[
+  line width=1.5pt,
+  my style,
+  lightgray,
+  rotate=180
+] (-0.7,-2.2) -- (-0.7,3.5);
+\begin{knot}[
+  consider self intersections=true,
+  end tolerance=3pt,
+  flip crossing=4,
+  rotate=180]
+  \strand ([closed].5,2) [add arrow,violet] ..  (-.5,1) .. (.3,-.5) .. (-.3,-.5) .. (.5,1) .. ([tension=3]-1.5,1) .. (.7,-1) .. (-2,1);
+\end{knot}
+\path (0,-.7);
+\end{tikzpicture}
+
+
+\tikzsetnextfilename{large-scale}
+\begin{tikzpicture}[scale=2, use Hobby shortcut, add arrow/.style={postaction={decorate}, decoration={
+  markings,
+  mark=at position 0.25 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.653 with {\arrow[line width=1.5pt]{<}},
+  mark=at position 0.75 with {\arrow[line width=1.5pt]{<}}}}]
+\begin{knot}[
+  consider self intersections=true,
+  ignore endpoint intersections=false,
+  flip crossing=3,
+  rotate=180]
+  \strand ([closed]0,0) .. (0.7,-0.7) .. (0,-1) .. (-1.7,0) .. (-1.5,2.2) .. (0,2.5) .. (.5,2) .. (-.5,1) [add arrow,violet] .. (.5,0) .. (0,-.5) .. (-.5,0) .. (.5,1) .. (-.5,2) .. (-1.5,1) .. (0,0);
+  \strand[knot diagram/only when rendering/.style={my style}, lightgray] (-0.7,-1.2) -- (-0.7,-.9); 
+  \strand[knot diagram/only when rendering/.style={my style}, lightgray] (-0.7,-.75) -- (-0.7,2.5);
+\end{knot}
+\path (0,-.7);
+\end{tikzpicture}
+
+\end{document}
