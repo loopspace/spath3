@@ -210,6 +210,8 @@ manipulating PGF soft paths}
 \tl_new:N \l__spath_smuggle_tl
 \dim_new:N \l__spath_tmpa_dim
 \dim_new:N \l__spath_tmpb_dim
+\dim_new:N \l__spath_move_x_dim
+\dim_new:N \l__spath_move_y_dim
 \fp_new:N \l__spath_tmpa_fp
 \fp_new:N \l__spath_tmpb_fp
 \int_new:N \l__spath_tmpa_int
@@ -245,6 +247,7 @@ manipulating PGF soft paths}
 % The first consists of all attributes, the second of those that are ``moveable'' in the sense that they change if we transform the path, the third are the ones that contain actual paths.
 %
 % Note that if using these attributes outside an \Verb+expl3+ context, the spaces should be omitted.
+%
 %    \begin{macrocode}
 \tl_new:N \g__spath_attributes
 \tl_new:N \g__spath_moveable_attributes
@@ -277,7 +280,6 @@ manipulating PGF soft paths}
 % An \Verb+spath+ object is actually a \Verb+prop+.
 % The following functions are wrappers around the underlying \Verb+prop+ functions.
 % We prefix the names to avoid clashing with other \Verb+prop+s that might be lying around, this is why all the \Verb+spath+ methods take argument \Verb+:n+ and not \Verb+:N+.
-% Given that \Verb+spath+ objects might be created inside a group but used outside it, we work globally throughout.
 % \begin{macro}{\spath_new:n}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_new:n #1
@@ -291,6 +293,15 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_clear:n #1
 {
+  \prop_clear:c {l__spath_#1}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_gclear:n}
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_gclear:n #1
+{
   \prop_gclear:c {l__spath_#1}
 }
 %    \end{macrocode}
@@ -299,6 +310,15 @@ manipulating PGF soft paths}
 % \begin{macro}{\spath_clear_new:n}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_clear_new:n #1
+{
+  \prop_clear_new:c {l__spath_#1}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_gclear_new:n}
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_gclear_new:n #1
 {
   \prop_gclear_new:c {l__spath_#1}
 }
@@ -318,6 +338,15 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_put:nnn #1#2#3
 {
+  \prop_put:cnn {l__spath_#1} {#2} {#3}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_gput:nnn}
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_gput:nnn #1#2#3
+{
   \prop_gput:cnn {l__spath_#1} {#2} {#3}
 }
 %    \end{macrocode}
@@ -326,6 +355,15 @@ manipulating PGF soft paths}
 % \begin{macro}{\spath_remove:nn}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_remove:nn #1#2
+{
+  \prop_remove:cn {l__spath_#1} {#2}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_gremove:nn}
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_gremove:nn #1#2
 {
   \prop_gremove:cn {l__spath_#1} {#2}
 }
@@ -375,6 +413,7 @@ manipulating PGF soft paths}
   { \prg_return_false: }
 }
 \cs_generate_variant:Nn \spath_put:nnn {nnV, nnx, nno}
+\cs_generate_variant:Nn \spath_gput:nnn {nnV, nnx, nno}
 \cs_generate_variant:Nn \__spath_get:nn {Vn}
 \cs_generate_variant:Nn \__spath_get:nnN {VnN}
 %    \end{macrocode}
@@ -413,6 +452,24 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\spath_gclone:nn}
+% Globally clones an \Verb+spath+.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_gclone:nn #1 #2
+{
+  \spath_gclear_new:n {#2}
+  \tl_map_inline:Nn \g__spath_attributes
+  {
+    \spath_if_in:nnT {#1} {##1}
+    {
+      \__spath_get:nnN {#1} {##1} \l__spath_tmpa_tl
+      \spath_gput:nnV {#2} {##1} \l__spath_tmpa_tl
+    }
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\spath_get_current_path:n}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_get_current_path:n #1
@@ -420,6 +477,17 @@ manipulating PGF soft paths}
   \pgfsyssoftpath@getcurrentpath\l__spath_tmpa_tl
   \spath_clear_new:n {#1}
   \spath_put:nnV {#1} {path} \l__spath_tmpa_tl
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\spath_gget_current_path:n}
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_gget_current_path:n #1
+{
+  \pgfsyssoftpath@getcurrentpath\l__spath_tmpa_tl
+  \spath_gclear_new:n {#1}
+  \spath_gput:nnV {#1} {path} \l__spath_tmpa_tl
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1038,6 +1106,23 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\spath_globalise:n}
+% Takes all of the data generated for an \Verb+spath+ and promotes it to global (some of the data may have been automatically generated so this avoids duplicating a load of code)
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_globalise:n #1
+{
+  \tl_map_inline:Nn \g__spath_attributes
+  {
+    \spath_if_in:nnT {#1} {##1}
+    {
+      \__spath_get:nnN {#1} {##1} \l__spath_tmpa_tl
+      \spath_gput:nnV {#1} {##1} \l__spath_tmpa_tl
+    }
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \subsection{Path Manipulation}
 %
 % \begin{macro}{\spath_translate:nnn}
@@ -1060,6 +1145,7 @@ manipulating PGF soft paths}
         {\dim_use:N \l__spath_tmpa_dim}
         {\dim_use:N \l__spath_tmpb_dim}
       }
+
       \spath_put:nnV {#1} {##1} \l__spath_tmpb_tl
     }
   }
@@ -1740,6 +1826,88 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\spath_open_path:n}
+% Removes all close paths from the path, replacing them by \Verb+lineto+ if they move any distance.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_open_path:n #1
+{
+  \__spath_get:nnN {#1} {path} \l__spath_tmpa_tl
+  \tl_clear:N \l__spath_tmpb_tl
+  \bool_until_do:nn {
+    \tl_if_empty_p:N \l__spath_tmpa_tl
+  }
+  {
+    \tl_set:Nx \l__spath_tmpc_tl {\tl_head:N \l__spath_tmpa_tl}
+    \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+    \tl_case:NnF \l__spath_tmpc_tl
+    {
+      \g__spath_closepath_tl {
+
+        \bool_if:nF
+        {
+          \dim_compare_p:n
+          {
+            \l__spath_move_x_dim == \l__spath_tmpa_dim
+          }
+          &&
+          \dim_compare_p:n
+          {
+            \l__spath_move_y_dim == \l__spath_tmpb_dim
+          }
+        }
+        {
+          \tl_put_right:NV \l__spath_tmpb_tl \g__spath_lineto_tl
+        
+          \tl_put_right:Nx \l__spath_tmpb_tl {
+            { \dim_use:N \l__spath_move_x_dim }
+            { \dim_use:N \l__spath_move_y_dim }
+          }
+        }
+        
+        \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+        \dim_set:Nn \l__spath_tmpb_dim {\tl_head:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+      }
+
+      \g__spath_moveto_tl {
+        \tl_put_right:NV \l__spath_tmpb_tl \l__spath_tmpc_tl
+        
+        \dim_set:Nn \l__spath_move_x_dim {\tl_head:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+        \dim_set:Nn \l__spath_move_y_dim {\tl_head:N \l__spath_tmpa_tl}
+        \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+        \tl_put_right:Nx \l__spath_tmpb_tl {
+          { \dim_use:N \l__spath_move_x_dim }
+          { \dim_use:N \l__spath_move_y_dim }
+        }
+
+        \dim_set_eq:NN \l__spath_tmpa_dim \l__spath_move_x_dim
+        \dim_set_eq:NN \l__spath_tmpb_dim \l__spath_move_y_dim
+      }
+    }
+    {
+      \tl_put_right:NV \l__spath_tmpb_tl \l__spath_tmpc_tl
+      
+      \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+      \dim_set:Nn \l__spath_tmpb_dim {\tl_head:N \l__spath_tmpa_tl}
+      \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
+
+      \tl_put_right:Nx \l__spath_tmpb_tl {
+        { \dim_use:N \l__spath_tmpa_dim }
+        { \dim_use:N \l__spath_tmpb_dim }
+      }
+    }
+  }
+  \spath_put:nnV {#1} {path} \l__spath_tmpb_tl
+  \spath_remove:nn {#1} {reverse path}
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \subsection{Iteration Functions}
 %
 % \begin{macro}{\spath_map_component:Nn}
@@ -1926,14 +2094,23 @@ manipulating PGF soft paths}
 % That said, they aren't intended for direct use in a normal document.
 %
 % Most are just wrappers around internal functions.
+% By default, they work globally.
+% The star argument makes them local.
 %
 % \begin{macro}{\MakeSPath}
 % Constructs an \Verb+spath+ object out of the given name and path.
 %    \begin{macrocode}
-\NewDocumentCommand \MakeSPath { m m }
+\NewDocumentCommand \MakeSPath { s m m }
 {
-  \spath_clear_new:n {#1}
-  \spath_put:nno {#1} {path} {#2}
+  \IfBooleanTF {#1}
+  {
+    \spath_clear_new:n {#2}
+    \spath_put:nno {#2} {path} {#3}
+  }
+  {
+    \spath_gclear_new:n {#1}
+    \spath_gput:nno {#2} {path} {#3}
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1941,15 +2118,28 @@ manipulating PGF soft paths}
 % \begin{macro}{\MakeSPathList}
 % This constructs a list of \Verb+spath+ objects from a single path by splitting it into components.
 %    \begin{macrocode}
-\NewDocumentCommand \MakeSPathList { m m }
+\NewDocumentCommand \MakeSPathList { s m m }
 {
-  \tl_gclear_new:c {l__spath_list_#1}
-  \int_zero:N \l__spath_tmpa_int
-  \spath_map_component:Nn #2 {
-    \spath_clear_new:n {#1 _ \int_use:N \l__spath_tmpa_int}
-    \spath_put:nnn  {#1 _ \int_use:N \l__spath_tmpa_int} {path} {##1}
-    \tl_gput_right:cx {l__spath_list_#1} {{#1 _ \int_use:N \l__spath_tmpa_int}}
-    \int_incr:N \l__spath_tmpa_int
+  \IfBooleanTF {#1}
+  {
+    \tl_clear_new:c {l__spath_list_#2}
+    \int_zero:N \l__spath_tmpa_int
+    \spath_map_component:Nn #3 {
+      \spath_clear_new:n {#2 _ \int_use:N \l__spath_tmpa_int}
+      \spath_put:nnn  {#2 _ \int_use:N \l__spath_tmpa_int} {path} {##1}
+      \tl_put_right:cx {l__spath_list_#2} {{#2 _ \int_use:N \l__spath_tmpa_int}}
+      \int_incr:N \l__spath_tmpa_int
+    }
+  }
+  {
+    \tl_gclear_new:c {l__spath_list_#2}
+    \int_zero:N \l__spath_tmpa_int
+    \spath_map_component:Nn #3 {
+      \spath_gclear_new:n {#2 _ \int_use:N \l__spath_tmpa_int}
+      \spath_gput:nnn  {#2 _ \int_use:N \l__spath_tmpa_int} {path} {##1}
+      \tl_gput_right:cx {l__spath_list_#2} {{#2 _ \int_use:N \l__spath_tmpa_int}}
+      \int_incr:N \l__spath_tmpa_int
+    }
   }
 }
 %    \end{macrocode}
@@ -1957,9 +2147,15 @@ manipulating PGF soft paths}
 %
 % \begin{macro}{\CloneSPath}
 %    \begin{macrocode}
-\NewDocumentCommand \CloneSPath { m m }
+\NewDocumentCommand \CloneSPath { s m m }
 {
-  \spath_clone:nn {#1} {#2}
+  \IfBooleanTF {#1}
+  {
+    \spath_clone:nn {#2} {#3}
+  }
+  {
+    \spath_gclone:nn {#2} {#3}
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1975,20 +2171,40 @@ manipulating PGF soft paths}
 %
 % \begin{macro}{\SPathPrepare}
 %    \begin{macrocode}
-\NewDocumentCommand \SPathPrepare { m }
+\NewDocumentCommand \SPathPrepare { s m }
 {
-  \spath_generate_all:n {#1}
+  \spath_generate_all:n {#2}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#2}
+  }
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\SPathListPrepare}
 %    \begin{macrocode}
-\NewDocumentCommand \SPathListPrepare { m }
+\NewDocumentCommand \SPathListPrepare { s m }
+{
+  \tl_map_inline:cn {l__spath_list_#2}
+  {
+    \spath_generate_all:n {##1}
+    \IfBooleanF {#1}
+    {
+      \spath_globalise:n {##1}
+    }
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\SPathListOpen}
+%    \begin{macrocode}
+\NewDocumentCommand \SPathListOpen { m }
 {
   \tl_map_inline:cn {l__spath_list_#1}
   {
-    \spath_generate_all:n {##1}
+    \spath_open_path:n {##1}
   }
 }
 %    \end{macrocode}
@@ -2015,9 +2231,13 @@ manipulating PGF soft paths}
 %
 % \begin{macro}{\SPathTranslate}
 %    \begin{macrocode}
-\NewDocumentCommand \SPathTranslate { m m m }
+\NewDocumentCommand \SPathTranslate { s m m m }
 {
-  \spath_translate:nnn {#1} {#2} {#3}
+  \spath_translate:nnn {#2} {#3} {#4}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#2}
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2025,19 +2245,33 @@ manipulating PGF soft paths}
 % \begin{macro}{\SPathTranslateInto}
 % Clones the path before translating it.
 %    \begin{macrocode}
-\NewDocumentCommand \SPathTranslateInto { m m m m }
+\NewDocumentCommand \SPathTranslateInto { s m m m m }
 {
-  \spath_clone:nn {#1} {#2}
-  \spath_translate:nnn {#2} {#3} {#4}
+  \IfBooleanTF {#1}
+  {
+    \spath_clone:nn {#2} {#3}
+  }
+  {
+    \spath_gclone:nn {#2} {#3}
+  }
+  \spath_translate:nnn {#3} {#4} {#5}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#3}
+  }
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\SPathScale}
 %    \begin{macrocode}
-\NewDocumentCommand \SPathScale { m m m }
+\NewDocumentCommand \SPathScale { s m m m }
 {
-  \spath_scale:nnn {#1} {#2} {#3}
+  \spath_scale:nnn {#2} {#3} {#4}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#2}
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2045,44 +2279,123 @@ manipulating PGF soft paths}
 % \begin{macro}{\SPathScaleInto}
 % Clones the path first.
 %    \begin{macrocode}
-\NewDocumentCommand \SPathScaleInto { m m m m }
+\NewDocumentCommand \SPathScaleInto { s m m m m }
 {
-  \spath_clone:nn {#1} {#2}
-  \spath_scale:nnn {#2} {#3} {#4}
+  \IfBooleanTF {#1}
+  {
+    \spath_clone:nn {#2} {#3}
+  }
+  {
+    \spath_gclone:nn {#2} {#3}
+  }
+  \spath_scale:nnn {#3} {#4} {#5}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#3}
+  }
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\SPathWeld}
 %    \begin{macrocode}
-\NewDocumentCommand \SPathWeld { m m }
+\NewDocumentCommand \SPathWeld { s m m }
 {
-  \spath_weld:nn {#1} {#2}
+  \spath_weld:nn {#2} {#3}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#2}
+  }
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\SPathWeldInto}
 %    \begin{macrocode}
-\NewDocumentCommand \SPathWeldInto { m m m }
+\NewDocumentCommand \SPathWeldInto { s m m m }
 {
-  \spath_clone:nn {#1} {#2}
-  \spath_weld:nn {#2} {#3}
+  \IfBooleanTF {#1}
+  {
+    \spath_clone:nn {#2} {#3}
+  }
+  {
+    \spath_gclone:nn {#2} {#3}
+  }
+  \spath_weld:nn {#3} {#4}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#3}
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\SPathReverse}
+%    \begin{macrocode}
+\DeclareDocumentCommand \SPathReverse {s m}
+{
+  \spath_reverse:n {#2}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#2}
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\SPathClose}
+%    \begin{macrocode}
+\DeclareDocumentCommand \SPathClose {s m}
+{
+  \spath_close_path:n {#2}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#2}
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\SPathOpen}
+%    \begin{macrocode}
+\DeclareDocumentCommand \SPathOpen {s m}
+{
+  \spath_open_path:n {#2}
+  \IfBooleanF {#1}
+  {
+    \spath_globalise:n {#2}
+  }
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % Interfaces via TikZ keys.
+%
+% When saving an \Verb+spath+ we make it global since we're probably buried deep within groups and scopes.
 %     \begin{macrocode}
 \tikzset{
-  save~spath/.code={
+  save~ spath/.code={
     \tikz@addmode{
-      \spath_get_current_path:n {#1}
+      \spath_gget_current_path:n {#1}
     }
   },
-  restore~spath/.code={
+  restore~ spath/.code={
     \spath_set_current_path:n {#1}
-  }
+  },
+  insert~ spath/.code={
+    \spath_get_current_path:n {current spath}
+    \spath_weld:nn { current path } { #1 }
+    \spath_set_current_path:n { current path }
+  },
+  reverse~ spath/.code={
+    \spath_reverse:n { #1 }
+  },
+  insert~ reverse~ spath/.code={
+    \spath_reverse:n { #1 }
+    \spath_get_current_path:n { current path }
+    \spath_weld:nn { current path } { #1 }
+    \spath_set_current_path:n { current path }
+  },    
 }
 %    \end{macrocode}
 % \subsection{Miscellaneous Commands}
@@ -2255,6 +2568,7 @@ manipulating PGF soft paths}
     \tikz@addmode{
       \pgfsyssoftpath@getcurrentpath\l__cal_tmpa_tl
       \MakeSPathList{calligraphy path}{\l__cal_tmpa_tl}
+      \SPathListOpen{calligraphy path}
       \SPathListPrepare{calligraphy path}
       \CalligraphyPathCreate{calligraphy path}{\pgfkeysvalueof{/tikz/pen~name}}
     }
@@ -2410,6 +2724,7 @@ manipulating PGF soft paths}
     \tl_map_inline:cn {l__spath_list_#1}
     {
       \__spath_get:nnN {##1} {length} \l__cal_tmpa_tl
+
       \int_compare:nT {\l__cal_tmpa_tl > 1}
       {
       
@@ -2421,14 +2736,13 @@ manipulating PGF soft paths}
         \int_incr:N \l__cal_tmpb_int
         \group_begin:
         \pgfsys@beginscope
-
         \cal_apply_style:c {l__cal_stroke_style_ \int_use:N \l__cal_tmpa_int}
         \cal_apply_style:c {l__cal_stroke_inline_style_ \int_use:N \l__cal_tmpa_int}
         \cal_apply_style:c {l__cal_nib_style_ \int_use:N \l__cal_tmpb_int}
-
         \spath_clone:nn {##1} {calligraphy temp path}
 
         \__spath_get:nnN {####1} {initial point} \l__cal_tmpa_tl
+
         \spath_translate:nV {calligraphy temp path} \l__cal_tmpa_tl
 
         \__spath_get:nnN {####1} {length} \l__cal_tmpa_tl
@@ -3422,16 +3736,14 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % If in draft mode we label the intersections, otherwise we just stick a coordinate at each one.
 %    \begin{macrocode}
-    \bool_if:NTF \l__knot_draft_bool
+    \tl_clear:N \l__knot_node_tl
+    \bool_if:NT \l__knot_draft_bool
     {
       \tl_set:Nn \l__knot_node_tl {
         \exp_not:N \node[coordinate,
           pin={[node~ contents={\int_use:N \l__knot_intersections_int},knot~ diagram/draft/crossing~ label, knot~ diagram/draft/crossing~ \int_use:N \l__knot_intersections_int \c_space_tl label/.try]
             }]
       }
-    }
-    {
-      \tl_set:Nn \l__knot_node_tl {\exp_not:N \node[coordinate]}
     }
 %    \end{macrocode}
 % This double loop steps through the pieces (strands or filaments) and computes the intersections and does stuff with those.
@@ -3880,6 +4192,7 @@ manipulating PGF soft paths}
       \group_begin:
       \tikzset{knot~ diagram/every~ intersection/.try, every~ intersection/.try, knot~ diagram/intersection~ \int_use:N \l__knot_intersections_int/.try}
       \knot_draw_crossing:nVV {\tl_use:N \l__knot_tmpg_tl} \l__knot_tmpa_dim \l__knot_tmpb_dim
+      \coordinate (\l__knot_name_tl \c_space_tl \int_use:N \l__knot_intersections_int) at (\dim_use:N \l__knot_tmpa_dim, \dim_use:N \l__knot_tmpb_dim);
       \group_end:
       \endpgfscope
 %    \end{macrocode}
@@ -3887,10 +4200,12 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
     }
 %    \end{macrocode}
-% And stick a coordinate possibly with a label at the crossing.
+% And possibly stick a coordinate with a label at the crossing.
 %    \begin{macrocode}
-    \seq_gpush:Nx \l__knot_nodes_seq { \l__knot_node_tl (\l__knot_name_tl \c_space_tl \int_use:N \l__knot_intersections_int) at (\dim_use:N \l__knot_tmpa_dim, \dim_use:N \l__knot_tmpb_dim) {};}
-
+    \tl_if_empty:NF \l__knot_node_tl
+    {
+      \seq_gpush:Nx \l__knot_nodes_seq { \l__knot_node_tl at (\dim_use:N \l__knot_tmpa_dim, \dim_use:N \l__knot_tmpb_dim) {};}
+    }
   }
 }
 
