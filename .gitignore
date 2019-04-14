@@ -1,4 +1,6 @@
 *.pdf
+*.md5
+*.dpth
 *.aux
 *.auxlock
 *~
@@ -12,3 +14,4 @@ README.txt
 spath3.sty
 tikzlibrarycalligraphy.code.tex
 tikzlibraryknots.code.tex
+CTAN/*
