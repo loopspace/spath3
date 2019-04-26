@@ -92,6 +92,16 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff 
 
 \begin{document}
 
+\begin{tikzpicture}
+\path[save as spath=rpath] (0,0) to[out=30,in=150] (1,0);
+\end{tikzpicture}
+\SPathPrepare*{rpath}
+\SPathShow{rpath}
+\SPathReverse*{rpath}
+\SPathShow{rpath}
+
+\end{document}
+
 \tikz \calligraphy[copperplate] (0,0) .. controls +(1,-1) and +(-1,1) .. ++(3,0) [this stroke style={light,taper=start}] +(0,0) .. controls +(1,-1) and +(-1,1) .. ++(3,0) [this stroke style={taper,heavy}];
 
 \begin{tikzpicture}

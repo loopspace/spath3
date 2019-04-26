@@ -682,6 +682,7 @@ manipulating PGF soft paths}
   \__spath_get:nnN {#1} {path} \l__spath_tmpa_tl
 
   \tl_clear:N \l__spath_tmpb_tl
+  \tl_clear:N \l__spath_tmpd_tl
   \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
   \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
   \tl_set:Nx \l__spath_tmpa_tl {\tl_tail:N \l__spath_tmpa_tl}
@@ -1340,6 +1341,20 @@ manipulating PGF soft paths}
   \spath_swap:nnn {#1} {path} {reverse path}
   \spath_swap:nnn {#1} {initial point} {final point}
   \spath_swap:nnn {#1} {initial action} {final action}
+  \__spath_get:nnNT {#1} {initial action} \l__spath_tmpa_tl
+  {
+    \tl_if_eq:NNT \l__spath_tmpa_tl \g__spath_curveto_tl
+    {
+      \spath_put:nnV {#1} {initial action} \g__spath_curvetoa_tl
+    }
+  }
+  \__spath_get:nnNT {#1} {final action} \l__spath_tmpa_tl
+  {
+    \tl_if_eq:NNT \l__spath_tmpa_tl \g__spath_curvetoa_tl
+    {
+      \spath_put:nnV {#1} {final action} \g__spath_curveto_tl
+    }
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2108,7 +2123,7 @@ manipulating PGF soft paths}
     \spath_put:nno {#2} {path} {#3}
   }
   {
-    \spath_gclear_new:n {#1}
+    \spath_gclear_new:n {#2}
     \spath_gput:nno {#2} {path} {#3}
   }
 }
