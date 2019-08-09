@@ -102,7 +102,14 @@ and the derived files            spath3.ins,
  
 \usepackage{listings}
 \lstloadlanguages{[LaTeX]TeX}
-\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+\lstset{
+  breakatwhitespace=true,
+  breaklines=true,
+  language=[LaTeX]TeX,
+  basicstyle=\small\ttfamily,
+  keepspaces=true,
+  columns=fullflexible
+}
  
 \usepackage{fancyvrb}
 
@@ -113,11 +120,10 @@ and the derived files            spath3.ins,
    \begin{center}
 %   \setlength{\parindent}{0pt}
    \fbox{\begin{minipage}{.9\linewidth}
-     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
      \lstinputlisting[]{example.out}
    \end{minipage}}
-
    \fbox{\begin{minipage}{.9\linewidth}
+     \centering
      \input{example.out}
    \end{minipage}}
 \end{center}
@@ -131,7 +137,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{4488}
+% \CheckSum{4865}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
