@@ -196,6 +196,10 @@ and the derived files            spath3.ins,
 % \fi
 % \subsection{Initialisation}
 %
+%    \begin{macrocode}
+%<@@=spath>
+%    \end{macrocode}
+%
 % Load the \LaTeX3 foundation and register us as a \LaTeX3\ package.
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}
@@ -286,7 +290,7 @@ manipulating PGF soft paths}
 % An \Verb+spath+ object is actually a \Verb+prop+.
 % The following functions are wrappers around the underlying \Verb+prop+ functions.
 % We prefix the names to avoid clashing with other \Verb+prop+s that might be lying around, this is why all the \Verb+spath+ methods take argument \Verb+:n+ and not \Verb+:N+.
-% \begin{macro}[aux]{\spath_new:n}
+% \begin{macro}[internal]{\spath_new:n}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_new:n #1
 {
@@ -295,7 +299,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_clear:n}
+% \begin{macro}[internal]{\spath_clear:n}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_clear:n #1
 {
@@ -304,7 +308,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_gclear:n}
+% \begin{macro}[internal]{\spath_gclear:n}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_gclear:n #1
 {
@@ -313,7 +317,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_clear_new:n}
+% \begin{macro}[internal]{\spath_clear_new:n}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_clear_new:n #1
 {
@@ -322,7 +326,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_gclear_new:n}
+% \begin{macro}[internal]{\spath_gclear_new:n}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_gclear_new:n #1
 {
@@ -331,7 +335,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_show:n}
+% \begin{macro}[internal]{\spath_show:n}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_show:n #1
 {
@@ -340,7 +344,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_put:nnn}
+% \begin{macro}[internal]{\spath_put:nnn}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_put:nnn #1#2#3
 {
@@ -349,7 +353,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_gput:nnn}
+% \begin{macro}[internal]{\spath_gput:nnn}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_gput:nnn #1#2#3
 {
@@ -358,7 +362,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_remove:nn}
+% \begin{macro}[internal]{\spath_remove:nn}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_remove:nn #1#2
 {
@@ -367,7 +371,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_gremove:nn}
+% \begin{macro}[internal]{\spath_gremove:nn}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_gremove:nn #1#2
 {
@@ -376,7 +380,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\__spath_get:nn}
+% \begin{macro}[internal]{\__spath_get:nn}
 % This function is an internal one since the real \Verb+get+ function will generate its data if it does not already exist.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \__spath_get:nn #1#2
@@ -386,7 +390,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\__spath_get:nnN}
+% \begin{macro}[internal]{\__spath_get:nnN}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \__spath_get:nnN #1#2#3
 {
@@ -395,7 +399,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_if_in:nn}
+% \begin{macro}[internal]{\spath_if_in:nn}
 %    \begin{macrocode}
 \prg_new_conditional:Npnn \spath_if_in:nn #1#2 {p, T, F, TF}
 {
@@ -406,7 +410,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\__spath_get:nnN}
+% \begin{macro}[internal]{\__spath_get:nnN}
 %    \begin{macrocode}
 \cs_generate_variant:Nn \__prop_split:NnTF {cnTF}
 \prg_new_protected_conditional:Npnn \__spath_get:nnN #1#2#3 {T, F, TF}
@@ -425,7 +429,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_if_exist:n}
+% \begin{macro}[internal]{\spath_if_exist:n}
 %    \begin{macrocode}
 \prg_new_conditional:Npnn \spath_if_exist:n #1 {p,T,F,TF}
 {
@@ -440,7 +444,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_clone:nn}
+% \begin{macro}[internal]{\spath_clone:nn}
 % Clones an \Verb+spath+.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_clone:nn #1 #2
@@ -458,7 +462,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_gclone:nn}
+% \begin{macro}[internal]{\spath_gclone:nn}
 % Globally clones an \Verb+spath+.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_gclone:nn #1 #2
@@ -476,7 +480,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_get_current_path:n}
+% \begin{macro}[internal]{\spath_get_current_path:n}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_get_current_path:n #1
 {
@@ -487,7 +491,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_gget_current_path:n}
+% \begin{macro}[internal]{\spath_gget_current_path:n}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_gget_current_path:n #1
 {
@@ -498,7 +502,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_set_current_path:n}
+% \begin{macro}[internal]{\spath_set_current_path:n}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_set_current_path:n #1
 {
@@ -515,7 +519,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_use_path:nn}
+% \begin{macro}[internal]{\spath_use_path:nn}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_use_path:nn #1#2
 {
@@ -525,7 +529,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_protocol_path:n}
+% \begin{macro}[internal]{\spath_protocol_path:n}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_protocol_path:n #1
 {
@@ -538,7 +542,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_tikz_path:nn}
+% \begin{macro}[internal]{\spath_tikz_path:nn}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_tikz_path:nn #1#2
 {
@@ -553,7 +557,7 @@ manipulating PGF soft paths}
 %
 % \subsection{Computing Information}
 %
-% \begin{macro}[aux]{\spath_get:nn}
+% \begin{macro}[internal]{\spath_get:nn}
 % The information that we store along with a soft path can be computed from it, but computing it every time is wasteful.
 % So this is the real \Verb+\spath_get:nn+ function which checks to see if we have already computed it and then either retrieves it or computes it. 
 %    \begin{macrocode}
@@ -568,7 +572,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_get:nnN}
+% \begin{macro}[internal]{\spath_get:nnN}
 % As above but leaves the result in a token list rather than in the stream.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_get:nnN #1#2#3
@@ -584,7 +588,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 % The next slew of functions generate data from the original path, storing it in the \Verb+prop+ for further retrieval.
-% \begin{macro}[aux]{\spath_generate_length:n}
+% \begin{macro}[internal]{\spath_generate_length:n}
 % Counts the number of triples in the path.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_generate_length:n #1
@@ -595,7 +599,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_reallength:n}
+% \begin{macro}[internal]{\spath_generate_reallength:n}
 % The real length of a path is the number of triples that actually draw something (that is, the number of lines and curves).
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_generate_reallength:n #1
@@ -617,7 +621,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_numberofcomponents:n}
+% \begin{macro}[internal]{\spath_generate_numberofcomponents:n}
 % A component is a continuous segment of the path, separated by moves.
 % Successive moves are not collapsed, and zero length moves count.
 %    \begin{macrocode}
@@ -636,7 +640,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_initialpoint:n}
+% \begin{macro}[internal]{\spath_generate_initialpoint:n}
 % The starting point of the path.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_generate_initialpoint:n #1
@@ -652,7 +656,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_finalpoint:n}
+% \begin{macro}[internal]{\spath_generate_finalpoint:n}
 % The final point of the path.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_generate_finalpoint:n #1
@@ -679,7 +683,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_reversepath:n}
+% \begin{macro}[internal]{\spath_generate_reversepath:n}
 % This computes the reverse of the path.
 % TODO: handle closed paths, possibly rectangles.
 %    \begin{macrocode}
@@ -792,7 +796,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_initialaction:n}
+% \begin{macro}[internal]{\spath_generate_initialaction:n}
 % This is the first thing that the path does (after the initial move).
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_generate_initialaction:n #1
@@ -810,7 +814,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_final action:n}
+% \begin{macro}[internal]{\spath_generate_final action:n}
 % This is the last thing that the path does.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_generate_finalaction:n #1
@@ -839,7 +843,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_minbb:n}
+% \begin{macro}[internal]{\spath_generate_minbb:n}
 % This computes the minimum (bottom left) of the bounding box of the path.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_generate_minbb:n #1
@@ -871,7 +875,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_max bb:n}
+% \begin{macro}[internal]{\spath_generate_max bb:n}
 % This computes the maximum (top right) of the bounding box of the path.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_generate_maxbb:n #1
@@ -903,7 +907,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_generate_all:n}
+% \begin{macro}[internal]{\spath_generate_all:n}
 % This function generates all of the data in one fell swoop.
 % By traversing the path just once it is quicker than doing each one individually.
 % However, it does need to store a lot of data as it goes.
@@ -1113,7 +1117,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_globalise:n}
+% \begin{macro}[internal]{\spath_globalise:n}
 % Takes all of the data generated for an \Verb+spath+ and promotes it to global (some of the data may have been automatically generated so this avoids duplicating a load of code)
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_globalise:n #1
@@ -1132,7 +1136,7 @@ manipulating PGF soft paths}
 %
 % \subsection{Path Manipulation}
 %
-% \begin{macro}[aux]{\spath_translate:nnn}
+% \begin{macro}[internal]{\spath_translate:nnn}
 % Translates a path.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_translate:nnn #1#2#3
@@ -1200,7 +1204,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_scale:nnn}
+% \begin{macro}[internal]{\spath_scale:nnn}
 % Scale a path.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_scale:nnn #1#2#3
@@ -1266,7 +1270,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_transform:nnnnnnn}
+% \begin{macro}[internal]{\spath_transform:nnnnnnn}
 % Applies an affine (matrix and vector) transformation to path.
 % The matrix is specified in rows first.
 %    \begin{macrocode}
@@ -1335,7 +1339,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_reverse:n}
+% \begin{macro}[internal]{\spath_reverse:n}
 % This reverses a path.
 % As a lot of the data is invariant under reversing, there isn't a lot to do.
 %     \begin{macrocode}
@@ -1365,7 +1369,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_swap:nnn}
+% \begin{macro}[internal]{\spath_swap:nnn}
 % Swaps two entries, being careful to ensure that their existence (or otherwise) is preserved.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_swap:nnn #1#2#3
@@ -1382,7 +1386,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_weld:nn}
+% \begin{macro}[internal]{\spath_weld:nn}
 % This welds one path to another, moving the second so that its initial point coincides with the first's final point.
 % It is called a \emph{weld} because the initial move of the second path is removed.
 % The first path is updated, the second is not modified.
@@ -1517,7 +1521,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_prepend_no_move:nn}
+% \begin{macro}[internal]{\spath_prepend_no_move:nn}
 % Prepend the path from the second \Verb+spath+ to the first, removing
 % the adjoining move.  
 %    \begin{macrocode}
@@ -1666,7 +1670,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_append_no_move:nn}
+% \begin{macro}[internal]{\spath_append_no_move:nn}
 % Append the path from the second \Verb+spath+ to the first, removing
 % the adjoining move.  
 %    \begin{macrocode}
@@ -1811,7 +1815,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_bake_round:n}
+% \begin{macro}[internal]{\spath_bake_round:n}
 % Ought to clear the reverse path, if set.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_bake_round:n #1
@@ -1823,7 +1827,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_close_path:n}
+% \begin{macro}[internal]{\spath_close_path:n}
 % Appends a close path to the end of the path, and to the end of the reverse path.
 % For now, the point is the initial or final point (respectively).
 % To be future proof, it ought to be the point of the adjacent move to.
@@ -1847,7 +1851,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_open_path:n}
+% \begin{macro}[internal]{\spath_open_path:n}
 % Removes all close paths from the path, replacing them by \Verb+lineto+ if they move any distance.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_open_path:n #1
@@ -1931,7 +1935,7 @@ manipulating PGF soft paths}
 %
 % \subsection{Iteration Functions}
 %
-% \begin{macro}[aux]{\spath_map_component:Nn}
+% \begin{macro}[internal]{\spath_map_component:Nn}
 % This iterates through the components of a path, applying the inline function to each.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_component:Nn #1#2
@@ -1965,7 +1969,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_map_segment_inline:Nn}
+% \begin{macro}[internal]{\spath_map_segment_inline:Nn}
 % This iterates through the segments of the path, applying the inline function to each.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_segment_inline:Nn #1#2
@@ -1977,7 +1981,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_map_segment_inline:nn}
+% \begin{macro}[internal]{\spath_map_segment_inline:nn}
 % This iterates through the segments of the path of the \Verb+spath+ object, applying the inline function to each.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_segment_inline:nn #1#2
@@ -1990,7 +1994,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\spath_map_segment_function:nN}
+% \begin{macro}[internal]{\spath_map_segment_function:nN}
 % This iterates through the segments of the path of the \Verb+spath+ object, applying the specified function to each.
 % The specified function should take two \Verb+N+ type arguments.
 % The first is a token representing the type of path segment, the second is the path segment itself.
@@ -2118,7 +2122,7 @@ manipulating PGF soft paths}
 % By default, they work globally.
 % The star argument makes them local.
 %
-% \begin{macro}[aux]{\MakeSPath}
+% \begin{macro}[internal]{\MakeSPath}
 % Constructs an \Verb+spath+ object out of the given name and path.
 %    \begin{macrocode}
 \NewDocumentCommand \MakeSPath { s m m }
@@ -2136,7 +2140,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\MakeSPathList}
+% \begin{macro}[internal]{\MakeSPathList}
 % This constructs a list of \Verb+spath+ objects from a single path by splitting it into components.
 %    \begin{macrocode}
 \NewDocumentCommand \MakeSPathList { s m m }
@@ -2166,7 +2170,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\CloneSPath}
+% \begin{macro}[internal]{\CloneSPath}
 %    \begin{macrocode}
 \NewDocumentCommand \CloneSPath { s m m }
 {
@@ -2181,7 +2185,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathInfo}
+% \begin{macro}[internal]{\SPathInfo}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathInfo { m m }
 {
@@ -2190,7 +2194,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathPrepare}
+% \begin{macro}[internal]{\SPathPrepare}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathPrepare { s m }
 {
@@ -2203,7 +2207,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathListPrepare}
+% \begin{macro}[internal]{\SPathListPrepare}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathListPrepare { s m }
 {
@@ -2219,7 +2223,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathListOpen}
+% \begin{macro}[internal]{\SPathListOpen}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathListOpen { m }
 {
@@ -2231,7 +2235,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathInfoInto}
+% \begin{macro}[internal]{\SPathInfoInto}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathInfoInto { m m m }
 {
@@ -2241,7 +2245,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathShow}
+% \begin{macro}[internal]{\SPathShow}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathShow { m }
 {
@@ -2250,7 +2254,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathTranslate}
+% \begin{macro}[internal]{\SPathTranslate}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathTranslate { s m m m }
 {
@@ -2263,7 +2267,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathTranslateInto}
+% \begin{macro}[internal]{\SPathTranslateInto}
 % Clones the path before translating it.
 %    \begin{macrocode}
 \NewDocumentCommand \SPathTranslateInto { s m m m m }
@@ -2284,7 +2288,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathScale}
+% \begin{macro}[internal]{\SPathScale}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathScale { s m m m }
 {
@@ -2297,7 +2301,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathScaleInto}
+% \begin{macro}[internal]{\SPathScaleInto}
 % Clones the path first.
 %    \begin{macrocode}
 \NewDocumentCommand \SPathScaleInto { s m m m m }
@@ -2318,7 +2322,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathWeld}
+% \begin{macro}[internal]{\SPathWeld}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathWeld { s m m }
 {
@@ -2331,7 +2335,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathWeldInto}
+% \begin{macro}[internal]{\SPathWeldInto}
 %    \begin{macrocode}
 \NewDocumentCommand \SPathWeldInto { s m m m }
 {
@@ -2351,7 +2355,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathReverse}
+% \begin{macro}[internal]{\SPathReverse}
 %    \begin{macrocode}
 \DeclareDocumentCommand \SPathReverse {s m}
 {
@@ -2364,7 +2368,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathClose}
+% \begin{macro}[internal]{\SPathClose}
 %    \begin{macrocode}
 \DeclareDocumentCommand \SPathClose {s m}
 {
@@ -2377,7 +2381,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\SPathOpen}
+% \begin{macro}[internal]{\SPathOpen}
 %    \begin{macrocode}
 \DeclareDocumentCommand \SPathOpen {s m}
 {
@@ -2421,7 +2425,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \subsection{Miscellaneous Commands}
 %
-% \begin{macro}[aux]{\spath_split_curve:nnNN}
+% \begin{macro}[internal]{\spath_split_curve:nnNN}
 % Splits a Bezier cubic into pieces.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_split_curve:nnNN #1#2#3#4
@@ -2531,6 +2535,10 @@ manipulating PGF soft paths}
 % \fi
 %
 % \section{The Calligraphy Package}
+%
+%    \begin{macrocode}
+%<@@=cal>
+%    \end{macrocode}
 %
 % \subsection{Initialisation}
 %    \begin{macrocode}
@@ -2734,7 +2742,7 @@ manipulating PGF soft paths}
 %
 % \subsection{The Path Creation}
 %
-% \begin{macro}[aux]{\CalligraphyPathCreate}
+% \begin{macro}[internal]{\CalligraphyPathCreate}
 % This is the main command for creating the calligraphic paths.
 %    \begin{macrocode}
 \NewDocumentCommand \CalligraphyPathCreate { m m }
@@ -2842,7 +2850,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\cal_moveto:n}
+% \begin{macro}[internal]{\cal_moveto:n}
 % When creating the path, we need to keep track of the number of components so that we can apply styles accordingly.
 %    \begin{macrocode}
 \cs_new_eq:NN \cal_orig_moveto:n \pgfpathmoveto
@@ -2854,7 +2862,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\cal_apply_style:N}
+% \begin{macro}[internal]{\cal_apply_style:N}
 % Interface for applying \Verb+\tikzset+ to a token list.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \cal_apply_style:N #1
@@ -2867,7 +2875,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\cal_at_least_three:n}
+% \begin{macro}[internal]{\cal_at_least_three:n}
 % A tapered path has to have at least three components.
 % This figures out if it is necessary and sets up the splitting.
 %    \begin{macrocode}
@@ -2919,7 +2927,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\cal_split_line_in_two:NN}
+% \begin{macro}[internal]{\cal_split_line_in_two:NN}
 % Splits a line in two, adding the splits to the first token list.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \cal_split_line_in_two:NN #1#2
@@ -2957,7 +2965,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\cal_split_line_in_three:NN}
+% \begin{macro}[internal]{\cal_split_line_in_three:NN}
 % Splits a line in three, adding the splits to the first token list.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \cal_split_line_in_three:NN #1#2
@@ -3002,7 +3010,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\cal_split_curve_in_two:NN}
+% \begin{macro}[internal]{\cal_split_curve_in_two:NN}
 % Splits a curve in two, adding the splits to the first token list.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \cal_split_curve_in_two:NN #1#2
@@ -3020,7 +3028,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\cal_split_curve_in_three:NN}
+% \begin{macro}[internal]{\cal_split_curve_in_three:NN}
 % Splits a curve in three, adding the splits to the first token list.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \cal_split_curve_in_three:NN #1#2
@@ -3045,7 +3053,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\cal_maybe_taper:N}
+% \begin{macro}[internal]{\cal_maybe_taper:N}
 % Possibly tapers the path, depending on the booleans.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \cal_maybe_taper:N #1
@@ -3166,7 +3174,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\__cal_taper_aux:}
+% \begin{macro}[internal]{\__cal_taper_aux:}
 % Auxiliary macro to avoid unnecessary code duplication.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \__cal_taper_aux:
@@ -3453,6 +3461,9 @@ manipulating PGF soft paths}
 %%
 % \section{Drawing Knots}
 %
+%    \begin{macrocode}
+%<@@=knot>
+%    \end{macrocode}
 %
 % \subsection{Initialisation}
 %
@@ -3665,7 +3676,7 @@ manipulating PGF soft paths}
 \cs_generate_variant:Nn \knot_apply_style:N {c}
 %    \end{macrocode}
 %
-%\begin{macro}[aux]{\flipcrossings}
+%\begin{macro}[internal]{\flipcrossings}
 % The user can specify a comma separated list of crossings to flip.
 %    \begin{macrocode}
 \NewDocumentCommand \flipcrossings {m}
@@ -3675,7 +3686,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\strand}
+% \begin{macro}[internal]{\strand}
 % This is how the user specifies a strand of the knot.
 %    \begin{macrocode}
 \NewDocumentCommand \strand { O{} }
@@ -3688,7 +3699,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{knot}
+% \begin{macro}[internal]{knot}
 % This is the wrapper environment that calls the knot generation code.
 %    \begin{macrocode}
 \NewDocumentEnvironment{knot} { O{} }
@@ -3701,7 +3712,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_initialise:n}
+% \begin{macro}[internal]{\knot_initialise:n}
 % Set up some stuff before loading in the strands.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_initialise:n #1
@@ -3714,7 +3725,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_render:}
+% \begin{macro}[internal]{\knot_render:}
 % This is the code that starts the work of rendering the knot.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_render:
@@ -3793,7 +3804,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_draw_strand:n}
+% \begin{macro}[internal]{\knot_draw_strand:n}
 % This renders a strand using the options originally specified.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_draw_strand:n #1
@@ -3812,7 +3823,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_draw_labels:n}
+% \begin{macro}[internal]{\knot_draw_labels:n}
 % Draw a label at each end of each strand, if in draft mode.
 % Also, if requested, split potentially self intersecting Bezier curves.
 %    \begin{macrocode}
@@ -3843,7 +3854,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_split_self_intersects:NN}
+% \begin{macro}[internal]{\knot_split_self_intersects:NN}
 % This is the macro that does the split.
 % Figuring out whether a Bezier cubic self intersects is apparently a difficult problem so we don't bother.
 % We compute a point such that if there is an intersection then it lies on either side of the point.
@@ -3928,7 +3939,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_intersections:nn}
+% \begin{macro}[internal]{\knot_intersections:nn}
 % This computes the intersections of two pieces and steps through them.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_intersections:nn #1#2
@@ -3963,7 +3974,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_save_intersections:nn}
+% \begin{macro}[internal]{\knot_save_intersections:nn}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_save_intersections:nn #1#2
 {
@@ -4006,7 +4017,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_do_intersection:n}
+% \begin{macro}[internal]{\knot_do_intersection:n}
 % This handles a specific intersection.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_do_intersection:n #1
@@ -4234,7 +4245,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_test_endpoint:N}
+% \begin{macro}[internal]{\knot_test_endpoint:N}
 % Test whether the point is near the intersection point.
 %    \begin{macrocode}
 \prg_new_conditional:Npnn \knot_test_endpoint:N #1 {p,T,F,TF}
@@ -4257,7 +4268,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_test_endpoint:nn}
+% \begin{macro}[internal]{\knot_test_endpoint:nn}
 % Wrapper around the above.
 %    \begin{macrocode}
 \prg_new_protected_conditional:Npnn \knot_test_endpoint:nn #1#2 {T,F,TF}
@@ -4278,7 +4289,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_draw_crossing:nnn}
+% \begin{macro}[internal]{\knot_draw_crossing:nnn}
 % This is the code that actually renders a crossing.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \knot_draw_crossing:nnn #1#2#3
@@ -4322,7 +4333,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_split_strands:}
+% \begin{macro}[internal]{\knot_split_strands:}
 % This, and the following macros, are for splitting strands into filaments.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_split_strands:
@@ -4334,7 +4345,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_compute_nexts:n}
+% \begin{macro}[internal]{\knot_compute_nexts:n}
 % Each filament needs to know its predecessor and successor.
 % We work out the predecessors as we go along, this fills in the successors.
 %    \begin{macrocode}
@@ -4346,7 +4357,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_split_strand:n}
+% \begin{macro}[internal]{\knot_split_strand:n}
 % Sets up the split for a single strand.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_split_strand:n #1
@@ -4359,7 +4370,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\knot_save_filament:NN}
+% \begin{macro}[internal]{\knot_save_filament:NN}
 % Saves a filament as a new \Verb+spath+ object.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_save_filament:NN #1#2
@@ -4424,7 +4435,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{\redraw}
+% \begin{macro}[internal]{\redraw}
 % The user can redraw segments of the strands at specific locations.
 %    \begin{macrocode}
 \NewDocumentCommand \redraw { m m }
@@ -4442,7 +4453,7 @@ manipulating PGF soft paths}
 \ExplSyntaxOff
 %    \end{macrocode}
 %
-% \begin{macro}[aux]{\pgf@sh@@knotanchor}
+% \begin{macro}[internal]{\pgf@sh@@knotanchor}
 % Add the extra anchors for the knot crossing nodes.
 %    \begin{macrocode}
 \def\pgf@sh@@knotanchor#1#2{%
@@ -4490,7 +4501,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{knot crossing}
+% \begin{macro}[internal]{knot crossing}
 %    \begin{macrocode}
 \pgfdeclareshape{knot crossing}
 {
@@ -4532,7 +4543,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{knot over cross}
+% \begin{macro}[internal]{knot over cross}
 %    \begin{macrocode}
 \pgfdeclareshape{knot over cross}
 {
@@ -4571,7 +4582,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{knot under cross}
+% \begin{macro}[internal]{knot under cross}
 %    \begin{macrocode}
 \pgfdeclareshape{knot under cross}
 {
@@ -4610,7 +4621,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{knot vert}
+% \begin{macro}[internal]{knot vert}
 %    \begin{macrocode}
 \pgfdeclareshape{knot vert}
 {
@@ -4645,7 +4656,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[aux]{knot horiz}
+% \begin{macro}[internal]{knot horiz}
 %    \begin{macrocode}
 \pgfdeclareshape{knot horiz}
 {
