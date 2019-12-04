@@ -1,0 +1,17 @@
+\documentclass{article}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n { check-declarations , deprecation }
+\ExplSyntaxOff
+\usepackage{tikz}
+\usetikzlibrary{knots}
+\begin{document}
+\begin{tikzpicture}
+\begin{knot}[
+  draft mode=strands
+]
+\strand[red,thick] (0,0) .. controls +(1,0) and +(-1,0) .. (2,1) .. controls +(1,0) and +(-1,0) .. (4,0);
+\strand[blue,thick] (0,1) .. controls +(1,0) and +(-1,0) .. (2,0) .. controls +(1,0) and +(-1,0) .. (4,1);
+\end{knot}
+\end{tikzpicture}
+\end{document}

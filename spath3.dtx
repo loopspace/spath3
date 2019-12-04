@@ -262,7 +262,7 @@ manipulating PGF soft paths}
 \tl_new:N \g__spath_attributes
 \tl_new:N \g__spath_moveable_attributes
 \tl_new:N \g__spath_path_attributes
-\tl_set:Nn \g__spath_attributes {
+\tl_gset:Nn \g__spath_attributes {
   {path}
   {reverse path}
   {length}
@@ -275,13 +275,13 @@ manipulating PGF soft paths}
   {min bb}
   {max bb}
 }
-\tl_set:Nn \g__spath_moveable_attributes {
+\tl_gset:Nn \g__spath_moveable_attributes {
   {initial point}
   {final point}
   {min bb}
   {max bb}
 }
-\tl_set:Nn \g__spath_path_attributes {
+\tl_gset:Nn \g__spath_path_attributes {
   {path}
   {reverse path}
 }
@@ -3513,7 +3513,7 @@ manipulating PGF soft paths}
 \bool_new:N \l__knot_skip_bool
 \bool_new:N \l__knot_save_bool
 
-\seq_new:N \l__knot_nodes_seq
+\seq_new:N \g__knot_nodes_seq
 
 \bool_set_true:N \l__knot_ignore_ends_bool
 %    \end{macrocode}
@@ -3720,7 +3720,7 @@ manipulating PGF soft paths}
   \tikzset{knot~ diagram/.cd,every~ knot~ diagram/.try,#1}
   \int_zero:N \l__knot_strands_int
   \tl_clear:N \l__knot_redraws_tl
-  \seq_gclear:N \l__knot_nodes_seq
+  \seq_gclear:N \g__knot_nodes_seq
 }
 %    \end{macrocode}
 % \end{macro}
@@ -3794,7 +3794,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % Draw the crossing nodes
 %    \begin{macrocode}
-    \seq_use:Nn \l__knot_nodes_seq {}
+    \seq_use:Nn \g__knot_nodes_seq {}
   }
 %    \end{macrocode}
 % Close the scope
@@ -4236,7 +4236,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
     \tl_if_empty:NF \l__knot_node_tl
     {
-      \seq_gpush:Nx \l__knot_nodes_seq { \l__knot_node_tl at (\dim_use:N \l__knot_tmpa_dim, \dim_use:N \l__knot_tmpb_dim) {};}
+      \seq_gpush:Nx \g__knot_nodes_seq { \l__knot_node_tl at (\dim_use:N \l__knot_tmpa_dim, \dim_use:N \l__knot_tmpb_dim) {};}
     }
   }
 }
