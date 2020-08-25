@@ -515,6 +515,9 @@ manipulating PGF soft paths}
   \spath_get:nnN {#1} {path} \l__spath_tmpa_tl
   \pgfsyssoftpath@setcurrentpath\l__spath_tmpa_tl
   \pgfsyssoftpath@flushcurrentpath
+
+  \tl_put_right:Nn \tikz@preactions {\def\tikz@actions@path}
+  \tl_put_right:Nx \tikz@preactions {{\exp_args:NV \exp_not:n \l__spath_tmpa_tl}}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -549,6 +552,8 @@ manipulating PGF soft paths}
   \path[#1] \pgfextra{
     \spath_get:nnN {#2} {path} \l__spath_tmpa_tl
     \pgfsyssoftpath@setcurrentpath \l__spath_tmpa_tl
+    \tl_put_right:Nn \tikz@preactions {\def\tikz@actions@path}
+    \tl_put_right:Nx \tikz@preactions {{\exp_args:NV \exp_not:n \l__spath_tmpa_tl}}
   };
 }
 \cs_generate_variant:Nn \spath_tikz_path:nn {Vn}
@@ -2408,7 +2413,7 @@ manipulating PGF soft paths}
     \spath_set_current_path:n {#1}
   },
   insert~ spath/.code={
-    \spath_get_current_path:n {current spath}
+    \spath_get_current_path:n {current path}
     \spath_weld:nn { current path } { #1 }
     \spath_set_current_path:n { current path }
   },
