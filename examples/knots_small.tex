@@ -1,0 +1,45 @@
+\documentclass{memoir}
+%\url{https://tex.stackexchange.com/q/554924/86}
+\usepackage{tikz}
+\usetikzlibrary{knots}
+
+\begin{document}
+
+\def\rings{
+\begin{tikzpicture}
+\begin{knot}[
+    clip radius=1.8pt,
+    clip draw radius=1.9pt,
+    end tolerance=2pt,
+    clip width=3,
+    flip crossing/.list={1,3},
+    ]
+    \strand [line width=0.7pt, black] (0,0) ellipse (3.2pt and 2.2pt);%circle (1.0cm);
+    \strand [line width=0.7pt, black] (4pt,0) ellipse (3.2pt and 2.2pt);%circle (1.0cm);
+    \strand [line width=0.7pt, black] (8pt,0) ellipse (3.2pt and 2.2pt);%circle (1.0cm);
+\end{knot}
+\end{tikzpicture} 
+}
+
+\fancybreak{\rings}
+
+\def\ringsA{
+\begin{tikzpicture}[scale=0.1]
+\begin{knot}[
+    clip radius=1.8pt,
+    clip draw radius=1.9pt,
+    end tolerance=2pt,
+    flip crossing/.list={1,3},
+    ]
+    \strand [line width=0.7pt, black] (0,0) ellipse (1.2 and 0.8);%circle (1.0cm);
+    \strand [line width=0.7pt, black] (1.5,0) ellipse (1.2 and 0.8);%circle (1.0cm);
+    \strand [line width=0.7pt, black] (3,0) ellipse (1.2 and 0.8);%circle (1.0cm);
+\end{knot}
+\end{tikzpicture} 
+}
+
+\fancybreak{\ringsA}
+
+\fancybreak{***}
+
+\end{document}

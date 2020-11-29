@@ -514,10 +514,6 @@ manipulating PGF soft paths}
 
   \spath_get:nnN {#1} {path} \l__spath_tmpa_tl
   \pgfsyssoftpath@setcurrentpath\l__spath_tmpa_tl
-  \pgfsyssoftpath@flushcurrentpath
-
-  \tl_put_right:Nn \tikz@preactions {\def\tikz@actions@path}
-  \tl_put_right:Nx \tikz@preactions {{\exp_args:NV \exp_not:n \l__spath_tmpa_tl}}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -839,9 +835,9 @@ manipulating PGF soft paths}
   \tl_if_empty:NF \l__spath_tmpa_tl {
     \tl_set:Nx \l__spath_tmpb_tl {\tl_head:N \l__spath_tmpa_tl}
   }
-  \tl_if_eq:NNT \l__spath_tmpa_tl \g__spath_curvetoa_tl
+  \tl_if_eq:NNT \l__spath_tmpb_tl \g__spath_curvetoa_tl
   {
-    \tl_set_eq:NN \l__spath_tmpa_tl \g__spath_curveto_tl
+    \tl_set_eq:NN \l__spath_tmpb_tl \g__spath_curveto_tl
   }
   \spath_put:nnV {#1} {final action} \l__spath_tmpb_tl    
 }
@@ -1399,6 +1395,7 @@ manipulating PGF soft paths}
 \cs_new_nopar:Npn \spath_weld:nn #1#2
 {
   \spath_clone:nn {#2} {tmp_path}
+  \spath_generate_finalaction:n {#1}
   \spath_get:nnN {#1} {final point} \l__spath_tmpa_tl
 
   \dim_set:Nn \l__spath_tmpa_dim {\tl_head:N \l__spath_tmpa_tl}
@@ -1415,9 +1412,13 @@ manipulating PGF soft paths}
 
   \__spath_get:nnN {#1} {path} \l__spath_tmpa_tl
   \__spath_get:nnN {tmp_path} {path} \l__spath_tmpb_tl
-  \tl_set:Nx \l__spath_tmpb_tl {\tl_tail:N \l__spath_tmpb_tl}
-  \tl_set:Nx \l__spath_tmpb_tl {\tl_tail:N \l__spath_tmpb_tl}
-  \tl_set:Nx \l__spath_tmpb_tl {\tl_tail:N \l__spath_tmpb_tl}
+  \__spath_get:nnN {#1} {final action} \l__spath_tmpc_tl
+  \tl_if_eq:NNF \l__spath_tmpc_tl  \g__spath_closepath_tl
+  {
+    \tl_set:Nx \l__spath_tmpb_tl {\tl_tail:N \l__spath_tmpb_tl}
+    \tl_set:Nx \l__spath_tmpb_tl {\tl_tail:N \l__spath_tmpb_tl}
+    \tl_set:Nx \l__spath_tmpb_tl {\tl_tail:N \l__spath_tmpb_tl}
+  }
   \tl_put_right:NV \l__spath_tmpa_tl \l__spath_tmpb_tl
 
   \spath_put:nnV {#1} {path} \l__spath_tmpa_tl
@@ -1675,6 +1676,147 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}[internal]{\spath_prepend:nn}
+% Prepend the path from the second \Verb+spath+ to the first.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_prepend:nn #1#2
+{
+  \spath_if_exist:nT {#2}
+  {
+    \__spath_get:nnN {#2} {path} \l__spath_tmpa_tl
+    \__spath_get:nnN {#1} {path} \l__spath_tmpb_tl
+    \tl_put_right:NV \l__spath_tmpa_tl \l__spath_tmpb_tl
+    \spath_put:nnV {#1} {path} \l__spath_tmpa_tl
+
+    \spath_if_in:nnTF {#2} {initial point}
+    {
+      \__spath_get:nnN {#2} {initial point} \l__spath_tmpa_tl
+      \spath_put:nnV {#1} {initial point} \l__spath_tmpa_tl
+    }
+    {
+      \spath_remove:nn {#1} {initial point}
+    }
+
+    \spath_if_in:nnTF {#2} {initial action}
+    {
+      \__spath_get:nnN {#2} {initial action} \l__spath_tmpa_tl
+      \spath_put:nnV {#1} {initial action} \l__spath_tmpa_tl
+    }
+    {
+      \spath_remove:nn {#1} {initial action}
+    }
+
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {length}
+      &&
+      \spath_if_in_p:nn {#2} {length}
+    }
+    {
+      \__spath_get:nnN {#1} {length} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {length} \l__spath_tmpb_tl
+      \spath_put:nnx {#1} {length} {\int_eval:n {\l__spath_tmpa_tl +
+          \l__spath_tmpb_tl - 1}}
+    }
+    {
+      \spath_remove:nn {#1} {length}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {real length}
+      &&
+      \spath_if_in_p:nn {#2} {real length}
+    }
+    {
+      \__spath_get:nnN {#1} {real length} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {real length} \l__spath_tmpb_tl
+      \spath_put:nnx {#1} {real length} {\int_eval:n {\l__spath_tmpa_tl +
+          \l__spath_tmpb_tl }}
+    }
+    {
+      \spath_remove:nn {#1} {real length}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {number of components}
+      &&
+      \spath_if_in_p:nn {#2} {number of components}
+    }
+    {
+      \__spath_get:nnN {#1} {number of components} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {number of components} \l__spath_tmpb_tl
+      \spath_put:nnx {#1} {number of components} {\int_eval:n {\l__spath_tmpa_tl +
+          \l__spath_tmpb_tl - 1}}
+    }
+    {
+      \spath_remove:nn {#1} {number of components}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {min bb}
+      &&
+      \spath_if_in_p:nn {#2} {min bb}
+    }
+    {
+      \__spath_get:nnN {#1} {min bb} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {min bb} \l__spath_tmpb_tl
+      \dim_set:Nn \l__spath_tmpa_dim {\dim_min:nn {\tl_item:Nn
+          \l__spath_tmpa_tl {1}} {\tl_item:Nn
+          \l__spath_tmpb_tl {1}}}
+      \dim_set:Nn \l__spath_tmpb_dim {\dim_min:nn {\tl_item:Nn
+          \l__spath_tmpa_tl {2}} {\tl_item:Nn
+          \l__spath_tmpb_tl {2}}}
+      \spath_put:nnx {#1} {min bb} {
+        {\dim_use:N \l__spath_tmpa_dim}
+        {\dim_use:N \l__spath_tmpb_dim}
+      }
+    }
+    {
+      \spath_remove:nn {#1} {min bb}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {max bb}
+      &&
+      \spath_if_in_p:nn {#2} {max bb}
+    }
+    {
+      \__spath_get:nnN {#1} {max bb} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {max bb} \l__spath_tmpb_tl
+      \dim_set:Nn \l__spath_tmpa_dim {\dim_min:nn {\tl_item:Nn
+          \l__spath_tmpa_tl {1}} {\tl_item:Nn
+          \l__spath_tmpb_tl {1}}}
+      \dim_set:Nn \l__spath_tmpb_dim {\dim_min:nn {\tl_item:Nn
+          \l__spath_tmpa_tl {2}} {\tl_item:Nn
+          \l__spath_tmpb_tl {2}}}
+      \spath_put:nnx {#1} {max bb} {
+        {\dim_use:N \l__spath_tmpa_dim}
+        {\dim_use:N \l__spath_tmpb_dim}
+      }
+    }
+    {
+      \spath_remove:nn {#1} {max bb}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {reverse path}
+      &&
+      \spath_if_in_p:nn {#2} {reverse path}
+    }
+    {
+      \__spath_get:nnN {#1} {reverse path} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {reverse path} \l__spath_tmpb_tl
+      \tl_put_right:NV \l__spath_tmpa_tl \l__spath_tmpb_tl
+      \spath_put:nnV {#1} {reverse path} \l__spath_tmpb_tl
+    }
+    {
+      \spath_remove:nn {#1} {reverse path}
+    }
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}[internal]{\spath_append_no_move:nn}
 % Append the path from the second \Verb+spath+ to the first, removing
 % the adjoining move.  
@@ -1820,13 +1962,151 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}[internal]{\spath_append:nn}
+% Append the path from the second \Verb+spath+ to the first.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_append:nn #1#2
+{
+  \spath_if_exist:nT {#2}
+  {
+    \spath_get:nnN {#1} {path} \l__spath_tmpa_tl
+    \spath_get:nnN {#2} {path} \l__spath_tmpb_tl
+    \tl_put_right:NV \l__spath_tmpa_tl \l__spath_tmpb_tl
+    \spath_put:nnV {#1} {path} \l__spath_tmpa_tl
+    \spath_if_in:nnTF {#2} {final point}
+    {
+      \__spath_get:nnN {#2} {final point} \l__spath_tmpa_tl
+      \spath_put:nnV {#1} {final point} \l__spath_tmpa_tl
+    }
+    {
+      \spath_remove:nn {#1} {final point}
+    }
+    \spath_if_in:nnTF {#2} {final action}
+    {
+      \__spath_get:nnN {#2} {final action} \l__spath_tmpa_tl
+      \spath_put:nnV {#1} {final action} \l__spath_tmpa_tl
+    }
+    {
+      \spath_remove:nn {#1} {final action}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {length}
+      &&
+      \spath_if_in_p:nn {#2} {length}
+    }
+    {
+      \__spath_get:nnN {#1} {length} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {length} \l__spath_tmpb_tl
+      \spath_put:nnx {#1} {length} {\int_eval:n {\l__spath_tmpa_tl +
+          \l__spath_tmpb_tl - 1}}
+    }
+    {
+      \spath_remove:nn {#1} {length}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {real length}
+      &&
+      \spath_if_in_p:nn {#2} {real length}
+    }
+    {
+      \__spath_get:nnN {#1} {real length} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {real length} \l__spath_tmpb_tl
+      \spath_put:nnx {#1} {real length} {\int_eval:n {\l__spath_tmpa_tl +
+          \l__spath_tmpb_tl }}
+    }
+    {
+      \spath_remove:nn {#1} {real length}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {number of components}
+      &&
+      \spath_if_in_p:nn {#2} {number of components}
+    }
+    {
+      \__spath_get:nnN {#1} {number of components} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {number of components} \l__spath_tmpb_tl
+      \spath_put:nnx {#1} {number of components} {\int_eval:n {\l__spath_tmpa_tl +
+          \l__spath_tmpb_tl - 1}}
+    }
+    {
+      \spath_remove:nn {#1} {number of components}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {min bb}
+      &&
+      \spath_if_in_p:nn {#2} {min bb}
+    }
+    {
+      \__spath_get:nnN {#1} {min bb} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {min bb} \l__spath_tmpb_tl
+      \dim_set:Nn \l__spath_tmpa_dim {\dim_min:nn {\tl_item:Nn
+          \l__spath_tmpa_tl {1}} {\tl_item:Nn
+          \l__spath_tmpb_tl {1}}}
+      \dim_set:Nn \l__spath_tmpb_dim {\dim_min:nn {\tl_item:Nn
+          \l__spath_tmpa_tl {2}} {\tl_item:Nn
+          \l__spath_tmpb_tl {2}}}
+      \spath_put:nnx {#1} {min bb} {
+        {\dim_use:N \l__spath_tmpa_dim}
+        {\dim_use:N \l__spath_tmpb_dim}
+      }
+    }
+    {
+      \spath_remove:nn {#1} {min bb}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {max bb}
+      &&
+      \spath_if_in_p:nn {#2} {max bb}
+    }
+    {
+      \__spath_get:nnN {#1} {max bb} \l__spath_tmpa_tl
+      \__spath_get:nnN {#2} {max bb} \l__spath_tmpb_tl
+      \dim_set:Nn \l__spath_tmpa_dim {\dim_min:nn {\tl_item:Nn
+          \l__spath_tmpa_tl {1}} {\tl_item:Nn
+          \l__spath_tmpb_tl {1}}}
+      \dim_set:Nn \l__spath_tmpb_dim {\dim_min:nn {\tl_item:Nn
+          \l__spath_tmpa_tl {2}} {\tl_item:Nn
+          \l__spath_tmpb_tl {2}}}
+      \spath_put:nnx {#1} {max bb} {
+        {\dim_use:N \l__spath_tmpa_dim}
+        {\dim_use:N \l__spath_tmpb_dim}
+      }
+    }
+    {
+      \spath_remove:nn {#1} {max bb}
+    }
+    \bool_if:nTF
+    {
+      \spath_if_in_p:nn {#1} {reverse path}
+      &&
+      \spath_if_in_p:nn {#2} {reverse path}
+    }
+    {
+      \__spath_get:nnN {#2} {reverse path} \l__spath_tmpa_tl
+      \__spath_get:nnN {#1} {reverse path} \l__spath_tmpb_tl
+      \tl_put_right:NV \l__spath_tmpa_tl \l__spath_tmpb_tl
+      \spath_put:nnV {#1} {reverse path} \l__spath_tmpb_tl
+    }
+    {
+      \spath_remove:nn {#1} {reverse path}
+    }
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}[internal]{\spath_bake_round:n}
 % Ought to clear the reverse path, if set.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_bake_round:n #1
 {
   \__spath_get:nnN {#1} {path} \l__spath_tmpa_tl
-  \pgf@@processround\l__spath_tmpa_tl\l__spath_tmpb_tl
+  \pgf@@@@processround \l__spath_tmpa_tl\l__spath_tmpb_tl
   \spath_put:nnV {#1} {path} \l__spath_tmpb_tl
 }
 %    \end{macrocode}
@@ -3816,10 +4096,10 @@ manipulating PGF soft paths}
 {
   \pgfscope
   \group_begin:
+  \spath_bake_round:n {knot strand #1}
   \tl_set:Nn \l_tmpa_tl {knot~ diagram/every~ strand/.try,}
   \tl_put_right:Nv \l_tmpa_tl {l__knot_options_strand #1}
   \tl_put_right:Nn \l_tmpa_tl {,knot~ diagram/only~ when~ rendering/.try,only~ when~ rendering/.try}
-  \spath_bake_round:n {knot strand #1}
   \spath_tikz_path:Vn \l_tmpa_tl {knot strand #1}
   \group_end:
   \endpgfscope
@@ -4457,6 +4737,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \ExplSyntaxOff
 %    \end{macrocode}
+%<@@=>
 %
 % \begin{macro}[internal]{\pgf@sh@@knotanchor}
 % Add the extra anchors for the knot crossing nodes.

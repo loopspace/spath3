@@ -1,0 +1,975 @@
+\immediate\write18{cd ..; tex spath3.dtx}
+\documentclass{article}
+
+\usepackage{xparse}
+\usepackage{tikz}
+\usepackage{spath3}
+\usetikzlibrary{intersections,hobby,patterns}
+
+\ExplSyntaxOn
+
+\tikzset{
+  append~ spath/.code={
+    \spath_get_current_path:n {current path}
+    \spath_append:nn { current path } { #1 }
+    \spath_set_current_path:n { current path }
+  },
+  set~ spath/.code={
+    \spath_set_current_path:n { #1 }
+    \spath_get:nnN {#1} {final point} \l__spath_tmpa_tl
+    \tl_set:Nx \l__spath_tmpa_tl
+    {
+      \exp_not:c {tikz@lastx}=\tl_item:Nn \l__spath_tmpa_tl {1}
+      \exp_not:c {tikz@lasty}=\tl_item:Nn \l__spath_tmpa_tl {2}
+      \exp_not:c {tikz@lastxsaved}=\tl_item:Nn \l__spath_tmpa_tl {1}
+      \exp_not:c {tikz@lastysaved}=\tl_item:Nn \l__spath_tmpa_tl {2}
+    }
+    \tl_use:N \l__spath_tmpa_tl
+  },
+  shorten~spath~at~end/.code~ 2~ args={
+    \spath_shorten:nn {#1} {#2}
+  },
+  shorten~spath~at~start/.code~ 2~ args ={
+    \spath_reverse:n {#1}
+    \spath_shorten:nn {#1} {#2}
+    \spath_reverse:n {#1}
+  },
+  shorten~spath~both~ends/.code~ 2~ args={
+    \spath_shorten:nn {#1} {#2}
+    \spath_reverse:n {#1}
+    \spath_shorten:nn {#1} {#2}
+    \spath_reverse:n {#1}
+  },
+  globalise~ spath/.code={
+    \spath_globalise:n {#1}
+  },
+  translate~ spath/.code~ n~ args={3}{
+    \spath_translate:nnn {#1}{#2}{#3}
+  },
+  split~ at~ self~ intersections/.code~ 2~ args={
+    \use:c {tikz@addmode}{
+      \group_begin:
+      \spath_get_current_path:n {spath split tmpa}
+      \spath_split_at_self_intersections:nnn {spath split tmpa} {#1} {#2}
+      \group_end:
+    }
+  },
+  split~ at~ intersections/.code~ n~ args={5}{
+    \spath_split_at_intersections:nnnnn {#1}{#2}{#3}{#4}{#5}
+  }
+}
+
+
+\tl_new:N \l__spath_shorten_fa_tl
+\tl_new:N \l__spath_shorten_path_tl
+\tl_new:N \l__spath_shorten_last_tl
+\int_new:N \l__spath_shorten_int
+\fp_new:N \l__spath_shorten_x_fp
+\fp_new:N \l__spath_shorten_y_fp
+
+\cs_new_nopar:Npn \spath_shorten:nn #1#2
+{
+  \group_begin:
+  \spath_get:nnN {#1} {final action} \l__spath_shorten_fa_tl
+  \spath_get:nnN {#1} {path} \l__spath_shorten_path_tl
+  \tl_reverse:N \l__spath_shorten_path_tl
+
+  \tl_clear:N \l__spath_shorten_last_tl
+  \tl_if_eq:NNTF \l__spath_shorten_fa_tl \g__spath_curveto_tl
+  {
+    \int_set:Nn \l__spath_shorten_int {3}
+  }
+  {
+    \int_set:Nn \l__spath_shorten_int {1}
+  }
+
+  \prg_replicate:nn { \l__spath_shorten_int }
+  {
+    \tl_put_right:Nx \l__spath_shorten_last_tl
+    {
+      {\tl_head:N \l__spath_shorten_path_tl}
+    }
+    \tl_set:Nx \l__spath_shorten_path_tl {\tl_tail:N \l__spath_shorten_path_tl}
+    \tl_put_right:Nx \l__spath_shorten_last_tl
+    {
+      {\tl_head:N \l__spath_shorten_path_tl}
+    }
+    \tl_set:Nx \l__spath_shorten_path_tl {\tl_tail:N \l__spath_shorten_path_tl}
+    \tl_put_right:Nx \l__spath_shorten_last_tl
+    {
+      \tl_head:N \l__spath_shorten_path_tl
+    }
+    \tl_set:Nx \l__spath_shorten_path_tl {\tl_tail:N \l__spath_shorten_path_tl}
+  }
+
+  \tl_put_right:Nx \l__spath_shorten_last_tl
+  {
+    {\tl_item:Nn \l__spath_shorten_path_tl {1}}
+    {\tl_item:Nn \l__spath_shorten_path_tl {2}}
+  }
+  \tl_put_right:NV \l__spath_shorten_last_tl \g__spath_moveto_tl
+  
+  \tl_reverse:N \l__spath_shorten_path_tl
+
+  \fp_set:Nn \l__spath_shorten_x_fp
+  {
+    \dim_to_fp:n {\tl_item:Nn \l__spath_shorten_last_tl {4}}
+    -
+    \dim_to_fp:n {\tl_item:Nn \l__spath_shorten_last_tl {1}}
+  }
+  
+  \fp_set:Nn \l__spath_shorten_y_fp
+  {
+    \dim_to_fp:n {\tl_item:Nn \l__spath_shorten_last_tl {5}}
+    -
+    \dim_to_fp:n {\tl_item:Nn \l__spath_shorten_last_tl {2}}
+  }
+
+  \fp_set:Nn \l__spath_shorten_len_fp
+  {
+    sqrt( \l__spath_shorten_x_fp * \l__spath_shorten_x_fp +  \l__spath_shorten_y_fp *  \l__spath_shorten_y_fp )
+  }
+
+  \fp_set:Nn \l__spath_shorten_len_fp
+  {
+    (\l__spath_shorten_len_fp - #2)/ \l__spath_shorten_len_fp
+  }
+
+  \tl_reverse:N \l__spath_shorten_last_tl
+  
+  \tl_if_eq:NNTF \l__spath_shorten_fa_tl \g__spath_curveto_tl
+  {
+    \fp_set:Nn \l__spath_shorten_len_fp
+    {
+      1 - (1 -\l__spath_shorten_len_fp)/3
+    }
+    \spath_split_curve:VVNN \l__spath_shorten_len_fp \l__spath_shorten_last_tl
+    \l__spath_shorten_lasta_tl
+    \l__spath_shorten_lastb_tl
+  }
+  {
+    \spath_split_line:VVNN \l__spath_shorten_len_fp \l__spath_shorten_last_tl
+    \l__spath_shorten_lasta_tl
+    \l__spath_shorten_lastb_tl
+  }
+
+  \prg_replicate:nn {3}
+  {
+    \tl_set:Nx \l__spath_shorten_lasta_tl {\tl_tail:N \l__spath_shorten_lasta_tl}
+  }
+
+  \tl_put_right:NV \l__spath_shorten_path_tl \l__spath_shorten_lasta_tl
+
+  \tl_gset_eq:NN \l__spath_smuggle_tl \l__spath_shorten_path_tl
+  \group_end:
+
+  \spath_clear:n {#1}
+  \spath_put:nnV {#1} {path} \l__spath_smuggle_tl
+}
+
+\cs_generate_variant:Nn \spath_shorten:nn {Vn, VV}
+\cs_generate_variant:Nn \spath_reverse:n {V}
+\cs_generate_variant:Nn \spath_append_no_move:nn {VV}
+\cs_generate_variant:Nn \spath_prepend_no_move:nn {VV}
+
+\cs_new_nopar:Npn \spath_intersect:nn #1#2
+{
+  \group_begin:
+  \spath_get:nnN {#1} {path} \l__spath_tmpa_tl
+  \spath_get:nnN {#2} {path} \l__spath_tmpb_tl
+  \pgfintersectionofpaths%
+  {%
+    \pgfsetpath\l__spath_tmpa_tl
+  }{%
+    \pgfsetpath\l__spath_tmpb_tl
+  }
+  \group_end:
+}
+
+\cs_generate_variant:Nn \spath_intersect:nn {VV, Vn}
+
+\cs_new_nopar:Npn \spath_split_line:nnNN #1#2#3#4
+{
+  \group_begin:
+  \tl_gclear:N \l__spath_smuggle_tl
+  \tl_set_eq:NN \l__spath_tmpa_tl \g__spath_moveto_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl {
+    {\tl_item:nn {#2} {2}}
+    {\tl_item:nn {#2} {3}}
+  }
+  \tl_put_right:NV \l__spath_tmpa_tl \g__spath_lineto_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl
+  {
+    {\fp_to_dim:n
+    {
+      (1 - #1) * \tl_item:nn {#2} {2} + (#1) * \tl_item:nn {#2} {5}
+    }}
+    {\fp_to_dim:n
+    {
+      (1 - #1) * \tl_item:nn {#2} {3} + (#1) * \tl_item:nn {#2} {6}
+    }}
+  }
+  \tl_gset_eq:NN \l__spath_smuggle_tl \l__spath_tmpa_tl
+  \group_end:
+  \tl_set_eq:NN #3 \l__spath_smuggle_tl
+  \group_begin:
+  \tl_gclear:N \l__spath_smuggle_tl
+  \tl_set_eq:NN \l__spath_tmpa_tl \g__spath_moveto_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl
+  {
+    {\fp_to_dim:n
+    {
+      (1 - #1) * \tl_item:nn {#2} {2} + (#1) * \tl_item:nn {#2} {5}
+    }}
+    {\fp_to_dim:n
+    {
+      (1 - #1) * \tl_item:nn {#2} {3} + (#1) * \tl_item:nn {#2} {6}
+    }}
+  }
+  \tl_put_right:NV \l__spath_tmpa_tl \g__spath_lineto_tl
+  \tl_put_right:Nx \l__spath_tmpa_tl {
+    {\tl_item:nn {#2} {5}}
+    {\tl_item:nn {#2} {6}}
+  }
+  \tl_gset_eq:NN \l__spath_smuggle_tl \l__spath_tmpa_tl
+  \group_end:
+  \tl_set_eq:NN #4 \l__spath_smuggle_tl
+}
+
+\cs_generate_variant:Nn \spath_split_line:nnNN {nVNN, VVNN}
+
+\int_new:N \l__spath_split_int
+\int_new:N \l__spath_splitat_int
+\fp_new:N \l__spath_split_fp
+\bool_new:N \l__spath_split_bool
+\tl_new:N \l__spath_split_path_tl
+\tl_new:N \l__spath_split_patha_tl
+\tl_new:N \l__spath_split_pathb_tl
+\tl_new:N \l__spath_split_intoa_tl
+\tl_new:N \l__spath_split_intob_tl
+\dim_new:N \l__spath_splitx_dim
+\dim_new:N \l__spath_splity_dim
+
+\cs_new_nopar:Npn \spath_split_at:nnnn #1#2#3#4
+{
+  \group_begin:
+  \int_set:Nn \l__spath_splitat_int {\fp_to_int:n {floor(#2) + 1}}
+  \fp_set:Nn \l__spath_split_fp {#2 - floor(#2)}
+  \int_zero:N \l__spath_split_int
+  \bool_set_true:N \l__spath_split_bool
+
+  \spath_get:nnN {#1} {path} \l__spath_split_path_tl
+  \tl_clear:N \l__spath_split_patha_tl
+
+  \dim_zero:N \l__spath_splitx_dim
+  \dim_zero:N \l__spath_splity_dim
+
+  \bool_until_do:nn {
+    \tl_if_empty_p:N \l__spath_split_path_tl
+    ||
+    \int_compare_p:n { \l__spath_splitat_int == \l__spath_split_int  }
+  }
+  {
+    \tl_set:Nx \l__spath_tmpc_tl {\tl_head:N \l__spath_split_path_tl}
+    \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+    \tl_case:Nn \l__spath_tmpc_tl
+    {
+      \g__spath_lineto_tl
+      {
+        \int_incr:N \l__spath_split_int
+      }
+      \g__spath_curvetoa_tl
+      {
+        \int_incr:N \l__spath_split_int
+      }
+    }
+    \int_compare:nT { \l__spath_split_int < \l__spath_splitat_int  }
+    {
+      \tl_put_right:NV \l__spath_split_patha_tl \l__spath_tmpc_tl
+      
+      \tl_put_right:Nx \l__spath_split_patha_tl
+      {{ \tl_head:N \l__spath_split_path_tl }}
+      \dim_set:Nn \l__spath_splitx_dim {\tl_head:N \l__spath_split_path_tl}
+      \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+      
+      \tl_put_right:Nx \l__spath_split_patha_tl
+      {{ \tl_head:N \l__spath_split_path_tl }}
+      \dim_set:Nn \l__spath_splity_dim {\tl_head:N \l__spath_split_path_tl}
+      \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+      
+    }
+  }
+
+  \tl_clear:N \l__spath_split_pathb_tl
+  \tl_put_right:NV \l__spath_split_pathb_tl \g__spath_moveto_tl
+  \tl_put_right:Nx \l__spath_split_pathb_tl
+  {
+    {\dim_use:N \l__spath_splitx_dim}
+    {\dim_use:N \l__spath_splity_dim}
+  }
+  \tl_case:Nn \l__spath_tmpc_tl
+  {
+    \g__spath_lineto_tl
+    {
+      \tl_put_right:NV \l__spath_split_pathb_tl \l__spath_tmpc_tl
+      \tl_put_right:Nx \l__spath_split_pathb_tl
+      {{ \tl_head:N \l__spath_split_path_tl }}
+      \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+      
+      \tl_put_right:Nx \l__spath_split_pathb_tl
+      {{ \tl_head:N \l__spath_split_path_tl }}
+      \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+      
+      \spath_split_line:VVNN \l__spath_split_fp \l__spath_split_pathb_tl
+      \l__spath_split_intoa_tl
+      \l__spath_split_intob_tl
+
+      \prg_replicate:nn {3} {
+        \tl_set:Nx \l__spath_split_intoa_tl {\tl_tail:N \l__spath_split_intoa_tl}
+      }
+
+      \tl_put_right:NV \l__spath_split_patha_tl \l__spath_split_intoa_tl
+      \tl_put_right:NV \l__spath_split_intob_tl \l__spath_split_path_tl
+    }
+    \g__spath_curvetoa_tl
+    {
+      \tl_put_right:NV \l__spath_split_pathb_tl \l__spath_tmpc_tl
+      \tl_put_right:Nx \l__spath_split_pathb_tl
+      {{ \tl_head:N \l__spath_split_path_tl }}
+      \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+      
+      \tl_put_right:Nx \l__spath_split_pathb_tl
+      {{ \tl_head:N \l__spath_split_path_tl }}
+      \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+      
+      \prg_replicate:nn {2} {
+        
+        \tl_put_right:Nx \l__spath_split_pathb_tl
+        { \tl_head:N \l__spath_split_path_tl }
+        \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+        
+        \tl_put_right:Nx \l__spath_split_pathb_tl
+        {{ \tl_head:N \l__spath_split_path_tl }}
+        \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+      
+        \tl_put_right:Nx \l__spath_split_pathb_tl
+        {{ \tl_head:N \l__spath_split_path_tl }}
+        \tl_set:Nx \l__spath_split_path_tl {\tl_tail:N \l__spath_split_path_tl }
+      }
+
+      \spath_split_curve:VVNN \l__spath_split_fp \l__spath_split_pathb_tl
+      \l__spath_split_intoa_tl
+      \l__spath_split_intob_tl
+
+      \prg_replicate:nn {3} {
+        \tl_set:Nx \l__spath_split_intoa_tl {\tl_tail:N \l__spath_split_intoa_tl}
+      }
+
+      \tl_put_right:NV \l__spath_split_patha_tl \l__spath_split_intoa_tl
+      \tl_put_right:NV \l__spath_split_intob_tl \l__spath_split_path_tl
+    }
+  }
+
+  \spath_gclear_new:n {#3}
+  \spath_gput:nnV {#3} {path} \l__spath_split_patha_tl
+  \spath_gclear_new:n {#4}
+  \spath_gput:nnV {#4} {path} \l__spath_split_intob_tl
+  \group_end:
+}
+
+\cs_generate_variant:Nn \spath_split_at:nnnn {VVnn, Vnnn}
+
+\cs_new_nopar:Npn \spath_explode_into_list:nn #1#2
+{
+  \tl_clear_new:c {l__spath_list_#2}
+
+  \int_zero:N \l__spath_tmpa_int
+  \spath_map_segment_inline:nn {#1} {
+    \tl_if_eq:NNF ##1 \g__spath_moveto_tl
+    {
+      \spath_clear_new:n {#2 _ \int_use:N \l__spath_tmpa_int}
+      \spath_put:nnV  {#2 _ \int_use:N \l__spath_tmpa_int} {path} ##2
+      \tl_put_right:cx {l__spath_list_#2} {{#2 _ \int_use:N \l__spath_tmpa_int}}
+      \int_incr:N \l__spath_tmpa_int
+    }
+  }
+}
+
+\tl_new:N \spathselfintersectioncount
+
+\tl_new:N \l__spath_split_tmpa_tl
+\tl_new:N \l__spath_split_path_a_tl
+\tl_new:N \l__spath_split_path_b_tl
+\tl_new:N \l__spath_split_join_a_tl
+\tl_new:N \l__spath_split_join_b_tl
+\tl_new:N \l__spath_split_first_tl
+\tl_new:N \l__spath_split_second_tl
+
+\tl_new:N \l__spath_split_one_tl
+\tl_set:Nn \l__spath_split_one_tl {1}
+\tl_new:N \l__spath_split_I_tl
+\tl_set:Nn \l__spath_split_I_tl {I}
+
+\int_new:N \l__spath_split_count_int
+\int_new:N \l__spath_split_intersection_int
+\seq_new:N \l__spath_split_segments_seq
+\seq_new:N \l__spath_split_segments_processed_seq
+\seq_new:N \l__spath_split_segments_middle_seq
+
+\seq_new:N \l__spath_split_joins_seq
+\seq_new:N \l__spath_split_joins_processed_seq
+\seq_new:N \l__spath_split_joins_middle_seq
+
+\seq_new:N \l__spath_split_intersections_seq
+
+\bool_new:N \l__spath_split_join_bool
+
+% We'll run this on each segment
+%
+% Arguments:
+%  1. Path to split
+%  2. Prefix for name of new paths
+%  3. List of how to split at intersections
+%     A - don't split first path at intersection
+%     B - don't split second path at intersection
+%     C - split both paths at intersection
+%
+\cs_new_nopar:Npn \spath_split_at_self_intersections:nnn #1#2#3
+{
+  \group_begin:
+  % The third argument says whether to rejoin segments at the intersections
+  \seq_set_split:Nnn \l__spath_split_intersections_seq {} {#3}
+  % Clone the path as we'll mess around with it
+  \spath_clone:nn {#1} {spath split tmp}
+  % Clear the sequence of joining information
+  % The join information says whether to rejoin a segment to its predecessor
+  \seq_clear:N \l__spath_split_joins_seq
+  % Check the last action to see if it is a close path
+  \spath_get:nnN {spath split tmp} {final action} \l__spath_split_tmpa_tl
+  \tl_if_eq:NNTF \l__spath_split_tmpa_tl \g__spath_closepath_tl
+  {
+    % Last action is a close, so mark it as needing rejoining
+    \seq_put_right:Nn \l__spath_split_joins_seq {1}
+  }
+  {
+    % Last action is not a close, so mark it as needing rejoining
+    \seq_put_right:Nn \l__spath_split_joins_seq {0}
+  }
+  % Remove close paths
+  \spath_open_path:n {spath split tmp}
+  % Separate into segments (creates a token list)
+  \spath_explode_into_list:nn {spath split tmp}{split segments}
+  % so convert to a sequence
+  \seq_set_split:NnV \l__spath_split_segments_seq {} \l__spath_list_splitsegments
+
+  % Iterate over the number of terms in the sequence, adding the
+  % rejoining information
+  \int_step_inline:nnnn {1} {1} {\seq_count:N \l__spath_split_segments_seq - 1}
+  {
+    \seq_put_right:Nn \l__spath_split_joins_seq {1}
+  }
+  
+  % Clear a couple of auxiliaries
+  \seq_clear:N \l__spath_split_segments_processed_seq
+  \seq_clear:N \l__spath_split_joins_processed_seq
+  \int_zero:N \l__spath_split_count_int
+  \int_zero:N \l__spath_split_intersection_int
+
+  % Iterate over the sequence
+  \bool_while_do:nn
+  {
+    !\seq_if_empty_p:N \l__spath_split_segments_seq
+  }
+  {
+    % Remove the left-most items for consideration
+    \seq_pop_left:NN \l__spath_split_segments_seq \l__spath_split_path_a_tl
+    \seq_pop_left:NN \l__spath_split_joins_seq \l__spath_split_join_a_tl
+
+    % Clear some sequences, these will hold any pieces we create from splitting our path under consideration except for the first piece
+    \seq_clear:N \l__spath_split_segments_middle_seq
+    \seq_clear:N \l__spath_split_joins_middle_seq
+
+    % Put the rejoining information in the processed sequence
+    \seq_put_right:NV \l__spath_split_joins_processed_seq \l__spath_split_join_a_tl
+    
+    % Iterate over the rest of the segments
+    \int_step_inline:nnnn {1} {1} {\seq_count:N \l__spath_split_segments_seq}
+    {
+      % Store the next segment for intersection
+      \tl_set:Nx \l__spath_split_path_b_tl {\seq_item:Nn \l__spath_split_segments_seq {##1}}
+      % Get the next joining information
+      \tl_set:Nx \l__spath_split_join_b_tl {\seq_item:Nn \l__spath_split_joins_seq {##1}}
+      % And put it onto our saved stack of joins
+      \seq_put_right:NV \l__spath_split_joins_middle_seq \l__spath_split_join_b_tl
+      
+      % Sort intersections along the first path
+      \pgfintersectionsortbyfirstpath
+      % Find the intersections of these segments
+      \spath_intersect:VV \l__spath_split_path_a_tl \l__spath_split_path_b_tl
+
+      % If we get intersections
+      \int_compare:nTF {\pgfintersectionsolutions > 0}
+      {
+        % Find the times of the first intersection (which will be the first along the segment we're focussing on)
+        \pgfintersectiongetsolutiontimes{1}{\l__spath_split_first_tl}{\l__spath_split_second_tl}
+
+        % Ignore intersections that are very near end points
+        \bool_if:nT {
+          \fp_compare_p:n {
+            \l__spath_split_first_tl < .99
+          }
+          &&
+          \fp_compare_p:n {
+            \l__spath_split_first_tl > .01
+          }
+          &&
+          \fp_compare_p:n {
+            \l__spath_split_second_tl < .99
+          }
+          &&
+          \fp_compare_p:n {
+            \l__spath_split_second_tl > .01
+          }
+        }
+        {
+          % We have a genuine intersection
+          \int_incr:N \l__spath_split_intersection_int
+        }
+
+        % Do we split the first path?
+        \bool_if:nT {
+          \fp_compare_p:n {
+            \l__spath_split_first_tl < .99
+          }
+          &&
+          \fp_compare_p:n {
+            \l__spath_split_first_tl > .01
+          }
+        }
+        {
+          % Split the first path at the intersection
+          \spath_split_at:VVnn \l__spath_split_path_a_tl \l__spath_split_first_tl {split \int_use:N \l__spath_split_count_int}{split \int_eval:n { \l__spath_split_count_int + 1}}
+
+          % Put the latter part into our temporary sequence
+          \seq_put_left:Nx \l__spath_split_segments_middle_seq {split \int_eval:n{ \l__spath_split_count_int + 1}}
+          % Mark this intersection in the joining information
+          % Label the breaks as "IA#" and "IB#"
+          \seq_put_left:Nx \l__spath_split_joins_middle_seq {IA \int_use:N  \l__spath_split_intersection_int }
+          
+          % Replace our segment under consideration by the initial part
+          \tl_set:Nx \l__spath_split_path_a_tl {split \int_use:N \l__spath_split_count_int }
+          % Increment our counter
+          \int_incr:N \l__spath_split_count_int
+          \int_incr:N \l__spath_split_count_int
+        }
+
+        % Do we split the second path?
+        \bool_if:nTF {
+          \fp_compare_p:n {
+            \l__spath_split_second_tl < .99
+          }
+          &&
+          \fp_compare_p:n {
+            \l__spath_split_second_tl > .01
+          }
+        }
+        {
+          % Split the second segment at the intersection point
+          \spath_split_at:VVnn \l__spath_split_path_b_tl \l__spath_split_second_tl {split \int_use:N \l__spath_split_count_int}{split \int_eval:n { \l__spath_split_count_int + 1}}
+
+          % Add these segments to our list of segments we've considered
+          \seq_put_right:Nx \l__spath_split_segments_middle_seq {split \int_eval:n{ \l__spath_split_count_int}}
+          \seq_put_right:Nx \l__spath_split_segments_middle_seq {split \int_eval:n{ \l__spath_split_count_int + 1}}
+          \seq_put_right:Nx \l__spath_split_joins_middle_seq {IB \int_use:N \l__spath_split_intersection_int}
+          
+          % Increment the counter
+          \int_incr:N \l__spath_split_count_int
+          \int_incr:N \l__spath_split_count_int
+        }
+        {
+          % If we didn't split the second segment, we just put the second segment on the list of segments we've considered
+          \seq_put_right:NV \l__spath_split_segments_middle_seq \l__spath_split_path_b_tl
+        }
+
+      }
+      {
+        % If we didn't split the second segment, we just put the second segment on the list of segments we've considered
+        \seq_put_right:NV \l__spath_split_segments_middle_seq \l__spath_split_path_b_tl
+      }
+
+    }
+    % Having been through the loop for our segment under consideration, we replace the segment list since some of them might have been split and add any remainders of the segment under consideration
+    \seq_set_eq:NN \l__spath_split_segments_seq \l__spath_split_segments_middle_seq
+    \seq_set_eq:NN \l__spath_split_joins_seq \l__spath_split_joins_middle_seq
+
+    % We add the initial segment to our sequence of dealt with segments
+    \seq_put_right:NV \l__spath_split_segments_processed_seq \l__spath_split_path_a_tl
+  }
+
+  \seq_clear:N \l__spath_split_segments_seq
+  
+  \tl_set:Nx \l__spath_split_path_a_tl {\seq_item:Nn \l__spath_split_segments_processed_seq {1}}
+  
+  \int_step_inline:nnnn {2} {1} {\seq_count:N \l__spath_split_segments_processed_seq}
+  {
+    % Get the next path and joining information
+    \tl_set:Nx \l__spath_split_path_b_tl {\seq_item:Nn \l__spath_split_segments_processed_seq {##1}}
+    \tl_set:Nx \l__spath_split_join_b_tl {\seq_item:Nn \l__spath_split_joins_processed_seq {##1}}
+
+    % Do we join this to our previous path?
+    \bool_set_false:N \l__spath_split_join_bool
+
+    % If it came from when we split the original path, join them
+    \tl_if_eq:NNT \l__spath_split_join_b_tl \l__spath_split_one_tl
+    {
+      \bool_set_true:N \l__spath_split_join_bool
+    }
+
+    % Is this a labelled intersection?
+    \tl_set:Nx \l__spath_split_tmpa_tl {\tl_head:N \l__spath_split_join_b_tl}
+    \tl_if_eq:NNT \l__spath_split_tmpa_tl \l__spath_split_I_tl
+    {
+      % Strip off the "I" prefix
+      \tl_set:Nx \l__spath_split_tmpa_tl {\tl_tail:N \l__spath_split_join_b_tl}
+
+      % Next letter is "A" or "B"
+      \tl_set:Nx \l__spath_split_join_b_tl {\tl_head:N \l__spath_split_tmpa_tl}
+
+      % Remainder is the intersection index
+      \int_compare:nTF {\tl_tail:N \l__spath_split_tmpa_tl <= \seq_count:N \l__spath_split_intersections_seq}
+      {
+        \tl_set:Nx \l__spath_split_join_a_tl {\seq_item:Nn \l__spath_split_intersections_seq {\tl_tail:N \l__spath_split_tmpa_tl}}
+      }
+      {
+        % Default is to rejoin neither segment
+        \tl_set:Nn \l__spath_split_join_a_tl {C}
+      }
+
+      \tl_if_eq:NNT \l__spath_split_join_a_tl \l__spath_split_join_b_tl
+      {
+        \bool_set_true:N \l__spath_split_join_bool
+      }
+      
+    }
+
+    \bool_if:NTF \l__spath_split_join_bool
+    {
+      % Yes, so append it
+      \spath_append_no_move:VV \l__spath_split_path_a_tl \l__spath_split_path_b_tl
+    }
+    {
+      % No, so put the first path onto the stack
+      \seq_put_right:NV \l__spath_split_segments_seq \l__spath_split_path_a_tl
+
+      % Swap out the paths
+      \tl_set_eq:NN \l__spath_split_path_a_tl \l__spath_split_path_b_tl
+    }
+  }
+
+  % Do we need to add the first path to the last?
+  \tl_set:Nx \l__spath_split_join_a_tl {\seq_item:Nn \l__spath_split_joins_processed_seq {1}}
+
+  \tl_if_eq:NNTF \l__spath_split_join_a_tl \l__spath_split_one_tl
+  {
+    \tl_set:Nx \l__spath_split_path_b_tl {\seq_item:Nn \l__spath_split_segments_processed_seq {1}}
+    \spath_prepend_no_move:VV \l__spath_split_path_b_tl \l__spath_split_path_a_tl
+    
+  }
+  {
+    \seq_put_right:NV \l__spath_split_segments_seq \l__spath_split_path_a_tl
+  }
+
+  % Put our paths into a list
+  \int_zero:N \l__spath_split_count_int
+  \seq_map_inline:Nn \l__spath_split_segments_seq
+  {
+    \int_incr:N \l__spath_split_count_int
+    \spath_gclone:nn {##1} {#2~\int_use:N \l__spath_split_count_int}
+  }
+  \tl_gset:NV \spathselfintersectioncount \l__spath_split_count_int
+  \group_end:
+}
+
+\seq_new:N \l__spath_split_first_seq
+\seq_new:N \l__spath_split_second_seq
+\seq_new:N \l__spath_split_first_segments_seq
+\seq_new:N \l__spath_split_second_segments_seq
+
+\tl_new:N \spathfirstintersectioncount
+\tl_new:N \spathsecondintersectioncount
+
+%
+% Arguments:
+%  1. First path to split
+%  2. Second path to split
+%  3. Prefix for name of new paths of first path
+%  4. Prefix for name of new paths of second path
+%  5. List of how to split at intersections
+%     A - don't split first path at intersection
+%     B - don't split second path at intersection
+%     C - split both paths at intersection
+%
+\cs_new_nopar:Npn \spath_split_at_intersections:nnnnn #1#2#3#4#5
+{
+  \group_begin:
+  % The third argument says whether to rejoin segments at the intersections
+  \seq_set_split:Nnn \l__spath_split_intersections_seq {} {#5}
+  % Clone the paths as we'll mess around with them
+  \spath_clone:nn {#1} {spath split tmpa}
+  \spath_clone:nn {#2} {spath split tmpb}
+  % Remove close paths
+  \spath_open_path:n {spath split tmpa}
+  \spath_open_path:n {spath split tmpb}
+
+  % Sort intersections along the first path
+  \pgfintersectionsortbyfirstpath
+  % Find the intersections of these segments
+  \spath_intersect:nn {spath split tmpa}{spath split tmpb}
+
+  \seq_clear:N \l__spath_split_first_segments_seq
+  \seq_clear:N \l__spath_split_second_segments_seq
+
+  \seq_clear:N \l__spath_split_first_seq
+  \seq_clear:N \l__spath_split_second_seq
+  
+  % If we get intersections
+  \int_compare:nT {\pgfintersectionsolutions > 0}
+  {
+    % Find the times of the first intersection (which will be the first along the segment we're focussing on)
+
+    \int_step_inline:nnnn {1} {1} {\pgfintersectionsolutions}
+    {
+    \pgfintersectiongetsolutiontimes{##1}{\l__spath_split_first_tl}{\l__spath_split_second_tl}
+    \seq_put_left:NV \l__spath_split_first_seq \l__spath_split_first_tl
+    \seq_put_left:NV \l__spath_split_second_seq \l__spath_split_second_tl
+    }
+
+    \seq_sort:Nn \l__spath_split_second_seq
+    {
+      \fp_compare:nNnTF { ##1 } < { ##2 }
+      { \sort_return_swapped: }
+      { \sort_return_same: }
+    }
+ 
+  
+    \tl_set:Nn \l__spath_split_path_a_tl {spath split tmpa}
+    \tl_set:Nn \l__spath_split_path_b_tl {spath split tmpb}
+
+
+    \int_step_inline:nnnn {1} {1} {\pgfintersectionsolutions}
+    {
+      \tl_set:Nx \l__spath_split_first_tl {\seq_item:Nn \l__spath_split_first_seq {##1}}
+      \tl_set:Nx \l__spath_split_second_tl {\seq_item:Nn \l__spath_split_second_seq {##1}}
+      
+      \bool_set_true:N \l__spath_split_join_bool
+
+      \int_compare:nT { ##1 <= \seq_count:N \l__spath_split_intersections_seq }
+      {
+        \tl_set:Nx \l__spath_split_join_a_tl {\seq_item:Nn \l__spath_split_intersections_seq {##1}}
+        \tl_set:Nn \l__spath_split_join_b_tl {A}
+        \tl_if_eq:NNT \l__spath_split_join_a_tl \l__spath_split_join_b_tl
+        {
+          \bool_set_false:N \l__spath_split_join_bool
+        }
+        
+      }
+
+      \bool_if:NT \l__spath_split_join_bool
+      {
+        \spath_split_at:VVnn \l__spath_split_path_a_tl \l__spath_split_first_tl {path a ##1 start} {path a ##1 end}
+        \seq_put_left:Nn \l__spath_split_first_segments_seq {path a ##1 end}
+        \tl_set:Nn \l__spath_split_path_a_tl {path a ##1 start}
+      }
+    
+      \bool_set_true:N \l__spath_split_join_bool
+
+      \int_compare:nT { ##1 <= \seq_count:N \l__spath_split_intersections_seq }
+      {
+        \tl_set:Nx \l__spath_split_join_a_tl {\seq_item:Nn \l__spath_split_intersections_seq {##1}}
+        \tl_set:Nn \l__spath_split_join_b_tl {B}
+        
+        \tl_if_eq:NNT \l__spath_split_join_a_tl \l__spath_split_join_b_tl
+        {
+          \bool_set_false:N \l__spath_split_join_bool
+        }
+
+      }
+
+      \bool_if:NT \l__spath_split_join_bool
+      {
+        \spath_split_at:VVnn \l__spath_split_path_b_tl \l__spath_split_second_tl {path b ##1 start} {path b ##1 end}
+        \seq_put_left:Nn \l__spath_split_second_segments_seq {path b ##1 end}
+        \tl_set:Nn \l__spath_split_path_b_tl {path b ##1 start}
+      }
+    
+    }
+    \seq_put_left:NV \l__spath_split_first_segments_seq \l__spath_split_path_a_tl
+    \seq_put_left:NV \l__spath_split_second_segments_seq \l__spath_split_path_b_tl
+  }
+
+  \seq_if_empty:NT \l__spath_split_first_segments_seq
+  {
+    \seq_put_left:Nn \l__spath_split_first_segments_seq {spath split tmpa}
+  }
+  \seq_if_empty:NT \l__spath_split_second_segments_seq
+  {
+    \seq_put_left:Nn \l__spath_split_second_segments_seq {spath split tmpb}
+  }
+  
+
+  \int_zero:N \l__spath_split_count_int
+  \seq_map_inline:Nn \l__spath_split_first_segments_seq
+  {
+    \int_incr:N \l__spath_split_count_int
+    \spath_gclone:nn {##1} {#3~\int_use:N \l__spath_split_count_int}
+  }
+  \tl_gset:NV \spathfirstintersectioncount \l__spath_split_count_int
+
+  \int_zero:N \l__spath_split_count_int
+  \seq_map_inline:Nn \l__spath_split_second_segments_seq
+  {
+    \int_incr:N \l__spath_split_count_int
+    \spath_gclone:nn {##1} {#4~\int_use:N \l__spath_split_count_int}
+  }
+  \tl_gset:NV \spathsecondintersectioncount \l__spath_split_count_int
+  
+  \group_end:
+}
+
+\DeclareDocumentCommand \SpathSelfIntersect {m}
+{
+  \spath_split_at_self_intersections:nn {#1}{#1}
+}
+
+        
+\ExplSyntaxOff
+
+\begin{document}
+
+\begin{tikzpicture}[use Hobby shortcut]
+
+\shade[left color=cyan, right color=magenta, shading angle=90] (-.5,-.2) rectangle (7.5,2.2);
+\fill[pattern=bricks, pattern color=white] (-.5,-.2) rectangle (7.5,2.2);
+
+\path
+[
+split at self intersections={coil}{AAAAAAAAAAAAAAAA}
+] ([out angle=0]0,0)
+.. +(.85,1) .. +(.25,2) .. +(-.35,1) .. ++(.5,0)
+.. +(.85,1) .. +(.25,2) .. +(-.35,1) .. ++(.5,0)
+.. +(.85,1) .. +(.25,2) .. +(-.35,1) .. ++([in angle=180].5,0)
+;
+
+\foreach \k in {1,..., \spathselfintersectioncount} {
+  \tikzset{shorten spath both ends={coil \k}{2pt}, globalise spath=coil \k}
+}
+
+\foreach \k in {1,..., 4} {
+  \draw[set spath=coil \k];
+}
+
+\foreach[evaluate=\l as \xshift using \l*.5cm] \l in {0,...,10} {
+  \foreach \k in {5,..., 9} {
+    \draw[translate spath={coil \k}{\xshift pt}{0pt},set spath=coil \k];
+  }
+}
+
+\draw[translate spath={coil 10}{5cm}{0pt},set spath=coil 10];
+
+\end{tikzpicture}
+\end{document}
+
+\begin{tikzpicture}
+\draw[line width=3pt, blue!50!white, save spath=shortening] (0,0) .. controls +(1,1) and +(-1,-1) .. (2,0);
+
+\draw (2,0) circle[radius=10pt] circle[radius=5pt];
+
+\foreach \k in {0,...,10} {
+  \tikzset{shorten spath at end={shortening}{\k*5pt}}
+  \draw[-|,set spath=shortening];
+}
+
+\tikzset{translate spath={shortening}{0pt}{-1cm}}
+\draw[line width=3pt, green!50!white, set spath=shortening];
+
+\draw (2,-1) circle[radius=10pt] circle[radius=5pt];
+
+
+\draw[-|,set spath=shortening];
+
+\foreach \k in {0,...,10} {
+  \tikzset{shorten spath at end={shortening}{5pt},globalise spath={shortening}}
+  \draw[-|,set spath=shortening];
+}
+
+
+\end{tikzpicture}
+\end{document}
+
+\begin{tikzpicture}
+
+\shade[left color=cyan, right color=magenta] (-.2,-2.2) rectangle (2.2,4.2);
+
+
+\path[save spath=a] (0,-2) -- (0,0) to[out=90, in=-90] (2,2) -- (2,4);
+\path[save spath=b] (2,-2) -- (0,4);
+
+\SpathIntersect{a}{b}
+\pgfintersectiongetsolutiontimes{1}{\first}{\second}
+\SpathSplitAt{a}{\first}{c}{d}
+
+\path[set spath=c] coordinate (a);
+\draw (a) circle[radius=5pt];
+\SpathShorten{c}{5pt}
+\SpathShortenAtStart{d}{5pt}
+\draw[line width=1pt,red,set spath=c];
+\draw[line width=1pt,blue,set spath=d];
+\draw[line width=1pt,green!50!black, set spath=b];
+\end{tikzpicture}
+
+\begin{tikzpicture}[
+  use Hobby shortcut,
+]
+
+\fill[red!50!white] (-3,3) rectangle (3,-3);
+\fill[pattern=bricks, pattern color=white] (-3,3) rectangle (3,-3);
+
+\path
+[
+  split at self intersections={trefoil}{ABA}
+]
+([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) };
+
+\foreach \k in {1,..., \spathselfintersectioncount} {
+  \tikzset{shorten spath both ends={trefoil \k}{5pt}}
+  \draw[line width=\k pt, set spath=trefoil \k];
+}
+
+\end{tikzpicture}
+
+\begin{tikzpicture}[
+  use Hobby shortcut,
+]
+
+\fill[red!50!white] (-.5,-.5) rectangle (8.5,1.5);
+\fill[pattern=bricks, pattern color=white] (-.5,-.5) rectangle (8.5,1.5);
+
+\path[save spath=pathA] (0,0) to[out=0,in=180] ++(2,1) to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1);
+\path[save spath=pathB] (0,1) to[out=0,in=180] ++(2,-1) to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1);
+
+\tikzset{split at intersections={pathA}{pathB}{pathA}{pathB}{ABAB}}
+
+\foreach \k in {1,..., \spathfirstintersectioncount} {
+  \tikzset{shorten spath both ends={pathA \k}{5pt}}
+  \draw[green!50!black, ultra thick, set spath=pathA \k];
+}
+
+\foreach \k in {1,..., \spathsecondintersectioncount} {
+  \tikzset{shorten spath both ends={pathB \k}{5pt}}
+  \draw[blue, ultra thick, set spath=pathB \k];
+}
+
+\end{tikzpicture}
+
+
+\end{document}

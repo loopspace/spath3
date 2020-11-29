@@ -1,0 +1,29 @@
+\documentclass{article}
+
+\usepackage{tikz}
+\usepackage{spath3}
+
+\makeatletter
+\tikzset{
+  show path/.code={
+    \pgfsyssoftpath@getcurrentpath\@temp
+    \show\@temp
+  },
+  show path at end/.code={
+    \tikz@addmode{
+    \pgfsyssoftpath@getcurrentpath\@temp
+      \show\@temp
+      }
+  }
+}
+\makeatother
+
+\begin{document}
+
+\begin{tikzpicture}
+\path[save spath=A] (0,0) to[out=0,in=180] (3,2);
+\draw (0,0) -- (3,0);
+\draw[save spath=B, ultra thick, blue] (3,0) -- cycle [insert spath=A];
+\SPathShow{B}
+\end{tikzpicture}
+\end{document}
