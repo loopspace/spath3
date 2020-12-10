@@ -8,43 +8,77 @@
 
 \ExplSyntaxOn
 
+\cs_new_protected:Nn \asxutils_tl_put_right_braced:Nn
+ {
+  \tl_put_right:Nn #1 { { #2 } }
+ }
+\cs_generate_variant:Nn \asxutils_tl_put_right_braced:Nn { NV, cV, cv, Nx, cx }
+
+\cs_new_protected:Nn \asxutils_tl_gput_right_braced:Nn
+ {
+  \tl_gput_right:Nn #1 { { #2 } }
+ }
+\cs_generate_variant:Nn \asxutils_tl_gput_right_braced:Nn { NV, cV, cv, Nx, cx }
+
+
 \tikzset{
   append~ spath/.code={
-    \spath_get_current_path:n {current path}
-    \spath_append:nn { current path } { #1 }
-    \spath_set_current_path:n { current path }
+    \spath_if_exist:nT { #1 }
+    {
+      \spath_get_current_path:n {current path}
+      \spath_append:nn { current path } { #1 }
+      \spath_set_current_path:n { current path }
+    }
   },
   set~ spath/.code={
-    \spath_set_current_path:n { #1 }
-    \spath_get:nnN {#1} {final point} \l__spath_tmpa_tl
-    \tl_set:Nx \l__spath_tmpa_tl
+    \spath_if_exist:nT { #1 }
     {
-      \exp_not:c {tikz@lastx}=\tl_item:Nn \l__spath_tmpa_tl {1}
-      \exp_not:c {tikz@lasty}=\tl_item:Nn \l__spath_tmpa_tl {2}
-      \exp_not:c {tikz@lastxsaved}=\tl_item:Nn \l__spath_tmpa_tl {1}
-      \exp_not:c {tikz@lastysaved}=\tl_item:Nn \l__spath_tmpa_tl {2}
+      \spath_set_current_path:n { #1 }
+      \spath_get:nnN {#1} {final point} \l__spath_tmpa_tl
+      \tl_set:Nx \l__spath_tmpa_tl
+      {
+        \exp_not:c {tikz@lastx}=\tl_item:Nn \l__spath_tmpa_tl {1}
+        \exp_not:c {tikz@lasty}=\tl_item:Nn \l__spath_tmpa_tl {2}
+        \exp_not:c {tikz@lastxsaved}=\tl_item:Nn \l__spath_tmpa_tl {1}
+        \exp_not:c {tikz@lastysaved}=\tl_item:Nn \l__spath_tmpa_tl {2}
+      }
+      \tl_use:N \l__spath_tmpa_tl
     }
-    \tl_use:N \l__spath_tmpa_tl
   },
   shorten~spath~at~end/.code~ 2~ args={
-    \spath_shorten:nn {#1} {#2}
+    \spath_if_exist:nT { #1 }
+    {
+      \spath_shorten:nn {#1} {#2}
+    }
   },
   shorten~spath~at~start/.code~ 2~ args ={
-    \spath_reverse:n {#1}
-    \spath_shorten:nn {#1} {#2}
-    \spath_reverse:n {#1}
+    \spath_if_exist:nT { #1 }
+    {
+      \spath_reverse:n {#1}
+      \spath_shorten:nn {#1} {#2}
+      \spath_reverse:n {#1}
+    }
   },
   shorten~spath~both~ends/.code~ 2~ args={
-    \spath_shorten:nn {#1} {#2}
-    \spath_reverse:n {#1}
-    \spath_shorten:nn {#1} {#2}
-    \spath_reverse:n {#1}
+    \spath_if_exist:nT { #1 }
+    {
+      \spath_shorten:nn {#1} {#2}
+      \spath_reverse:n {#1}
+      \spath_shorten:nn {#1} {#2}
+      \spath_reverse:n {#1}
+    }
   },
   globalise~ spath/.code={
-    \spath_globalise:n {#1}
+    \spath_if_exist:nT { #1 }
+    {
+      \spath_globalise:n {#1}
+    }
   },
   translate~ spath/.code~ n~ args={3}{
-    \spath_translate:nnn {#1}{#2}{#3}
+    \spath_if_exist:nT { #1 }
+    {
+      \spath_translate:nnn {#1}{#2}{#3}
+    }
   },
   split~ at~ self~ intersections/.code~ 2~ args={
     \use:c {tikz@addmode}{
@@ -174,7 +208,6 @@
 
 \cs_new_nopar:Npn \spath_intersect:nn #1#2
 {
-  \group_begin:
   \spath_get:nnN {#1} {path} \l__spath_tmpa_tl
   \spath_get:nnN {#2} {path} \l__spath_tmpb_tl
   \pgfintersectionofpaths%
@@ -183,7 +216,6 @@
   }{%
     \pgfsetpath\l__spath_tmpb_tl
   }
-  \group_end:
 }
 
 \cs_generate_variant:Nn \spath_intersect:nn {VV, Vn}
@@ -409,6 +441,10 @@
 \tl_set:Nn \l__spath_split_one_tl {1}
 \tl_new:N \l__spath_split_I_tl
 \tl_set:Nn \l__spath_split_I_tl {I}
+\tl_new:N \l__spath_split_A_tl
+\tl_set:Nn \l__spath_split_A_tl {A}
+\tl_new:N \l__spath_split_B_tl
+\tl_set:Nn \l__spath_split_B_tl {B}
 
 \int_new:N \l__spath_split_count_int
 \int_new:N \l__spath_split_intersection_int
@@ -642,10 +678,22 @@
       }
       {
         % Default is to rejoin neither segment
-        \tl_set:Nn \l__spath_split_join_a_tl {C}
+        \tl_set:Nn \l__spath_split_join_a_tl {0}
       }
 
-      \tl_if_eq:NNT \l__spath_split_join_a_tl \l__spath_split_join_b_tl
+      \bool_if:nT
+      {
+        (
+        \tl_if_eq_p:NN \l__spath_split_join_b_tl \l__spath_split_A_tl
+        &&
+        \int_compare_p:n { \int_mod:nn{\l__spath_split_join_a_tl}{2} == 1 }
+        ) ||
+        (
+        \tl_if_eq_p:NN \l__spath_split_join_b_tl \l__spath_split_B_tl
+        &&
+        \int_compare_p:n { \int_div_truncate:nn {\l__spath_split_join_a_tl}{2} == 1 }
+        )
+      }
       {
         \bool_set_true:N \l__spath_split_join_bool
       }
@@ -705,9 +753,10 @@
 %  3. Prefix for name of new paths of first path
 %  4. Prefix for name of new paths of second path
 %  5. List of how to split at intersections
-%     A - don't split first path at intersection
-%     B - don't split second path at intersection
-%     C - split both paths at intersection
+%     0 - split both paths
+%     1 - split only second path
+%     2 - split only first path
+%     3 - split neither path
 %
 \cs_new_nopar:Npn \spath_split_at_intersections:nnnnn #1#2#3#4#5
 {
@@ -766,12 +815,12 @@
       \int_compare:nT { ##1 <= \seq_count:N \l__spath_split_intersections_seq }
       {
         \tl_set:Nx \l__spath_split_join_a_tl {\seq_item:Nn \l__spath_split_intersections_seq {##1}}
-        \tl_set:Nn \l__spath_split_join_b_tl {A}
-        \tl_if_eq:NNT \l__spath_split_join_a_tl \l__spath_split_join_b_tl
+
+        \int_compare:nT { \int_mod:nn{\l__spath_split_join_a_tl}{2} == 0 }
         {
           \bool_set_false:N \l__spath_split_join_bool
         }
-        
+
       }
 
       \bool_if:NT \l__spath_split_join_bool
@@ -786,9 +835,8 @@
       \int_compare:nT { ##1 <= \seq_count:N \l__spath_split_intersections_seq }
       {
         \tl_set:Nx \l__spath_split_join_a_tl {\seq_item:Nn \l__spath_split_intersections_seq {##1}}
-        \tl_set:Nn \l__spath_split_join_b_tl {B}
         
-        \tl_if_eq:NNT \l__spath_split_join_a_tl \l__spath_split_join_b_tl
+        \int_compare:nT { \int_div_truncate:nn {\l__spath_split_join_a_tl}{2} == 0 }
         {
           \bool_set_false:N \l__spath_split_join_bool
         }
@@ -835,12 +883,6 @@
   
   \group_end:
 }
-
-\DeclareDocumentCommand \SpathSelfIntersect {m}
-{
-  \spath_split_at_self_intersections:nn {#1}{#1}
-}
-
         
 \ExplSyntaxOff
 
@@ -853,7 +895,7 @@
 
 \path
 [
-split at self intersections={coil}{AAAAAAAAAAAAAAAA}
+split at self intersections={coil}{1111111111111111111111}
 ] ([out angle=0]0,0)
 .. +(.85,1) .. +(.25,2) .. +(-.35,1) .. ++(.5,0)
 .. +(.85,1) .. +(.25,2) .. +(-.35,1) .. ++(.5,0)
@@ -877,7 +919,7 @@ split at self intersections={coil}{AAAAAAAAAAAAAAAA}
 \draw[translate spath={coil 10}{5cm}{0pt},set spath=coil 10];
 
 \end{tikzpicture}
-\end{document}
+%\end{document}
 
 \begin{tikzpicture}
 \draw[line width=3pt, blue!50!white, save spath=shortening] (0,0) .. controls +(1,1) and +(-1,-1) .. (2,0);
@@ -904,7 +946,7 @@ split at self intersections={coil}{AAAAAAAAAAAAAAAA}
 
 
 \end{tikzpicture}
-\end{document}
+%\end{document}
 
 \begin{tikzpicture}
 
@@ -914,16 +956,16 @@ split at self intersections={coil}{AAAAAAAAAAAAAAAA}
 \path[save spath=a] (0,-2) -- (0,0) to[out=90, in=-90] (2,2) -- (2,4);
 \path[save spath=b] (2,-2) -- (0,4);
 
-\SpathIntersect{a}{b}
-\pgfintersectiongetsolutiontimes{1}{\first}{\second}
-\SpathSplitAt{a}{\first}{c}{d}
+\tikzset{
+  split at intersections={a}{b}{a}{b}{}
+}
 
-\path[set spath=c] coordinate (a);
+\path[set spath=a 1] coordinate (a);
 \draw (a) circle[radius=5pt];
-\SpathShorten{c}{5pt}
-\SpathShortenAtStart{d}{5pt}
-\draw[line width=1pt,red,set spath=c];
-\draw[line width=1pt,blue,set spath=d];
+\tikzset{shorten spath at end={a 1}{5pt}};
+\tikzset{shorten spath at start={a 2}{5pt}};
+\draw[line width=1pt,red,set spath=a 1];
+\draw[line width=1pt,blue,set spath=a 2];
 \draw[line width=1pt,green!50!black, set spath=b];
 \end{tikzpicture}
 
@@ -936,7 +978,7 @@ split at self intersections={coil}{AAAAAAAAAAAAAAAA}
 
 \path
 [
-  split at self intersections={trefoil}{ABA}
+  split at self intersections={trefoil}{121}
 ]
 ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) };
 
@@ -957,7 +999,7 @@ split at self intersections={coil}{AAAAAAAAAAAAAAAA}
 \path[save spath=pathA] (0,0) to[out=0,in=180] ++(2,1) to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1);
 \path[save spath=pathB] (0,1) to[out=0,in=180] ++(2,-1) to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1);
 
-\tikzset{split at intersections={pathA}{pathB}{pathA}{pathB}{ABAB}}
+\tikzset{split at intersections={pathA}{pathB}{pathA}{pathB}{1212}}
 
 \foreach \k in {1,..., \spathfirstintersectioncount} {
   \tikzset{shorten spath both ends={pathA \k}{5pt}}
