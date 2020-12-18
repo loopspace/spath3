@@ -318,6 +318,7 @@ manipulating PGF soft paths}
 \tl_new:N \l_@@_iterb_tl
 \tl_new:N \l_@@_iterc_tl
 \tl_new:N \l_@@_iterd_tl
+\tl_new:N \l_@@_iterp_tl
 \dim_new:N \l_@@_itera_dim
 \dim_new:N \l_@@_iterb_dim
 %    \end{macrocode}
@@ -2544,17 +2545,15 @@ manipulating PGF soft paths}
 % The iterations actually just work on the soft path, so the latter is a wrapper around the former.
 % If the function name include \Verb+map_path+ then it works on a soft path, if it just says \Verb+map+ then on an spath object.
 %
-% \begin{macro}[internal]{\spath_map_path_components_inline:Nn}
+% \begin{macro}[internal]{\spath_map_path_components_function:NN}
 % This iterates through the components of a pgf soft path (given as a token list variable), applying the inline function to each.
 %
 % The inline function should take a single \Verb+n+ type argument which will be the component of the path.
 %
 % This one works on the path itself.
 %    \begin{macrocode}
-\cs_new_nopar:Npn \spath_map_path_components_inline:Nn #1#2
+\cs_new_nopar:Npn \spath_map_path_components_function:NN #1#2
 {
-  \int_gincr:N \g_@@_map_int
-  \cs_gset:cpn { __spath_map_ \int_use:N \g_@@_map_int :n } ##1 {#2}
   \tl_set_eq:NN \l_@@_itera_tl #1
   \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
   \tl_put_right:NV \l_@@_itera_tl \g_@@_moveto_tl
@@ -2566,7 +2565,7 @@ manipulating PGF soft paths}
     \tl_set:Nx \l_@@_iterc_tl {\tl_head:N \l_@@_itera_tl}
     \tl_if_eq:NNT \l_@@_iterc_tl \g_@@_moveto_tl
     {
-      \exp_args:NnV \use:c { __spath_map_ \int_use:N \g_@@_map_int :n } \l_@@_iterb_tl
+      \exp_args:NnV \use:c { @@_map_ \int_use:N \g_@@_map_int :n } \l_@@_iterb_tl
 \tl_clear:N \l_@@_iterb_tl
     }
     \tl_if_single:NTF \l_@@_iterc_tl
@@ -2578,6 +2577,19 @@ manipulating PGF soft paths}
     }
     \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
   }
+}
+\cs_generate_variant:Nn \spath_map_path_components_function:NN {Nc,cN,cc}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{\spath_map_path_components_inline:Nn}
+% Inline version of the above.
+%    \begin{macrocode}
+\cs_new_nopar:Npn \spath_map_path_components_inline:Nn #1#2
+{
+  \int_gincr:N \g_@@_map_int
+  \cs_gset:cpn { @@_map_ \int_use:N \g_@@_map_int :n } ##1 {#2}
+  \spath_map_path_components_function:Nc #1 { @@_map_ \int_use:N \g_@@_map_int :n }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2702,8 +2714,8 @@ manipulating PGF soft paths}
 \cs_new_nopar:Npn \spath_map_path_segments_inline:Nn #1#2
 {
   \int_gincr:N \g_@@_map_int
-  \cs_gset:cpn { __spath_map_ \int_use:N \g_@@_map_int :w } ##1 ##2 {#2}
-  \spath_map_path_segments_function:Nc #1 { __spath_map_ \int_use:N \g_@@_map_int :w }
+  \cs_gset:cpn { @@_map_ \int_use:N \g_@@_map_int :w } ##1 ##2 {#2}
+  \spath_map_path_segments_function:Nc #1 { @@_map_ \int_use:N \g_@@_map_int :w }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2713,10 +2725,8 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_segments_inline:nn #1#2
 {
-  \int_gincr:N \g_@@_map_int
-  \cs_gset:cpn { __spath_map_ \int_use:N \g_@@_map_int :w } ##1 ##2 {#2}
-  \spath_get:nnN {#1} {path} \l_@@_iterd_tl
-  \spath_map_path_segments_function:Nc \l_@@_iterd_tl { __spath_map_ \int_use:N \g_@@_map_int :w }
+  \spath_get:nnN {#1} {path} \l_@@_iterp_tl
+  \spath_map_path_segments_inline:Nn \l_@@_iterp_tl {#2}
 }
 \cs_generate_variant:Nn \spath_map_segments_inline:nn {Vn}
 %    \end{macrocode}
@@ -2727,8 +2737,8 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_segments_function:nN #1#2
 {
-  \spath_get:nnN {#1} {path} \l_@@_iterd_tl
-  \spath_map_path_segments_function:NN \l_@@_iterd_tl #2
+  \spath_get:nnN {#1} {path} \l_@@_iterp_tl
+  \spath_map_path_segments_function:NN \l_@@_iterp_tl #2
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2761,8 +2771,8 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_segments_into_list:nN #1#2
 {
-  \spath_get:nnN {#1} {path} \l_@@_iterd_tl
-  \spath_map_path_segments_into_list:NN \l_@@_iterd_tl #2
+  \spath_get:nnN {#1} {path} \l_@@_iterp_tl
+  \spath_map_path_segments_into_list:NN \l_@@_iterp_tl #2
 }
 \cs_generate_variant:Nn \spath_map_segments_into_list:nN {nc}
 %    \end{macrocode}
@@ -2775,9 +2785,9 @@ manipulating PGF soft paths}
 {
   \tl_clear:N #2
   \spath_map_path_components_inline:Nn #1 {
-    \spath_new_anonymous:N \l_@@_itera_tl
-    \spath_put:Vnn \l_@@_itera_tl {path} {##1}
-    \asxutils_tl_put_right_braced:NV #2 \l_@@_itera_tl
+    \spath_new_anonymous:N \l_@@_anon_tl
+    \spath_put:Vnn \l_@@_anon_tl {path} {##1}
+    \asxutils_tl_put_right_braced:NV #2 \l_@@_anon_tl
   }
 }
 \cs_generate_variant:Nn \spath_map_path_components_into_list:NN {cN, cc, Nc}
@@ -2789,8 +2799,8 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \spath_map_components_into_list:nN #1#2
 {
-  \spath_get:nnN {#1} {path} \l_@@_iterd_tl
-  \spath_map_path_components_into_list:NN \l_@@_iterd_tl #2
+  \spath_get:nnN {#1} {path} \l_@@_iterp_tl
+  \spath_map_path_components_into_list:NN \l_@@_iterp_tl #2
 }
 \cs_generate_variant:Nn \spath_map_components_into_list:nN {nc}
 %    \end{macrocode}
@@ -4024,7 +4034,10 @@ manipulating PGF soft paths}
       \spath_set_tikz_coords:n {#1}
     }
   },
-  insert~ spath/.code={
+  clone~ spath/.code~2~args={
+    \spath_clone:nn {#1} {#2}
+  },
+  append~ spath/.code={
     \spath_if_exist:nT { #1 }
     {
       \spath_get_current_path:n {current path}
@@ -4040,7 +4053,7 @@ manipulating PGF soft paths}
       \spath_reverse:n { #1 }
     }
   },
-  insert~ reverse~ spath/.code={
+  append~ reverse~ spath/.code={
     \spath_if_exist:nT { #1 }
     {
       \spath_reverse:n { #1 }
@@ -4050,7 +4063,7 @@ manipulating PGF soft paths}
       \spath_set_tikz_coords:n { current path }
     }
   },    
-  append~ spath/.code={
+  insert~ spath/.code={
     \spath_if_exist:nT { #1 }
     {
       \spath_get_current_path:n {current path}
@@ -4200,7 +4213,7 @@ manipulating PGF soft paths}
     \tikz@addmode{
       \pgfsyssoftpath@getcurrentpath\l_@@_tmpa_tl
       \spath_map_path_components_into_list:NN \l_@@_tmpa_tl \l_@@_spath_list
-      \tl_map_inline:cn {l_@@_spath_list}
+      \tl_map_inline:Nn \l_@@_spath_list
       {
         \spath_open_path:n {####1}
         \spath_generate_all:n {####1}
