@@ -10,6 +10,7 @@
 *.glo
 *.ins
 *.out
+*.png
 README.txt
 spath3.sty
 tikzlibrarycalligraphy.code.tex
