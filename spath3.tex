@@ -1,0 +1,302 @@
+\RequirePackage{shellesc}
+\immediate\write18{tex spath3_code.dtx}
+\documentclass{ltxdoc}
+\usepackage[T1]{fontenc}
+\usepackage{trace}
+\usepackage{lmodern}
+\usepackage{morefloats}
+\usepackage{tikz}
+\usetikzlibrary{spath3,hobby,patterns,intersections}
+\usepackage[numbered]{hypdoc}
+\definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9} 
+ 
+\usepackage{listings}
+\lstloadlanguages{[LaTeX]TeX}
+\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+ 
+\usepackage{fancyvrb}
+
+\newenvironment{example}
+  {\VerbatimEnvironment
+   \begin{VerbatimOut}{example.out}}
+  {\end{VerbatimOut}
+   \begin{center}
+   \setlength{\parindent}{0pt}
+   \fbox{\begin{minipage}{.9\linewidth}
+     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
+     \lstinputlisting[]{example.out}
+   \end{minipage}}
+
+   \fbox{\begin{minipage}{.9\linewidth}
+     \centering
+     \input{example.out}
+   \end{minipage}}
+\end{center}
+}
+
+\providecommand*{\url}{\texttt}
+\GetFileInfo{spath3.sty}
+
+\title{The \textsf{spath3} Package: Documentation}
+\author{Andrew Stacey \\ \url{loopspace@mathforge.org}}
+  \date{\fileversion~from \filedate}
+
+  \begin{document}
+
+  \maketitle
+
+  \section{Introduction}
+
+  The \texttt{spath3} package was originally designed as a low-level package for manipulating the \emph{soft paths} defined by PGF/TikZ.
+  Soft paths form one stage of the stack of translations between what the author writes in the \texttt{tikzpicture} environments in their \LaTeX\ document and what is eventually written to the output file.
+  Most of the complicated processing has been done by the time a soft path is constructed, but it is still very definitely a \TeX\ object and there has not, for example, been any consideration as to what the eventual output file format is (such as PDF, DVI, or SVG).
+  So it is very amenable to being modified at this stage and this package provides a set of routines for doing so.
+
+  The original purpose was to provide a common core on which other packages would be built.
+  Indeed, the packages \texttt{calligraphy}, \texttt{knots}, and \texttt{penrose} all use this package.
+  However, over time I've found myself wanting to use the routines of this package at a higher level and so have designed some user-level interfaces.
+  This document documents those.
+
+  \section{TikZ Keys}
+
+\begin{verbatim}
+\usetikzlibrary{spath3}
+\end{verbatim}
+
+The \texttt{spath3} TikZ library defines a set of keys that can be issued to muck about with soft paths.
+
+
+\DescribeMacro{save spath}\texttt{save spath=<name>}
+
+Saves the current path to an \texttt{spath} object called \texttt{<name>}.
+This delays until the path is fully constructed so can be issued in the options to the main command.
+
+Spaths constructed this way are global.
+
+\begin{example}
+\begin{tikzpicture}
+\fill[green] (2,0) circle[radius=2pt] (2,2) circle[radius=2pt];
+\draw[save spath=mypath] (2,0) to[out=0,in=180] (2,2);
+\end{tikzpicture}
+\end{example}
+
+\DescribeMacro{restore spath}\texttt{restore spath=<name>}
+
+Restores a previously saved \texttt{spath} to the current path.
+This happens immediately so can be issued in the options to the main command and then the path can be extended with normal drawing commands.
+
+One thing should be noted about transformations.
+By the time a soft path is built, all available transformations have been applied.
+This means that when re-inserting a soft path back into a high level command (such as \Verb+\draw+), the effect of existing transformations might produce some confusing effects.
+When restoring a path then the library tries to set the last point correctly, but depending on how this is used it can result in transformations being applied twice.
+
+\begin{example}
+\begin{tikzpicture}
+\fill[green] (2,0) circle[radius=2pt] (2,2) circle[radius=2pt];
+\draw[restore spath=mypath];
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\fill[green] (2,0) circle[radius=2pt] (2,2) circle[radius=2pt] +(2,0) circle[radius=2pt];
+\draw[restore spath=mypath] -- +(2,0);
+\end{tikzpicture}
+\end{example}
+
+
+\DescribeMacro{insert spath}\texttt{insert spath=<name>}
+
+This inserts an \texttt{spath} into the path at the current point, it is therefore more suited to being used part way through a path construction.
+In a sense, it is a little like a \texttt{pic} in that it enables the user to construct a path segment early to be reused at various places.
+
+The path is \emph{welded} on to the current path, meaning that it starts from the current point and there is no \texttt{move}.
+
+\begin{example}
+\begin{tikzpicture}
+\fill[green] (0,0) circle[radius=2pt] (1,0) circle[radius=2pt] ++(0,2) circle[radius=2pt] ++(2,0) circle[radius=2pt];
+\draw (0,0) -- (1,0) [insert spath=mypath] -- ++(2,0);
+\end{tikzpicture}
+\end{example}
+
+\DescribeMacro{reverse spath}\texttt{reverse spath=<name>}
+
+Reverses the path in the named spath object.
+This doesn't do any actually drawing.
+The effect is local.
+
+\DescribeMacro{insert reverse spath}\texttt{insert reverse spath=<name>}
+
+Like \texttt{insert spath} except that the inserted path is reversed first.
+
+\DescribeMacro{append spath}\texttt{append spath=<name>}
+
+Like \texttt{insert spath} except that is doesn't move the inserted path.
+
+\DescribeMacro{shorten spath at end}
+\DescribeMacro{shorten spath at start}
+\DescribeMacro{shorten spath at both ends}
+\texttt{shorten spath at end={<name>}{<dimen>}}
+
+Shortens the spath by the dimension from one or both ends.
+This shortens the path along its length so that it is guaranteed that the shorter path traces a subset of the original path.
+For B\'ezier curves, however, the amount of shortening is approximate and is better for shorter distances.
+If wanting to shorten by a large amount it is better to shorten by a small amount a number of times.
+
+\DescribeMacro{globalise spath}\texttt{globalise spath=<name>}
+
+Converts an spath object to a global one.
+
+\DescribeMacro{translate spath}\texttt{translate spath={<name>}{<x-dimen>}{<y-dimen>}}
+
+Translates the spath by the given dimensions.
+
+\DescribeMacro{transform spath}\texttt{transform spath={<name>}{<transformations>}}
+
+This applies the transformation to the spath.
+The transformation is processed by TikZ so should consist of TikZ-level transformations such as \Verb+shift={(2,2)}+.
+
+\DescribeMacro{split at self intersections}\texttt{split at self intersections={<prefix>}{<splits>}}
+
+This splits the current path into segments at the points where it intersects itself.
+The result is a set of spath objects with names \Verb+<prefix> <index>+, with \Verb+<index>+ running from \(1\) to \Verb+\spathselfintersectioncount+.
+The \Verb+<splits>+ argument can be used to control which intersections are actually used.
+It is a list of numbers from \(0\) to \(3\).
+A \(0\) means that at an intersection then both parts of the path are split.
+A \(1\) means to not split the first, a \(2\) to not split the second, a \(3\) means don't split either.
+(Actually, both are split but then conditionally rejoined.)
+
+\begin{example}
+\begin{tikzpicture}[
+  use Hobby shortcut,
+]
+
+\fill[red!50!white] (-3,3) rectangle (3,-3);
+\fill[pattern=bricks, pattern color=white] (-3,3) rectangle (3,-3);
+
+\path
+[
+  split at self intersections={trefoil}{121}
+]
+([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) };
+
+\foreach \k in {1,..., \spathselfintersectioncount} {
+  \tikzset{shorten spath at both ends={trefoil \k}{5pt}}
+  \draw[line width=\k pt, restore spath=trefoil \k];
+}
+
+\end{tikzpicture}
+\end{example}
+
+\DescribeMacro{split at intersections}\texttt{split at intersections={<first>}{<second>}{<first prefix>}{<second prefix>}{<splits>}}
+
+This splits a pair of paths at their mutual intersections.
+
+\begin{example}
+\begin{tikzpicture}[
+  use Hobby shortcut,
+]
+
+\fill[red!50!white] (-.5,-.5) rectangle (8.5,1.5);
+\fill[pattern=bricks, pattern color=white] (-.5,-.5) rectangle (8.5,1.5);
+
+\path[save spath=pathA] (0,0) to[out=0,in=180] ++(2,1) to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1);
+\path[save spath=pathB] (0,1) to[out=0,in=180] ++(2,-1) to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1);
+
+\tikzset{split at intersections={pathA}{pathB}{pathA}{pathB}{1212}}
+
+\foreach \k in {1,..., \spathfirstintersectioncount} {
+  \tikzset{shorten spath at both ends={pathA \k}{5pt}}
+  \draw[green!50!black, ultra thick, restore spath=pathA \k];
+}
+
+\foreach \k in {1,..., \spathsecondintersectioncount} {
+  \tikzset{shorten spath at both ends={pathB \k}{5pt}}
+  \draw[blue, ultra thick, restore spath=pathB \k];
+}
+
+\end{tikzpicture}
+\end{example}
+
+\section{Commands}
+
+In all the following commands, using a star makes it global.
+
+\DescribeMacro{\MakeSPath} \Verb+\MakeSPath*{<name>}{<path>}+
+
+Creates an spath object from a path.
+
+\DescribeMacro{\CloneSPath} \Verb+\CloneSPath*{<source>}{<target>}+
+
+Clones the \Verb+source+ into the \Verb+target+.
+
+\DescribeMacro{\SPathInfo}
+\DescribeMacro{\SPathInfoInto}
+\Verb+\SPathInfo{<name>}{<property>}+
+\Verb+\SPathInfoInto{<name>}{<property>}{<macro>}+
+
+Extract the \Verb+property+ from the named spath, the second version stores it in the given macro.
+
+\DescribeMacro{\SPathPrepare}
+\Verb+\SPathPrepare{<name>}+
+
+Calculates all of the information associated to an spath.
+
+\DescribeMacro{\SPathShow}
+\Verb+\SPathShow{<name>}+
+
+Dumps the information stored on the given spath to the log file.
+
+\DescribeMacro{\SPathTranslate}
+\DescribeMacro{\SPathTranslateInto}
+\Verb+\SpathTranslate{<name>}{<x dimen>}{<y dimen>}+
+\Verb+\SpathTranslateInto{<name>}{<name>}{<x dimen>}{<y dimen>}+
+
+Translates the given spath by the given dimensions.
+The first version modifies the given spath, the second clones it into the a second spath first.
+
+\DescribeMacro{\SPathScale}
+\DescribeMacro{\SPathScaleInto}
+\Verb+\SpathScale{<name>}{<x dimen>}{<y dimen>}+
+\Verb+\SpathScaleInto{<name>}{<name>}{<x dimen>}{<y dimen>}+
+
+Scales the given spath by the given dimensions.
+The first version modifies the given spath, the second clones it into the a second spath first.
+
+\DescribeMacro{\SPathWeld}
+\DescribeMacro{\SPathWeldInto}
+\Verb+\SPathWeld*{<first>}{<second>}+
+\Verb+\SPathWeldInto*{<first>}{<target>}{<second>}+
+
+Welds the second spath onto the first.
+This involves translating the second path so that it starts where the second ends, and removes the intervening move.
+
+\DescribeMacro{\SPathReverse}
+\Verb+\SPathReverse*{<name>}+
+
+Reverses the spath.
+
+\DescribeMacro{\SPathClose}
+\Verb+\SPathClose*{<name>}+
+
+Adds a closepath to the end of the spath.
+
+\DescribeMacro{\SPathOpen}
+\Verb+\SPathOpen*{<name>}+
+
+Removes all closepaths from the spath, replacing them by lines if appropriate.
+
+\DescribeMacro{\MakeSPathList}
+\Verb+\MakeSPathList*{<path>}{<name>}+
+
+Splits a path into a named list of segments.
+
+\DescribeMacro{\SPathListPrepare}
+\Verb+\SPathListPrepare*{<name>}+
+
+Calculates all of the information for all of the spaths in the named list.
+
+\DescribeMacro{\SPathListOpen}
+\Verb+\SPathListOpen*{<name>}+
+
+Opens all the spaths in the named list.
+
+\end{document}
