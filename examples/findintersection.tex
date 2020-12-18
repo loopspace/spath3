@@ -1,3 +1,4 @@
+\RequirePackage{shellesc}
 \immediate\write18{cd ..; tex spath3.dtx}
 \documentclass{article}
 
@@ -26,16 +27,16 @@ split at self intersections={coil}{1111111111111111111111}
 }
 
 \foreach \k in {1,..., 4} {
-  \draw[set spath=coil \k];
+  \draw[restore spath=coil \k];
 }
 
 \foreach[evaluate=\l as \xshift using \l*.5cm] \l in {0,...,10} {
   \foreach \k in {5,..., 9} {
-    \draw[translate spath={coil \k}{\xshift pt}{0pt},set spath=coil \k];
+    \draw[translate spath={coil \k}{\xshift pt}{0pt},restore spath=coil \k];
   }
 }
 
-\draw[translate spath={coil 10}{5cm}{0pt},set spath=coil 10];
+\draw[translate spath={coil 10}{5cm}{0pt},restore spath=coil 10];
 
 \end{tikzpicture}
 %\end{document}
@@ -47,20 +48,20 @@ split at self intersections={coil}{1111111111111111111111}
 
 \foreach \k in {0,...,10} {
   \tikzset{shorten spath at end={shortening}{\k*5pt}}
-  \draw[-|,set spath=shortening];
+  \draw[-|,restore spath=shortening];
 }
 
 \tikzset{translate spath={shortening}{0pt}{-1cm}}
-\draw[line width=3pt, green!50!white, set spath=shortening];
+\draw[line width=3pt, green!50!white, restore spath=shortening];
 
 \draw (2,-1) circle[radius=10pt] circle[radius=5pt];
 
 
-\draw[-|,set spath=shortening];
+\draw[-|,restore spath=shortening];
 
 \foreach \k in {0,...,10} {
   \tikzset{shorten spath at end={shortening}{5pt},globalise spath={shortening}}
-  \draw[-|,set spath=shortening];
+  \draw[-|,restore spath=shortening];
 }
 
 
@@ -79,13 +80,13 @@ split at self intersections={coil}{1111111111111111111111}
   split at intersections={a}{b}{a}{b}{}
 }
 
-\path[set spath=a 1] coordinate (a);
+\path[restore spath=a 1] coordinate (a);
 \draw (a) circle[radius=5pt];
 \tikzset{shorten spath at end={a 1}{5pt}};
 \tikzset{shorten spath at start={a 2}{5pt}};
-\draw[line width=1pt,red,set spath=a 1];
-\draw[line width=1pt,blue,set spath=a 2];
-\draw[line width=1pt,green!50!black, set spath=b];
+\draw[line width=1pt,red,restore spath=a 1];
+\draw[line width=1pt,blue,restore spath=a 2];
+\draw[line width=1pt,green!50!black, restore spath=b];
 \end{tikzpicture}
 
 \begin{tikzpicture}[
@@ -103,7 +104,7 @@ split at self intersections={coil}{1111111111111111111111}
 
 \foreach \k in {1,..., \spathselfintersectioncount} {
   \tikzset{shorten spath both ends={trefoil \k}{5pt}}
-  \draw[line width=\k pt, set spath=trefoil \k];
+  \draw[line width=\k pt, restore spath=trefoil \k];
 }
 
 \end{tikzpicture}
@@ -122,12 +123,12 @@ split at self intersections={coil}{1111111111111111111111}
 
 \foreach \k in {1,..., \spathfirstintersectioncount} {
   \tikzset{shorten spath both ends={pathA \k}{5pt}}
-  \draw[green!50!black, ultra thick, set spath=pathA \k];
+  \draw[green!50!black, ultra thick, restore spath=pathA \k];
 }
 
 \foreach \k in {1,..., \spathsecondintersectioncount} {
   \tikzset{shorten spath both ends={pathB \k}{5pt}}
-  \draw[blue, ultra thick, set spath=pathB \k];
+  \draw[blue, ultra thick, restore spath=pathB \k];
 }
 
 \end{tikzpicture}
