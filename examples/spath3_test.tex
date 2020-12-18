@@ -80,10 +80,10 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
   save spath=npath,
   split at self intersections={npath}{0000}
 ] (0,0) to[out=60,in=-90] (1,1) to[out=90,in=90] (0,1) to[out=-90,in=120] (1,0);
-\draw[shorten spath both ends={npath}{5mm}] (2,0) [insert spath=npath];
+\draw[shorten spath at both ends={npath}{5mm}] (2,0) [insert spath=npath];
 \foreach \k in {1,...,\spathselfintersectioncount}
 {
-  \draw[red, ultra thick, shorten spath both ends={npath \k}{5pt},restore spath=npath \k];
+  \draw[red, ultra thick, shorten spath at both ends={npath \k}{5pt},restore spath=npath \k];
 }
 
 

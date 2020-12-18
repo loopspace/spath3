@@ -23,7 +23,7 @@ split at self intersections={coil}{1111111111111111111111}
 ;
 
 \foreach \k in {1,..., \spathselfintersectioncount} {
-  \tikzset{shorten spath both ends={coil \k}{2pt}, globalise spath=coil \k}
+  \tikzset{shorten spath at both ends={coil \k}{2pt}, globalise spath=coil \k}
 }
 
 \foreach \k in {1,..., 4} {
@@ -103,7 +103,7 @@ split at self intersections={coil}{1111111111111111111111}
 ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) };
 
 \foreach \k in {1,..., \spathselfintersectioncount} {
-  \tikzset{shorten spath both ends={trefoil \k}{5pt}}
+  \tikzset{shorten spath at both ends={trefoil \k}{5pt}}
   \draw[line width=\k pt, restore spath=trefoil \k];
 }
 
@@ -122,12 +122,12 @@ split at self intersections={coil}{1111111111111111111111}
 \tikzset{split at intersections={pathA}{pathB}{pathA}{pathB}{1212}}
 
 \foreach \k in {1,..., \spathfirstintersectioncount} {
-  \tikzset{shorten spath both ends={pathA \k}{5pt}}
+  \tikzset{shorten spath at both ends={pathA \k}{5pt}}
   \draw[green!50!black, ultra thick, restore spath=pathA \k];
 }
 
 \foreach \k in {1,..., \spathsecondintersectioncount} {
-  \tikzset{shorten spath both ends={pathB \k}{5pt}}
+  \tikzset{shorten spath at both ends={pathB \k}{5pt}}
   \draw[blue, ultra thick, restore spath=pathB \k];
 }
 

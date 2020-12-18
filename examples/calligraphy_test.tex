@@ -1,6 +1,6 @@
 %\immediate\write18{tex calligraphy.dtx}
 \RequirePackage{shellesc}
-\immediate\write18{cd ..; tex spath3.dtx}
+\immediate\write18{cd ..; tex spath3_code.dtx}
 \documentclass{article}
 %\documentclass[convert={size=400},border=10]{standalone}
 \usepackage{tikz}
@@ -25,7 +25,6 @@
    (-.5,1.2) .. controls +(-60:.4) and +(-120:.4) .. (.7,1.2) -- (.7,-1.35) +(0,0) .. controls +(120:1) and +(140:1.5) .. (-.9,-1.7)
 ;
 \end{tikzpicture}
-
 
 \begin{tikzpicture}
 \pen (-20:.15) -- (20:.15);
