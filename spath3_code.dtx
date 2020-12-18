@@ -63,7 +63,7 @@ and the derived files            spath3.ins,
 \endpostamble
 \usedir{tex/latex/spath3}
 \generate{
-  \file{\jobname.sty}{\from{\jobname.dtx}{spath3}}
+  \file{spath3.sty}{\from{\jobname.dtx}{spath3}}
 }
 \generate{
   \file{tikzlibrarycalligraphy.code.tex}{\from{\jobname.dtx}{calligraphy}}
@@ -263,7 +263,7 @@ and the derived files            spath3.ins,
 \NeedsTeXFormat{LaTeX2e}
 \RequirePackage{expl3}
 \RequirePackage{pgf}
-\ProvidesExplPackage {spath3} {2020/18/12} {1.4} {Functions for
+\ProvidesExplPackage {spath3} {2020/12/18} {1.4} {Functions for
 manipulating PGF soft paths}
 \RequirePackage{xparse}
 \RequirePackage{asxutils}
@@ -2703,7 +2703,7 @@ manipulating PGF soft paths}
 {
   \int_gincr:N \g_@@_map_int
   \cs_gset:cpn { __spath_map_ \int_use:N \g_@@_map_int :w } ##1 ##2 {#2}
-  \spath_map_segments_function:Nc #1 { __spath_map_ \int_use:N \g_@@_map_int :w }
+  \spath_map_path_segments_function:Nc #1 { __spath_map_ \int_use:N \g_@@_map_int :w }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2751,7 +2751,7 @@ manipulating PGF soft paths}
     }
   }
 }
-\cs_generate_variant:Nn \spath_map_path_segments_into_list:nN {nc}
+\cs_generate_variant:Nn \spath_map_path_segments_into_list:NN {Nc, cN, cc}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2762,7 +2762,7 @@ manipulating PGF soft paths}
 \cs_new_nopar:Npn \spath_map_segments_into_list:nN #1#2
 {
   \spath_get:nnN {#1} {path} \l_@@_iterd_tl
-  \spath_map_path_segments_inline:Nn \l_@@_iterd_tl {#2}
+  \spath_map_path_segments_into_list:NN \l_@@_iterd_tl #2
 }
 \cs_generate_variant:Nn \spath_map_segments_into_list:nN {nc}
 %    \end{macrocode}
@@ -2790,9 +2790,9 @@ manipulating PGF soft paths}
 \cs_new_nopar:Npn \spath_map_components_into_list:nN #1#2
 {
   \spath_get:nnN {#1} {path} \l_@@_iterd_tl
-  \spath_map_path_components_inline:Nn \l_@@_iterd_tl {#2}
+  \spath_map_path_components_into_list:NN \l_@@_iterd_tl #2
 }
-\cs_generate_variant:Nn \spath_map_components_into_list:NN {cN, cc, Nc}
+\cs_generate_variant:Nn \spath_map_components_into_list:nN {nc}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3329,7 +3329,7 @@ manipulating PGF soft paths}
   % Remove close paths
   \spath_open_path:n {spath split tmp}
   % Separate into segments (creates a token list)
-  \spath_segments_into_list:nN {spath split tmp} \l_@@_list_splitsegments
+  \spath_map_segments_into_list:nN {spath split tmp} \l_@@_list_splitsegments
   % so convert to a sequence
   \seq_set_split:NnV \l_@@_split_segments_seq {} \l_@@_list_splitsegments
 
@@ -3761,7 +3761,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \NewDocumentCommand \MakeSPathList { s m m }
 {
-  \spath_components_into_list:nc {#2}{l_@@_list_#3}
+  \spath_map_components_into_list:nc {#2}{l_@@_list_#3}
   \IfBooleanT {#1}
   {
     \tl_map_inline:cn {l_@@_list_#3}
@@ -4073,7 +4073,7 @@ manipulating PGF soft paths}
       \spath_reverse:n {#1}
     }
   },
-  shorten~spath~both~ends/.code~ 2~ args={
+  shorten~spath~at~both~ends/.code~ 2~ args={
     \spath_if_exist:nT { #1 }
     {
       \spath_shorten:nn {#1} {#2}
@@ -5089,7 +5089,7 @@ manipulating PGF soft paths}
 % Then we get going.
 %    \begin{macrocode}
 \RequirePackage{spath3}
-\usetikzlibrary{intersections}
+\usetikzlibrary{intersections,spath3}
 
 \ExplSyntaxOn
 
@@ -5983,7 +5983,7 @@ manipulating PGF soft paths}
   \int_set_eq:NN \l__knot_component_start_int \l__knot_filaments_int
   \int_incr:N \l__knot_component_start_int
   \tl_set_eq:Nc \l__knot_tmpa_tl {l__knot_options_strand #1}
-  \spath_map_segment_function:nN {knot strand #1} \knot_save_filament:NN
+  \spath_map_segments_function:nN {knot strand #1} \knot_save_filament:NN
 }
 %    \end{macrocode}
 % \end{macro}
