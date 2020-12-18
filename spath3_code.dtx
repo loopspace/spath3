@@ -266,7 +266,21 @@ and the derived files            spath3.ins,
 \ProvidesExplPackage {spath3} {2020/12/18} {1.4} {Functions for
 manipulating PGF soft paths}
 \RequirePackage{xparse}
-\RequirePackage{asxutils}
+%    \end{macrocode}
+%
+% Utilities copied from https://github.com/loopspace/LaTeX3-Utilities
+%    \begin{macrocode}
+\cs_new_protected:Nn \@@_tl_put_right_braced:Nn
+ {
+  \tl_put_right:Nn #1 { { #2 } }
+ }
+\cs_generate_variant:Nn \@@_tl_put_right_braced:Nn { NV, cV, cv, Nx, cx }
+
+\cs_new_protected:Nn \@@_tl_gput_right_braced:Nn
+ {
+  \tl_gput_right:Nn #1 { { #2 } }
+ }
+\cs_generate_variant:Nn \@@_tl_gput_right_braced:Nn { NV, cV, cv, Nx, cx }
 %    \end{macrocode}
 %
 % We need a slew of temporary variables.
@@ -369,7 +383,7 @@ manipulating PGF soft paths}
 % The following functions are wrappers around the underlying \Verb+prop+ functions.
 % We prefix the names to avoid clashing with other \Verb+prop+s that might be lying around, this is why all the \Verb+spath+ methods take argument \Verb+:n+ and not \Verb+:N+.
 %
-% We use the \Verb+l+ prefix to obey \LaTeX3 naming conventions for variables.
+% At the moment I'm using the \Verb+l+ prefix while I figure out how best to obey \LaTeX3 naming conventions for variables.
 %
 %
 % \subsubsection{Prop Functions}
@@ -378,7 +392,7 @@ manipulating PGF soft paths}
 %
 % \begin{macro}[internal]{\spath_new:n}
 %    \begin{macrocode}
-\cs_new_nopar:Npn \spath_new:n #1
+\cs_new_protected_nopar:Npn \spath_new:n #1
 {
   \prop_new:c {l_@@_#1}
 }
@@ -690,9 +704,9 @@ manipulating PGF soft paths}
     {
       \@@_get:nnN {#1} {##1} \l_@@_tmpa_tl
       \tl_clear:N \l_@@_tmpc_tl
-      \asxutils_tl_gput_right_braced:Nn \l_@@_tmpc_tl {##1}
-      \asxutils_tl_gput_right_braced:NV \l_@@_tmpc_tl \l_@@_tmpa_tl
-      \asxutils_tl_gput_right_braced:NV \l_@@_tmpb_tl \l_@@_tmpc_tl
+      \@@_tl_gput_right_braced:Nn \l_@@_tmpc_tl {##1}
+      \@@_tl_gput_right_braced:NV \l_@@_tmpc_tl \l_@@_tmpa_tl
+      \@@_tl_gput_right_braced:NV \l_@@_tmpb_tl \l_@@_tmpc_tl
     }
   }
   \tl_gset_eq:NN \l_@@_smuggle_tl \l_@@_tmpb_tl
@@ -714,9 +728,9 @@ manipulating PGF soft paths}
     {
       \@@_get:nnN {#1} {##1} \l_@@_tmpa_tl
       \tl_clear:N \l_@@_tmpc_tl
-      \asxutils_tl_gput_right_braced:Nn \l_@@_tmpc_tl {##1}
-      \asxutils_tl_gput_right_braced:NV \l_@@_tmpc_tl \l_@@_tmpa_tl
-      \asxutils_tl_gput_right_braced:NV \l_@@_tmpb_tl \l_@@_tmpc_tl
+      \@@_tl_gput_right_braced:Nn \l_@@_tmpc_tl {##1}
+      \@@_tl_gput_right_braced:NV \l_@@_tmpc_tl \l_@@_tmpa_tl
+      \@@_tl_gput_right_braced:NV \l_@@_tmpb_tl \l_@@_tmpc_tl
     }
   }
   \tl_gset_eq:NN #2 \l_@@_tmpb_tl
@@ -1648,7 +1662,7 @@ manipulating PGF soft paths}
     {
       \spath_put:nnn {#1} {#2}
     }
-    \asxutils_tl_gput_right_braced:NV \l_@@_smuggle_tl \l_@@_tmpb_tl
+    \@@_tl_gput_right_braced:NV \l_@@_smuggle_tl \l_@@_tmpb_tl
   }
   \tl_if_empty:NTF \l_@@_tmpa_tl
   {
@@ -1662,7 +1676,7 @@ manipulating PGF soft paths}
     {
       \spath_put:nnn {#1} {#3}
     }
-    \asxutils_tl_gput_right_braced:NV \l_@@_smuggle_tl \l_@@_tmpa_tl
+    \@@_tl_gput_right_braced:NV \l_@@_smuggle_tl \l_@@_tmpa_tl
   }
   \group_end:
   \tl_use:N \l_@@_smuggle_tl
@@ -2757,7 +2771,7 @@ manipulating PGF soft paths}
     {
       \spath_new_anonymous:N \l_@@_anon_tl
       \spath_put:VnV \l_@@_anon_tl {path} ##2
-      \asxutils_tl_put_right_braced:NV #2 \l_@@_anon_tl
+      \@@_tl_put_right_braced:NV #2 \l_@@_anon_tl
     }
   }
 }
@@ -2787,7 +2801,7 @@ manipulating PGF soft paths}
   \spath_map_path_components_inline:Nn #1 {
     \spath_new_anonymous:N \l_@@_anon_tl
     \spath_put:Vnn \l_@@_anon_tl {path} {##1}
-    \asxutils_tl_put_right_braced:NV #2 \l_@@_anon_tl
+    \@@_tl_put_right_braced:NV #2 \l_@@_anon_tl
   }
 }
 \cs_generate_variant:Nn \spath_map_path_components_into_list:NN {cN, cc, Nc}
@@ -3106,12 +3120,12 @@ manipulating PGF soft paths}
   {
     \spath_gput:nnn {#3} {path}
   }
-  \asxutils_tl_gput_right_braced:NV \l_@@_smuggle_tl \l_@@_split_patha_tl
+  \@@_tl_gput_right_braced:NV \l_@@_smuggle_tl \l_@@_split_patha_tl
   \tl_gput_right:Nn \l_@@_smuggle_tl
   {
     \spath_gput:nnn {#4} {path}
   }
-  \asxutils_tl_gput_right_braced:NV \l_@@_smuggle_tl \l_@@_split_intob_tl
+  \@@_tl_gput_right_braced:NV \l_@@_smuggle_tl \l_@@_split_intob_tl
   
   \group_end:
 
