@@ -68,7 +68,7 @@ The \texttt{spath3} TikZ library defines a set of keys that can be issued to muc
 
 \DescribeMacro{save spath}\texttt{save spath=<name>}
 
-Saves the current path to an \texttt{spath} object called \texttt{<name>}.
+Saves the current path to an spath object called \texttt{<name>}.
 This delays until the path is fully constructed so can be issued in the options to the main command.
 
 Spaths constructed this way are global.
@@ -80,10 +80,15 @@ Spaths constructed this way are global.
 \end{tikzpicture}
 \end{example}
 
+\DescribeMacro{clone spath}\texttt{clone spath={<name>}{<name>}}
+
+Clones one spath object into another.
+
 \DescribeMacro{restore spath}\texttt{restore spath=<name>}
 
-Restores a previously saved \texttt{spath} to the current path.
+Restores a previously saved spath to the current path.
 This happens immediately so can be issued in the options to the main command and then the path can be extended with normal drawing commands.
+Any keys that affect the spath directly should be applied \emph{before} this one.
 
 One thing should be noted about transformations.
 By the time a soft path is built, all available transformations have been applied.
@@ -103,17 +108,18 @@ When restoring a path then the library tries to set the last point correctly, bu
 \end{example}
 
 
-\DescribeMacro{insert spath}\texttt{insert spath=<name>}
+\DescribeMacro{append spath}\texttt{append spath=<name>}
 
 This inserts an \texttt{spath} into the path at the current point, it is therefore more suited to being used part way through a path construction.
 In a sense, it is a little like a \texttt{pic} in that it enables the user to construct a path segment early to be reused at various places.
 
 The path is \emph{welded} on to the current path, meaning that it starts from the current point and there is no \texttt{move}.
+This is particularly useful for creating filled regions.
 
 \begin{example}
 \begin{tikzpicture}
 \fill[green] (0,0) circle[radius=2pt] (1,0) circle[radius=2pt] ++(0,2) circle[radius=2pt] ++(2,0) circle[radius=2pt];
-\draw (0,0) -- (1,0) [insert spath=mypath] -- ++(2,0);
+\draw (0,0) -- (1,0) [append spath=mypath] -- ++(2,0);
 \end{tikzpicture}
 \end{example}
 
@@ -123,13 +129,29 @@ Reverses the path in the named spath object.
 This doesn't do any actually drawing.
 The effect is local.
 
-\DescribeMacro{insert reverse spath}\texttt{insert reverse spath=<name>}
+\DescribeMacro{append reverse spath}\texttt{append reverse spath=<name>}
 
-Like \texttt{insert spath} except that the inserted path is reversed first.
+Like \texttt{append spath} except that the inserted path is reversed first.
 
-\DescribeMacro{append spath}\texttt{append spath=<name>}
+\begin{example}
+\begin{tikzpicture}
+\fill[green] (0,0) circle[radius=2pt] (-1,0) circle[radius=2pt] ++(0,2) circle[radius=2pt] ++(2,0) circle[radius=2pt] ++(0,-2) circle[radius=2pt];
+\filldraw[fill opacity=.3, ultra thick] (0,0) -- ++(-1,0) [append spath=mypath] -- ++(2,0) [append reverse spath=mypath];
+\end{tikzpicture}
+\end{example}
 
-Like \texttt{insert spath} except that is doesn't move the inserted path.
+
+\DescribeMacro{insert spath}\texttt{insert spath=<name>}
+
+Like \texttt{append spath} except that it doesn't move the inserted path and there is a move between the current path and the inserted path.
+
+\begin{example}
+\begin{tikzpicture}
+\fill[green] (0,0) circle[radius=2pt] (1,0) circle[radius=2pt] (2,0) circle[radius=2pt] ++(0,2) circle[radius=2pt] ++(2,0) circle[radius=2pt];
+\draw (0,0) -- (1,0) [insert spath=mypath] -- ++(2,0);
+\end{tikzpicture}
+\end{example}
+
 
 \DescribeMacro{shorten spath at end}
 \DescribeMacro{shorten spath at start}
@@ -141,18 +163,41 @@ This shortens the path along its length so that it is guaranteed that the shorte
 For B\'ezier curves, however, the amount of shortening is approximate and is better for shorter distances.
 If wanting to shorten by a large amount it is better to shorten by a small amount a number of times.
 
+\begin{example}
+\begin{tikzpicture}
+\draw[shorten spath at both ends={mypath}{5mm}, restore spath=mypath, line width=1mm, green];
+\draw[restore spath=mypath];
+\end{tikzpicture}
+\end{example}
+
 \DescribeMacro{globalise spath}\texttt{globalise spath=<name>}
 
 Converts an spath object to a global one.
+This is useful if doing some adjustments in a scope or a \Verb+\foreach+ loop and you want them to persist outside that.
 
 \DescribeMacro{translate spath}\texttt{translate spath={<name>}{<x-dimen>}{<y-dimen>}}
 
 Translates the spath by the given dimensions.
 
+\begin{example}
+\begin{tikzpicture}
+\draw[translate spath={mypath}{2cm}{0cm}, restore spath=mypath, line width=1mm, green];
+\draw[restore spath=mypath];
+\end{tikzpicture}
+\end{example}
+
+
 \DescribeMacro{transform spath}\texttt{transform spath={<name>}{<transformations>}}
 
 This applies the transformation to the spath.
 The transformation is processed by TikZ so should consist of TikZ-level transformations such as \Verb+shift={(2,2)}+.
+
+\begin{example}
+\begin{tikzpicture}
+\draw[transform spath={mypath}{shift={(0,1)},rotate=90, shift={(2,-1)}}, restore spath=mypath, line width=1mm, green];
+\draw[restore spath=mypath];
+\end{tikzpicture}
+\end{example}
 
 \DescribeMacro{split at self intersections}\texttt{split at self intersections={<prefix>}{<splits>}}
 
@@ -231,6 +276,7 @@ Clones the \Verb+source+ into the \Verb+target+.
 \DescribeMacro{\SPathInfo}
 \DescribeMacro{\SPathInfoInto}
 \Verb+\SPathInfo{<name>}{<property>}+
+
 \Verb+\SPathInfoInto{<name>}{<property>}{<macro>}+
 
 Extract the \Verb+property+ from the named spath, the second version stores it in the given macro.
@@ -248,6 +294,7 @@ Dumps the information stored on the given spath to the log file.
 \DescribeMacro{\SPathTranslate}
 \DescribeMacro{\SPathTranslateInto}
 \Verb+\SpathTranslate{<name>}{<x dimen>}{<y dimen>}+
+
 \Verb+\SpathTranslateInto{<name>}{<name>}{<x dimen>}{<y dimen>}+
 
 Translates the given spath by the given dimensions.
@@ -256,6 +303,7 @@ The first version modifies the given spath, the second clones it into the a seco
 \DescribeMacro{\SPathScale}
 \DescribeMacro{\SPathScaleInto}
 \Verb+\SpathScale{<name>}{<x dimen>}{<y dimen>}+
+
 \Verb+\SpathScaleInto{<name>}{<name>}{<x dimen>}{<y dimen>}+
 
 Scales the given spath by the given dimensions.
@@ -264,6 +312,7 @@ The first version modifies the given spath, the second clones it into the a seco
 \DescribeMacro{\SPathWeld}
 \DescribeMacro{\SPathWeldInto}
 \Verb+\SPathWeld*{<first>}{<second>}+
+
 \Verb+\SPathWeldInto*{<first>}{<target>}{<second>}+
 
 Welds the second spath onto the first.
