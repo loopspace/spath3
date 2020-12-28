@@ -171,22 +171,115 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 %  \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
 }
 \end{tikzpicture}
-\end{document}
+
+\begin{tikzpicture}
+\draw[save spath=pathA] (0,0) -- (2,2);
+\draw[save spath=pathB] (1,0) -- (0,1);
+
+\tikzset{
+  split at intersections={pathA}{pathB},
+  get components of={pathA}\pathAcomponents,
+  get components of={pathB}\pathBcomponents,
+}
+
+\foreach[count=\k] \cpt in \pathAcomponents {
+  \draw[restore spath=\cpt,-|];
+  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+
+\foreach[count=\k] \cpt in \pathBcomponents {
+  \draw[restore spath=\cpt,-|];
+  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+
+\tikzset{
+  insert gaps after components={pathA}{5pt}{1},
+  get components of={pathA}\pathAcomponents,
+  insert gaps after components={pathB}{5pt}{1},
+  get components of={pathB}\pathBcomponents,
+}
+
+\foreach[count=\k] \cpt in \pathAcomponents {
+  \draw[blue, line width=2pt,restore spath=\cpt];
+%  \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+
+\foreach[count=\k] \cpt in \pathBcomponents {
+  \draw[green, line width=2pt,restore spath=\cpt];
+%  \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+
+
+\end{tikzpicture}
+
 
 \begin{tikzpicture}
 \draw[
   scale=2,
   save spath=npath,
-  split current path at self intersections={npath}{0000}
 ] (0,0) to[out=60,in=-90] (1,1) to[out=90,in=90] (0,1) to[out=-90,in=120] (1,0);
-\draw[shorten spath at both ends={npath}{5mm}] (2,0) [insert spath=npath];
-\foreach \k in {1,...,\spathselfintersectioncount}
-{
-  \draw[red, ultra thick, shorten spath at both ends={npath \k}{5pt},restore spath=npath \k];
+
+\tikzset{
+  split at self intersections=npath,
+  get components of={npath}\npathcomponents,
+}
+
+\foreach[count=\k] \cpt in \npathcomponents {
+  \draw[restore spath=\cpt,-|];
+  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+
+\tikzset{
+  insert gaps after components={npath}{10pt}{2},
+  join components={npath}{2},
+  get components of={npath}\npathcomponents,
+}
+
+\foreach[count=\k] \cpt in \npathcomponents {
+  \draw[blue, line width=2pt,restore spath=\cpt];
+%  \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw[save spath=line] (5,0) -- (2.5,0) -- ++(0,-.25) -- ++(-2.5,0)
+arc[radius=2.25cm,start angle=180,end angle=90]
+arc[radius=2cm,start angle=90, delta angle=-180]
+arc[radius=1.75cm,start angle=-90, delta angle=-180]
+arc[radius=1.5cm,start angle=90, delta angle=-180]
+arc[radius=1.25cm,start angle=-90, delta angle=-180]
+arc[radius=1cm,start angle=90, delta angle=-180]
+arc[radius=.75cm,start angle=-90, delta angle=-180]
+arc[radius=.5cm,start angle=90, delta angle=-180]
+;
+
+\tikzset{
+  split at self intersections=line,
+  get components of={line}\pathcomponents,
+}
+
+\foreach[count=\k] \cpt in \pathcomponents {
+  \draw[restore spath=\cpt,-|];
+  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+
+
+\tikzset{
+  insert gaps after components={line}{10pt}{1,3,5,7,10,11,14},
+  join components={path}{2,4,6,8,9,12,13},
+  get components of={line}\pathcomponents,
+}
+
+\foreach[count=\k] \cpt in \pathcomponents {
+  \draw[blue, line width=2pt,restore spath=\cpt];
+%  \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
 }
 
 
 \end{tikzpicture}
+\end{document}
+
 
 \begin{tikzpicture}[
   use Hobby shortcut,
