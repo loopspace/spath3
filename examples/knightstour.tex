@@ -48,7 +48,10 @@
 
 \end{tikzpicture}
 
-\begin{tikzpicture}
+\begin{tikzpicture}[
+  x={(30pt,0pt)},
+  y={(0pt,30pt)}
+]
 
 \foreach \x in {0,1,...,7}
 {
@@ -235,21 +238,28 @@
   insert gaps after components={centre line}{5pt}{1},
   %
   clone spath={corner}{tour},
-  join spaths={tour}{triangle 180},
-  transform spath={edge line}{rotate=-90},
-  join spaths={tour}{edge line},
-  transform spath={corner}{rotate=-90},
-  join spaths={tour}{corner},
   clone spath={centre}{centre reversed},
-  reverse spath={centre reversed},
+  %
+  transform spath={edge line}{rotate=-90},
+  transform spath={corner}{rotate=-90},
   transform spath={centre}{rotate=180},
-  join spaths={tour}{centre},
   transform spath={centre line}{rotate=180},
-  join spaths={tour}{centre line},
   transform spath={centre reversed}{rotate=90},
+  %
+  reverse spath=centre reversed,
+  reverse spath=corner,
+  reverse spath=edge line,
+%
+  join spaths={tour}{triangle 180},
+  join spaths={tour}{edge line},
+  join spaths={tour}{corner},
+  join spaths={tour}{centre},
+  join spaths={tour}{centre line},
   join spaths={tour}{centre reversed},
+%
   clone spath={tour}{tour 180},
   transform spath={tour 180}{rotate=180},
+%
   join spaths={tour}{tour 180},
   spot weld spath={tour},
   export to svg={tour}
