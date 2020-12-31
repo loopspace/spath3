@@ -9,6 +9,17 @@
 
 \begin{document}
 
+\begin{tikzpicture}
+\pen (-150:.15) -- (30:.15);
+\calligraphy[copperplate]
+(0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0);
+\draw[yshift=-.5cm] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0) .. controls +(1,.5) and +(-1,-.5) .. (4,0);
+\calligraphy[
+  yshift=-1cm,
+  copperplate
+] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0) .. controls +(1,.5) and +(-1,-.5) .. (4,0);
+\end{tikzpicture}
+
 \begin{tikzpicture}[scale=2]
 \calligraphy[
   copperplate,
@@ -25,14 +36,6 @@
    (-.5,1.2) .. controls +(-60:.4) and +(-120:.4) .. (.7,1.2) -- (.7,-1.35) +(0,0) .. controls +(120:1) and +(140:1.5) .. (-.9,-1.7)
 ;
 \end{tikzpicture}
-
-\begin{tikzpicture}
-\pen (-20:.15) -- (20:.15);
-\calligraphy[copperplate] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0);
-\draw[yshift=-.5cm] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0) .. controls +(1,.5) and +(-1,-.5) .. (4,0);
-\calligraphy[yshift=-1cm,copperplate] (0,0) .. controls +(1,.5) and +(-1,-.5) .. (2,0) .. controls +(1,.5) and +(-1,-.5) .. (4,0);
-\end{tikzpicture}
-
 
 \begin{tikzpicture}
 \draw[decorate,decoration={calligraphic brace,amplitude=4mm},ultra thick] (0,0) -- (0,8);

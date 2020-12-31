@@ -4316,17 +4316,17 @@ manipulating PGF soft paths}
 %
 % \subsection{Points on a Path}
 %
-% \begin{macro}[internal]{\spath_get_nth_segment:nnn}
-% Get the nth segment of an spath as a path.
+% \begin{macro}[internal]{\spath_path_get_nth_segment:NnN}
+% Get the nth segment of a path as a path.
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \spath_get_nth_segment:nnN #1#2#3
+\cs_new_protected_nopar:Npn \spath_path_get_nth_segment:NnN #1#2#3
 {
   \group_begin:
-  \spath_get:nnN {#1} {real length} \l_@@_tmpa_tl
+  \spath_get_path_reallength:NN #1 \l_@@_tmpa_tl
   \int_set:Nn \l_@@_tmpa_int {\int_min:nn {\l_@@_tmpa_tl} {#2}}
 
   \tl_clear:N \l_@@_tmpb_tl
-  \spath_map_segments_inline:nn {#1}
+  \spath_map_path_segments_inline:Nn #1
   {
     \int_decr:N \l_@@_tmpa_int
     \int_compare:nT {\l_@@_tmpa_int == 0}
@@ -4338,21 +4338,38 @@ manipulating PGF soft paths}
   \group_end:
   \tl_set_eq:NN #3 \g_@@_smuggle_tl
 }
-\cs_generate_variant:Nn \spath_get_nth_segment:nnN {nVN, VnN, VVN}
+\cs_generate_variant:Nn \spath_path_get_nth_segment:NnN {NVN}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[internal]{\spath_get_nth_component:nnN}
-% Get the nth component of an spath as a path.
+% \begin{macro}[internal]{\spath_path_get_nth_segment:NnN}
+% Get the nth segment of a path as a path.
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \spath_get_nth_component:nnN #1#2#3
+\cs_new_protected_nopar:Npn \spath_get_nth_segment:nnN #1#2#3
 {
   \group_begin:
-  \spath_get:nnN {#1} {number of components} \l_@@_tmpa_tl
+  \spath_get:nnN {#1} {path} \l_@@_iterp_tl
+  \spath_path_get_nth_segment:NnN \l_@@_iterp_tl {#2} \l_@@_tmpa_tl
+  \tl_gset_eq:NN \g_@@_smuggle_tl \l_@@_tmpa_tl
+  \group_end:
+  \tl_set_eq:NN #3 \g_@@_smuggle_tl
+}
+\cs_generate_variant:Nn \spath_get_nth_segment:nnN {VnN, VVN, nVN}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}[internal]{\spath_path_get_nth_component:NnN}
+% Get the nth component of an spath as a path.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_path_get_nth_component:NnN #1#2#3
+{
+  \group_begin:
+  \spath_get_path_numberofcomponents:NN #1 \l_@@_tmpa_tl
   \int_set:Nn \l_@@_tmpa_int {\int_min:nn {\l_@@_tmpa_tl} {#2}}
 
   \tl_clear:N \l_@@_tmpb_tl
-  \spath_map_components_inline:nn {#1}
+  \spath_map_path_components_inline:Nn #1
   {
     \int_decr:N \l_@@_tmpa_int
     \int_compare:nT {\l_@@_tmpa_int == 0}
@@ -4365,7 +4382,61 @@ manipulating PGF soft paths}
   \group_end:
   \tl_set_eq:NN #3 \g_@@_smuggle_tl
 }
+\cs_generate_variant:Nn \spath_path_get_nth_component:NnN {NVN}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{\spath_get_nth_component:nnN}
+% Get the nth component of an spath as a path.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_get_nth_component:nnN #1#2#3
+{
+  \group_begin:
+  \spath_get:nnN {#1} {path} \l_@@_iterp_tl
+  \spath_path_get_nth_component:NnN \l_@@_iterp_tl {#2} \l_@@_tmpa_tl
+  \tl_gset_eq:NN \g_@@_smuggle_tl \l_@@_tmpa_tl
+  \group_end:
+  \tl_set_eq:NN #3 \g_@@_smuggle_tl
+}
 \cs_generate_variant:Nn \spath_get_nth_component:nnN {nVN, VnN, VVN}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{\spath_path_remove_nth_component:Nn}
+% Remove the nth component of an spath.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_path_remove_nth_component:Nn #1#2
+{
+  \group_begin:
+  \tl_set_eq:NN \l_@@_iterp_tl #1
+  \spath_get_path_numberofcomponents:NN \l_@@_iterp_tl \l_@@_tmpa_tl
+  \int_set:Nn \l_@@_tmpa_int {\int_min:nn {\l_@@_tmpa_tl} {#2}}
+
+  \spath_apply_inline_to_path_components:Nn \l_@@_iterp_tl
+  {
+    \int_decr:N \l_@@_tmpa_int
+    \int_compare:nT {\l_@@_tmpa_int == 0}
+    {
+      \tl_clear:N ##1
+    }
+  }
+  \tl_gset_eq:NN \g_@@_smuggle_tl \l_@@_iterp_tl
+  \group_end:
+  \tl_set_eq:NN #1 \g_@@_smuggle_tl
+}
+\cs_generate_variant:Nn \spath_path_get_nth_component:Nn {NV}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{\spath_path_remove_nth_component:NnN}
+% Remove the nth component of an spath, storing it in a macro.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_path_remove_nth_component:NnN #1#2#3
+{
+  \spath_path_get_nth_component:NnN #1 {#2} #3
+  \spath_path_remove_nth_component:Nn #1 {#2}
+}
+\cs_generate_variant:Nn \spath_path_get_nth_component:NnN {NVN}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5040,6 +5111,48 @@ manipulating PGF soft paths}
     \tl_reverse:N ##1
   }
 
+  \spath_get_path_initialpoint:NN \l_@@_iterp_tl \l_@@_tmpa_tl
+  \spath_get_path_finalpoint:NN \l_@@_iterp_tl \l_@@_tmpb_tl
+  
+  \bool_if:nT
+  {
+    \dim_compare_p:n
+    {
+      \dim_abs:n {\tl_item:Nn \l_@@_tmpa_tl {1} - \tl_item:Nn \l_@@_tmpb_tl {1} } < 0.01pt
+    }
+    &&
+    \dim_compare_p:n
+    {
+      \dim_abs:n {\tl_item:Nn \l_@@_tmpa_tl {2} - \tl_item:Nn \l_@@_tmpb_tl {2} } < 0.01pt
+    }
+  }
+  {
+    \spath_get_path_numberofcomponents:NN \l_@@_iterp_tl \l_@@_tmpa_tl
+
+    \int_compare:nTF
+    {
+      \l_@@_tmpa_tl > 1
+    }
+    {
+      \spath_path_remove_nth_component:NnN \l_@@_iterp_tl {1} \l_@@_tmpb_tl
+
+      \prg_replicate:nn {3}
+      {
+        \tl_set:Nx \l_@@_tmpb_tl {\tl_tail:N \l_@@_tmpb_tl}
+      }
+      \tl_put_right:NV \l_@@_iterp_tl \l_@@_tmpb_tl
+    }
+    {
+      \tl_put_left:NV \l_@@_iterp_tl \c_spath_moveto_tl
+      \tl_put_right:NV \l_@@_iterp_tl \c_spath_closepath_tl
+      \tl_put_right:Nx \l_@@_iterp_tl
+      {
+        { \tl_item:Nn \l_@@_iterp_tl {2} }
+        { \tl_item:Nn \l_@@_iterp_tl {3} }
+      }
+    }
+  }
+
   \tl_gset_eq:NN \g_@@_smuggle_tl \l_@@_iterp_tl
   \group_end:
   \tl_set_eq:NN #1 \g_@@_smuggle_tl
@@ -5563,19 +5676,19 @@ manipulating PGF soft paths}
       \spath_set_tikz_coords:n { current path }
     }
   },
-  shorten~spath~at~end/.code~ 2~ args={
+  shorten~ spath~ at~ end/.code~ 2~ args={
     \spath_if_exist:nT { #1 }
     {
       \spath_shorten_at_end:nn {#1} {#2}
     }
   },
-  shorten~spath~at~start/.code~ 2~ args ={
+  shorten~ spath~ at~ start/.code~ 2~ args ={
     \spath_if_exist:nT { #1 }
     {
       \spath_shorten_at_start:nn {#1} {#2}
     }
   },
-  shorten~spath~at~both~ends/.code~ 2~ args={
+  shorten~ spath~ at~ both~ ends/.code~ 2~ args={
     \spath_if_exist:nT { #1 }
     {
       \spath_shorten_at_end:nn {#1} {#2}
@@ -5740,6 +5853,8 @@ manipulating PGF soft paths}
 
 \tl_new:N \l_@@_tmpa_tl
 \tl_new:N \l_@@_tmpb_tl
+\tl_new:N \l_@@_tmpc_tl
+\tl_new:N \l_@@_tmpd_tl
 \int_new:N \l_@@_tmpa_int
 \int_new:N \l_@@_tmpb_int
 \int_new:N \l_@@_path_component_int
@@ -6087,25 +6202,36 @@ manipulating PGF soft paths}
   \tl_clear:N \l_@@_tmpb_tl
   \int_compare:nTF {\l_@@_tmpa_tl = 1}
   {
-    \spath_map_segments_inline:nn {#1}
+    \spath_get:nnN {#1} {path} \l_@@_tmpc_tl
+    \tl_set:Nx \l_@@_tmpd_tl {\tl_item:Nn \l_@@_tmpc_tl {4}}
+    \tl_set:Nx \l_@@_tmpb_tl
     {
-      \tl_case:NnF ##1 {
-        \c_spath_lineto_tl {
-          \cal_split_line_in_three:NN \l_@@_tmpb_tl ##2
-        }
-        \c_spath_curvetoa_tl {
-          \cal_split_curve_in_three:NN \l_@@_tmpb_tl ##2
-        }
-      }
-      {
-        \tl_put_right:NV \l_@@_tmpb_tl ##2
-      }
+      \tl_item:Nn \l_@@_tmpc_tl {1}
+      {\tl_item:Nn \l_@@_tmpc_tl {2}}
+      {\tl_item:Nn \l_@@_tmpc_tl {3}}
+    }
+    \tl_if_eq:NNT \l_@@_tmpd_tl \c_spath_lineto_tl
+    {
+      \cal_split_line_in_three:NN \l_@@_tmpb_tl \l_@@_tmpc_tl
+    }
+    \tl_if_eq:NNT \l_@@_tmpd_tl \c_spath_curvetoa_tl
+    {
+      \cal_split_curve_in_three:NN \l_@@_tmpb_tl \l_@@_tmpc_tl
     }
     \spath_put:nnV {#1} {path} \l_@@_tmpb_tl
   }
   {
     \int_compare:nT {\l_@@_tmpa_tl = 2}
     {
+      \spath_get:nnN {#1} {path} \l_@@_tmpc_tl
+      \tl_set:Nx \l_@@_tmpd_tl {\tl_item:Nn \l_@@_tmpc_tl {4}}
+      \tl_set:Nx \l_@@_tmpb_tl
+      {
+        \tl_item:Nn \l_@@_tmpc_tl {1}
+        {\tl_item:Nn \l_@@_tmpc_tl {2}}
+        {\tl_item:Nn \l_@@_tmpc_tl {3}}
+      }
+      
       \spath_map_segments_inline:nn {#1}
       {
         \tl_case:NnF ##1 {
