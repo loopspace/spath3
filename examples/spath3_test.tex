@@ -75,6 +75,13 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \begin{document}
 
 \begin{tikzpicture}
+\draw[save spath=tpath] (0,0) rectangle +(1,1);
+\draw[rotate=45, xscale=2, yscale=3, ultra thick, red] (0,0) rectangle +(1,1);
+\draw[transform spath={tpath}{rotate=45, xscale=2, yscale=3}, restore spath=tpath];
+\end{tikzpicture}
+\end{document}
+
+\begin{tikzpicture}
 \path[save spath=rpath] (0,0) to[out=30,in=150] (1,1);
 
 \foreach \k in {1,...,9} {

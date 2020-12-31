@@ -1,0 +1,261 @@
+\RequirePackage{shellesc}
+\immediate\write18{cd ..; tex spath3_code.dtx}
+\documentclass{article}
+
+\usepackage{tikz}
+\usetikzlibrary{spath3,intersections}
+
+\begin{document}
+
+\begin{tikzpicture}
+
+\fill[gray]
+(0,0) rectangle +(2,2)
+(2,2) rectangle +(2,2)
+(4,4) rectangle +(2,2)
+(0,4) rectangle +(2,2)
+(4,0) rectangle +(2,2)
+;
+\draw (0,0) grid[step=2] (6,6);
+
+\path[
+  save spath=tour,
+  line width=1pt,
+]
+(1,1)
+-- ++(4,2)
+-- ++(-4,2)
+-- ++(2,-4)
+-- ++(2,4)
+-- ++(-4,-2)
+-- ++(4,-2)
+-- ++(-2,4)
+-- ++(-2,-4)
+;
+
+\tikzset{
+  split at self intersections=tour,
+  remove empty components=tour,
+  insert gaps after components={tour}{5pt}{1,3,...,31},
+  join components={tour}{1,3,5,...,33},
+  get components of={tour}\pathcomponents,
+}
+
+\foreach[count=\k] \cpt in \pathcomponents {
+   \draw[line width=1pt,restore spath=\cpt];
+%  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+
+\end{tikzpicture}
+
+\begin{tikzpicture}
+
+\foreach \x in {0,1,...,7}
+{
+\foreach[evaluate=\y as \xy using {int(mod(\x+\y,2))}] \y in {0,1,...,7}
+  {
+    \ifnum\xy=0\relax
+    \fill[gray!50!white] (\x-4,\y-4) rectangle +(1,1);
+    \fi
+  }
+}
+\draw (-4,-4) grid[step=1] +(8,8);
+
+\path[
+%  draw,
+  gray!50!white,
+  line width=3pt
+]
+(-4,-4)
+++(.5,.5)
+-- ++(2,1)
+-- ++(-2,1)
+-- ++(1,-2)
+-- ++(2,1)
+-- ++(1,2)
+-- ++(-2,1)
+-- ++(2,1)
+-- ++(-1,-2)
+-- ++(-2,1)
+-- ++(-1,2)
+-- ++(2,1)
+-- ++(-1,-2)
+-- ++(-1,2)
+-- ++(2,-1)
+-- ++(-2,-1)
+-- ++(1,2)
+-- ++(2,-1)
+-- ++(2,-1)
+-- ++(2,-1)
+-- ++(-1,2)
+-- ++(-2,1)
+-- ++(-1,-2)
+-- ++(2,-1)
+-- ++(2,-1)
+-- ++(-1,-2)
+-- ++(-2,-1)
+-- ++(1,2)
+-- ++(1,2)
+-- ++(1,2)
+-- ++(-2,1)
+-- ++(1,-2)
+-- ++(1,2)
+-- ++(-2,-1)
+-- ++(2,-1)
+-- ++(-1,2)
+-- ++(-2,-1)
+-- ++(-1,-2)
+-- ++(2,-1)
+-- ++(-2,-1)
+-- ++(1,2)
+-- ++(2,-1)
+-- ++(1,-2)
+-- ++(-2,-1)
+-- ++(1,2)
+-- ++(1,-2)
+-- ++(-2,1)
+-- ++(2,1)
+-- ++(-1,-2)
+-- ++(-2,1)
+-- ++(-2,1)
+-- ++(-2,1)
+-- ++(1,-2)
+-- ++(2,-1)
+-- ++(1,2)
+-- ++(-2,1)
+-- ++(-2,1)
+-- ++(1,2)
+-- ++(2,1)
+-- ++(-1,-2)
+-- ++(-1,-2)
+-- ++(-1,-2)
+-- ++(2,-1)
+-- ++(-1,2)
+%-- ++(-1,-2)
+-- cycle
+;
+
+\path[
+  save spath=corner,
+%  draw
+]
+(-4,-4)
+++(1.5,3.5)
+-- ++(-1,-2)
+-- ++(2,-1)
+-- ++(-1,2)
+-- ++(-1,-2)
+-- ++(2,1)
+-- ++(-2,1)
+-- ++(1,-2)
+-- ++(2,1)
+%-- ++(1,2)
+;
+
+\path[
+  save spath=centre,
+%  draw
+]
+(-4,-4)
+++(4.5,1.5)
+-- ++(-2,1)
+-- ++(-2,1)
+-- ++(1,-2)
+-- ++(2,-1)
+-- ++(1,2)
+%-- ++(-2,1)
+%-- ++(-2,1)
+;
+
+\path[
+  save spath=triangle,
+%  draw,
+  rotate=180
+]
+(-4,-4)
+++(3.5,1.5)
+-- ++(1,2)
+-- ++(-2,1)
+-- ++(2,1)
+-- ++(-1,-2)
+;
+
+\path[
+  save spath=centre line
+]
+(.5,-1.5)
+-- ++(-2,1)
+;
+
+\path[
+  save spath=edge line
+]
+(-.5,-2.5)
+-- ++(1,2)
+;
+
+\tikzset{
+%  remove empty components=corner,
+%  remove empty components=centre,
+%  remove empty components=triangle,
+  %
+  transform spath={corner}{scale=.5},
+  transform spath={centre}{scale=.5},
+  transform spath={triangle}{scale=.5},
+  transform spath={centre line}{scale=.5},
+  %
+  clone spath={centre line}{centre line 180},
+  transform spath={centre line 180}{rotate=180},
+  %
+  split at self intersections=corner,
+  split at self intersections=centre,
+  split at self intersections=triangle,
+  %
+  split at intersections={triangle}{centre line 180},
+  split at intersections={triangle}{centre line},
+  %
+  clone spath={triangle}{triangle 180},
+  transform spath={triangle 180}{rotate=180},
+  %
+  split at intersections={corner}{centre},
+  split at intersections={centre}{triangle 180},
+  split at intersections={triangle}{triangle 180},
+  %
+  transform spath={corner}{scale=2},
+  transform spath={centre}{scale=2},
+  transform spath={triangle}{scale=2},
+  transform spath={triangle 180}{scale=2},
+  transform spath={centre line}{scale=2},
+  transform spath={centre line 180}{scale=2},
+  %
+  insert gaps after components={corner}{5pt}{1,3,...,33},
+  insert gaps after components={centre}{5pt}{2,4,...,10},
+  insert gaps after components={triangle}{5pt}{1,3,...,11},
+  insert gaps after components={triangle 180}{5pt}{2,4,...,10},
+  insert gaps after components={centre line}{5pt}{1},
+  %
+  clone spath={corner}{tour},
+  join spaths={tour}{triangle 180},
+  transform spath={edge line}{rotate=-90},
+  join spaths={tour}{edge line},
+  transform spath={corner}{rotate=-90},
+  join spaths={tour}{corner},
+  clone spath={centre}{centre reversed},
+  reverse spath={centre reversed},
+  transform spath={centre}{rotate=180},
+  join spaths={tour}{centre},
+  transform spath={centre line}{rotate=180},
+  join spaths={tour}{centre line},
+  transform spath={centre reversed}{rotate=90},
+  join spaths={tour}{centre reversed},
+  clone spath={tour}{tour 180},
+  transform spath={tour 180}{rotate=180},
+  join spaths={tour}{tour 180},
+  spot weld spath={tour},
+  export to svg={tour}
+%  show spath={tour},
+}
+
+\draw[line width=1pt, restore spath=tour];
+\end{tikzpicture}
+\end{document}
