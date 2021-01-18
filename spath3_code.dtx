@@ -3064,57 +3064,59 @@ manipulating PGF soft paths}
 \cs_generate_variant:Nn \spath_gsave_path:Nn {cn, NV, cV}
 
 \tikzset{
-  spath~ set~ prefix/.store~ in=\l_@@_prefix_tl,
-  spath~ prefix/.is~choice,
-  spath~ prefix/default/.style={
-    spath~ set~ prefix=tikz@intersect@path@name@
+  spath/.is~family,
+  spath/.cd,
+  set~ prefix/.store~ in=\l_@@_prefix_tl,
+  prefix/.is~choice,
+  prefix/default/.style={
+    /tikz/spath/set~ prefix=tikz@intersect@path@name@
   },
-  spath~ set~ suffix/.store~ in=\l_@@_suffix_tl,
-  spath~ suffix/.is~choice,
-  spath~ suffix/default/.style={
-    spath~ set~ suffix={}
+  set~ suffix/.store~ in=\l_@@_suffix_tl,
+  suffix/.is~choice,
+  suffix/default/.style={
+    /tikz/spath/set~ suffix={}
   },
-  spath~ set~ name/.style={
-    spath~ prefix=#1,
-    spath~ suffix=#1
+  set~ name/.style={
+    /tikz/spath/prefix=#1,
+    /tikz/spath/suffix=#1
   },
-  save~ spath/.code={
+  save/.code={
     \tikz@addmode{
       \spath_get_current_path:N \l_@@_tmpa_tl
       \spath_bake_round:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
       \spath_save_path:cV {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} \l_@@_tmpa_tl
     }
   },
-  clone~ spath/.code~ 2~ args={
+  clone/.code~ 2~ args={
     \tl_set_eq:cc {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
   },
-  save~ spath~ global/.code={
+  save~ global/.code={
     \tikz@addmode{
       \spath_get_current_path:N \l_@@_tmpa_tl
       \spath_bake_round:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
       \spath_gsave_path:cV {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} \l_@@_tmpa_tl
     }
   },
-  save~ spath~ to~ aux/.code={
+  save~ to~ aux/.code={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_save_to_aux:c {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
   },
-  restore~ spath/.code={
+  restore/.code={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_set_current_path:c {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_set_tikz_coords:v {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
   },
-  show~ path/.code={
+  show/.code={
     \tikz@addmode{
       \pgfsyssoftpath@getcurrentpath\l_@@_tmpa_tl
       \tl_show:N \l_@@_tmpa_tl
     }
   },
-  append~ spath/.code={
+  append/.code={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_get_current_path:N \l_@@_current_tl
@@ -3123,7 +3125,7 @@ manipulating PGF soft paths}
       \spath_set_tikz_coords:V \l_@@_current_tl
     }
   },
-  join~ spaths/.code~ 2~ args={
+  join~ with/.code~ 2~ args={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
@@ -3132,19 +3134,19 @@ manipulating PGF soft paths}
       }
     }
   },
-  spot~ weld~ spath/.code={
+  spot~ weld/.code={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_spot_weld_components:c {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
   },
-  reverse~ spath/.code={
+  reverse/.code={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:c {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
   },
-  append~ reverse~ spath/.code={
+  append~ reverse/.code={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:Nv \l_@@_reverse_tl {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -3154,7 +3156,7 @@ manipulating PGF soft paths}
       \spath_set_tikz_coords:V \l_@@_current_tl
     }
   },    
-  insert~ spath/.code={
+  insert/.code={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_get_current_path:N \l_@@_current_tl
@@ -3163,7 +3165,7 @@ manipulating PGF soft paths}
       \spath_set_tikz_coords:V \l_@@_current_tl
     }
   },
-  insert~ reverse~ spath/.code={
+  insert~ reverse/.code={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:Nv \l_@@_reverse_tl {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -3173,32 +3175,26 @@ manipulating PGF soft paths}
       \spath_set_tikz_coords:V \l_@@_current_tl
     }
   },
-  shorten~ spath~ at~ end/.code~ 2~ args={
+  shorten~ at~ end/.code~ 2~ args={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_end:cn {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
     }
   },
-  shorten~ spath~ at~ start/.code~ 2~ args ={
+  shorten~ at~ start/.code~ 2~ args ={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_start:cn {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
     }
   },
-  shorten~ spath~ at~ both~ ends/.code~ 2~ args={
+  shorten~ at~ both~ ends/.code~ 2~ args={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_end:cn {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
       \spath_shorten_at_start:cn {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
     }
   },
-  globalise~ spath/.code={
-    \spath_if_exist:nT { #1 }
-    {
-      \spath_globalise:n {#1}
-    }
-  },
-  translate~ spath/.code~ n~ args={3}{
+  translate/.code~ n~ args={3}{
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_translate:cnn {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}{#2}{#3}
@@ -3207,7 +3203,7 @@ manipulating PGF soft paths}
   export~ to~ svg/.code={
     \spath_export_to_svg:c {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
   },
-  transform~ spath/.code~ 2~ args={
+  transform/.code~ 2~ args={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
