@@ -797,7 +797,7 @@ manipulating PGF soft paths}
   \tl_set_eq:NN #1 \g_@@_smuggle_tl
   \tl_gclear:N \g_@@_smuggle_tl
 }
-\cs_generate_variant:Nn \spath_reverse:Nn {NV, cn, cV}
+\cs_generate_variant:Nn \spath_reverse:Nn {NV, cn, cV, Nv}
 \cs_new_protected_nopar:Npn \spath_reverse:N #1
 {
   \spath_reverse:NV #1#1
@@ -1200,7 +1200,7 @@ manipulating PGF soft paths}
 {
   \spath_append_no_move:NVn #1#1{#2}
 }
-\cs_generate_variant:Nn \spath_append_no_move:Nn {NV}
+\cs_generate_variant:Nn \spath_append_no_move:Nn {NV, cv}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1235,7 +1235,7 @@ manipulating PGF soft paths}
 {
   \spath_prepend_no_move:NVn #1#1{#2}
 }
-\cs_generate_variant:Nn \spath_prepend_no_move:Nn {NV}
+\cs_generate_variant:Nn \spath_prepend_no_move:Nn {NV, cv}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1804,8 +1804,6 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-%
-% %%%% <--- HERE
 %
 % \subsection{Shortening Paths}
 %
@@ -3018,12 +3016,14 @@ manipulating PGF soft paths}
 %</spath3>
 % \fi
 %
+% \section{The TikZ interface}
+%
 % \iffalse
 %<*tikzspath3>
 % \fi
 % Interfaces via TikZ keys.
 %
-% When saving an \Verb+spath+ we make it global since we're probably buried deep within groups and scopes.
+%
 %     \begin{macrocode}
 \RequirePackage{spath3}
 \RequirePackage{expl3}
@@ -4171,6 +4171,8 @@ manipulating PGF soft paths}
 \tl_new:N \l__knot_aux_tl
 \tl_new:N \l__knot_auxa_tl
 
+\seq_new:N \l_@@_segments_seq
+
 \int_new:N \l__knot_tmpa_int
 \int_new:N \l__knot_strands_int
 \int_new:N \l__knot_intersections_int
@@ -4203,11 +4205,11 @@ manipulating PGF soft paths}
 % Configuration is via TikZ keys and styles.
 %    \begin{macrocode}
 \tikzset{
-  spath~ prefix/knot/.style={
-    spath~ set~ prefix=knot strand,
+  spath/prefix/knot/.style={
+    spath/set~ prefix=knot strand,
   },
-  spath~ suffix/knot/.style={
-    spath~ set~ suffix={},
+  spath/suffix/knot/.style={
+    spath/set~ suffix={},
   },
   knot/.code={
     \tl_if_eq:nnTF {#1} {none}
@@ -4382,7 +4384,7 @@ manipulating PGF soft paths}
   \int_incr:N \l__knot_strands_int
   \tl_clear_new:c {l__knot_options_strand \int_use:N \l__knot_strands_int}
   \tl_set:cn {l__knot_options_strand \int_use:N \l__knot_strands_int} {#1}
-  \path[#1,spath~ set~ name=knot,save~ spath=\int_use:N \l__knot_strands_int]
+  \path[#1,spath/set~ name=knot,spath/save=\int_use:N \l__knot_strands_int]
 }
 %    \end{macrocode}
 % \end{macro}
@@ -4535,44 +4537,46 @@ manipulating PGF soft paths}
   }
   {
     \tl_clear:N \l__knot_tmpa_tl
-    \spath_map_segments_function:nN {knot strand #1} \knot_split_self_intersects:NN
+    \spath_segments_to_seq:Nv \l_@@_segments_seq {knot strand #1}
+    \seq_map_function:NN \l_@@_segments_seq \knot_split_self_intersects:N
     \tl_set_eq:cN {knot strand #1} \l__knot_tmpa_tl
   }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[internal]{\knot_split_self_intersects:NN}
+% \begin{macro}[internal]{\knot_split_self_intersects:N}
 % This is the macro that does the split.
 % Figuring out whether a Bezier cubic self intersects is apparently a difficult problem so we don't bother.
 % We compute a point such that if there is an intersection then it lies on either side of the point.
 % I don't recall where the formula came from!
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \knot_split_self_intersects:NN #1#2
+\cs_new_protected_nopar:Npn \knot_split_self_intersects:N #1
 {
-  \tl_case:NnF #1
+  \tl_set:Nx \l_@@_tmpc_tl {\tl_item:nn {#1} {4}}
+  \tl_case:NnF \l_@@_tmpc_tl
   {
     \c_spath_curvetoa_tl
     {
       \fp_set:Nn \l_tmpa_fp
       {
-        (\tl_item:Nn #2 {3} - 3 * \tl_item:Nn #2 {6} + 3 * \tl_item:Nn #2 {9} - \tl_item:Nn #2 {12})
+        (\tl_item:nn {#1} {3} - 3 * \tl_item:nn {#1} {6} + 3 * \tl_item:nn {#1} {9} - \tl_item:nn {#1} {12})
         *
-        (3 * \tl_item:Nn #2 {8} - 3 * \tl_item:Nn #2 {11})
+        (3 * \tl_item:nn {#1} {8} - 3 * \tl_item:nn {#1} {11})
         -
-        (\tl_item:Nn #2 {2} - 3 * \tl_item:Nn #2 {5} + 3 * \tl_item:Nn #2 {8} - \tl_item:Nn #2 {11})
+        (\tl_item:nn {#1} {2} - 3 * \tl_item:nn {#1} {5} + 3 * \tl_item:nn {#1} {8} - \tl_item:nn {#1} {11})
         *
-        (3 * \tl_item:Nn #2 {9} - 3 * \tl_item:Nn #2 {12})
+        (3 * \tl_item:nn {#1} {9} - 3 * \tl_item:nn {#1} {12})
       }
       \fp_set:Nn \l_tmpb_fp
       {
-        (\tl_item:Nn #2 {2} - 3 * \tl_item:Nn #2 {5} + 3 * \tl_item:Nn #2 {8} - \tl_item:Nn #2 {11})
+        (\tl_item:nn {#1} {2} - 3 * \tl_item:nn {#1} {5} + 3 * \tl_item:nn {#1} {8} - \tl_item:nn {#1} {11})
         *
-        (3 * \tl_item:Nn #2 {6} - 6 * \tl_item:Nn #2 {9} + 3 * \tl_item:Nn #2 {12})
+        (3 * \tl_item:nn {#1} {6} - 6 * \tl_item:nn {#1} {9} + 3 * \tl_item:nn {#1} {12})
         -
-        (\tl_item:Nn #2 {3} - 3 * \tl_item:Nn #2 {6} + 3 * \tl_item:Nn #2 {9} - \tl_item:Nn #2 {12})
+        (\tl_item:nn {#1} {3} - 3 * \tl_item:nn {#1} {6} + 3 * \tl_item:nn {#1} {9} - \tl_item:nn {#1} {12})
         *
-        (3 * \tl_item:Nn #2 {5} - 6 * \tl_item:Nn #2 {8} + 3 * \tl_item:Nn #2 {11})
+        (3 * \tl_item:nn {#1} {5} - 6 * \tl_item:nn {#1} {8} + 3 * \tl_item:nn {#1} {11})
       }
       \fp_compare:nTF
       {
@@ -4585,7 +4589,7 @@ manipulating PGF soft paths}
           0 < \l_tmpa_fp && \l_tmpa_fp < 1
         }
         {
-          \spath_split_curve:NNVV \l_tmpa_tl \l_tmpb_tl \l_tmpa_fp #2
+          \spath_split_curve:NNVn \l_tmpa_tl \l_tmpb_tl \l_tmpa_fp {#1}
           \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
           \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
           \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
@@ -4596,7 +4600,7 @@ manipulating PGF soft paths}
           \tl_put_right:NV \l__knot_tmpa_tl \l_tmpb_tl
         }
         {
-          \tl_set_eq:NN \l_tmpa_tl #2
+          \tl_set:Nn \l_tmpa_tl {#1}
           \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
           \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
           \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
@@ -4604,7 +4608,7 @@ manipulating PGF soft paths}
         }
       }
       {
-        \tl_set_eq:NN \l_tmpa_tl #2
+        \tl_set:Nn \l_tmpa_tl {#1}
         \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
         \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
         \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
@@ -4613,7 +4617,7 @@ manipulating PGF soft paths}
     }
     \c_spath_lineto_tl
     {
-      \tl_set_eq:NN \l_tmpa_tl #2
+      \tl_set:Nn \l_tmpa_tl {#1}
       \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
       \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
       \tl_set:Nx \l_tmpa_tl {\tl_tail:N \l_tmpa_tl}
@@ -4621,7 +4625,7 @@ manipulating PGF soft paths}
     }
   }
   {
-    \tl_put_right:NV \l__knot_tmpa_tl #2
+    \tl_put_right:Nn \l__knot_tmpa_tl {#1}
   }
 }
 %    \end{macrocode}
@@ -4652,10 +4656,12 @@ manipulating PGF soft paths}
 \pgfintersectionofpaths{\pgfsetpath\l__knot_tmpc_tl}{\pgfsetpath\l__knot_tmpd_tl}
 
   }
+
   \int_compare:nT {\pgfintersectionsolutions > 0}
   {
     \int_step_function:nnnN {1} {1} {\pgfintersectionsolutions} \knot_do_intersection:n
   }
+
   \knot_save_intersections:VV \l__knot_tmpa_tl \l__knot_tmpb_tl
   \group_end:
 }
@@ -4867,7 +4873,7 @@ manipulating PGF soft paths}
                 
 %                \spath_get:nnN {knot \tl_use:N \l__knot_prefix_tl -1} {path} \l_tmpa_tl
                 \spath_prepend_no_move:cv {knot \tl_use:N \l__knot_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:c {knot previous \tl_use:N \l__knot_tmpg_tl}}}
-                \tl_seq_eq:Nc \l_tmpa_tl {knot \tl_use:N \l__knot_prefix_tl -1}
+                \tl_set_eq:Nc \l_tmpa_tl {knot \tl_use:N \l__knot_prefix_tl -1}
               }
             }
           }
@@ -4911,7 +4917,7 @@ manipulating PGF soft paths}
       \pgfscope
       \group_begin:
       \tikzset{knot~ diagram/every~ intersection/.try, every~ intersection/.try, knot~ diagram/intersection~ \int_use:N \l__knot_intersections_int/.try}
-      \knot_draw_crossing:nVV {\tl_use:N \l__knot_tmpg_tl} \l__knot_tmpa_dim \l__knot_tmpb_dim
+      \knot_draw_crossing:VVV \l__knot_tmpg_tl \l__knot_tmpa_dim \l__knot_tmpb_dim
       \coordinate (\l__knot_name_tl \c_space_tl \int_use:N \l__knot_intersections_int) at (\dim_use:N \l__knot_tmpa_dim, \dim_use:N \l__knot_tmpb_dim);
       \group_end:
       \endpgfscope
@@ -4992,7 +4998,7 @@ manipulating PGF soft paths}
   \tl_put_right:Nv \l_tmpa_tl {l__knot_options_ #1}
   }
   \tl_put_right:Nn \l_tmpa_tl {,knotbg,line~ width= \tl_use:N \l__knot_clip_width_tl * \pgflinewidth}
-  \spath_tikz_path:Vn \l_tmpa_tl {knot #1}
+  \spath_tikz_path:Vv \l_tmpa_tl {knot #1}
 
   \endpgfscope
 
@@ -5005,13 +5011,13 @@ manipulating PGF soft paths}
   \tl_put_right:Nv \l_tmpa_tl {l__knot_options_ #1}
   }
   \tl_put_right:Nn \l_tmpa_tl {,knot~ diagram/only~ when~ rendering/.try,only~ when~ rendering/.try}
-  \spath_tikz_path:Vn \l_tmpa_tl {knot #1}
+  \spath_tikz_path:Vv \l_tmpa_tl {knot #1}
 
   \endpgfscope
   \group_end:
 }
 
-\cs_generate_variant:Nn \knot_draw_crossing:nnn {nVV}
+\cs_generate_variant:Nn \knot_draw_crossing:nnn {nVV, VVV}
 
 \cs_new_protected_nopar:Npn \knot_draw_crossing:nn #1#2
 {
@@ -5053,17 +5059,19 @@ manipulating PGF soft paths}
   \int_set_eq:NN \l__knot_component_start_int \l__knot_filaments_int
   \int_incr:N \l__knot_component_start_int
   \tl_set_eq:Nc \l__knot_tmpa_tl {l__knot_options_strand #1}
-  \spath_map_segments_function:nN {knot strand #1} \knot_save_filament:NN
+  \spath_segments_to_seq:Nv \l_@@_segments_seq {knot strand #1}
+  \seq_map_function:NN \l_@@_segments_seq \knot_save_filament:N
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}[internal]{\knot_save_filament:NN}
+% \begin{macro}[internal]{\knot_save_filament:N}
 % Saves a filament as a new \Verb+spath+ object.
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \knot_save_filament:NN #1#2
+\cs_new_protected_nopar:Npn \knot_save_filament:N #1
 {
-  \tl_case:NnF #1
+  \tl_set:Nx \l_@@_tmpb_tl {\tl_item:nn {#1} {4}}
+  \tl_case:NnF \l_@@_tmpb_tl
   {
     \c_spath_moveto_tl
     {
@@ -5075,7 +5083,7 @@ manipulating PGF soft paths}
     \c_spath_lineto_tl
     {
       \int_gincr:N \l__knot_filaments_int
-      \tl_set:cn {knot filament \int_use:N \l__knot_filaments_int} {path} {#2}
+      \tl_set:cn {knot filament \int_use:N \l__knot_filaments_int} {#1}
       \tl_set_eq:cN {l__knot_options_filament \int_use:N \l__knot_filaments_int} \l__knot_tmpa_tl
 
       \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
@@ -5087,8 +5095,8 @@ manipulating PGF soft paths}
     \c_spath_curvetoa_tl
     {
       \int_gincr:N \l__knot_filaments_int
-      \spath_clear_new:n {knot filament \int_use:N \l__knot_filaments_int}
-      \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} #2
+      \tl_clear_new:c {knot filament \int_use:N \l__knot_filaments_int}
+      \tl_set:cn {knot filament \int_use:N \l__knot_filaments_int} {#1}
       \tl_set_eq:cN {l__knot_options_filament \int_use:N \l__knot_filaments_int} \l__knot_tmpa_tl
 
       \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
@@ -5100,13 +5108,13 @@ manipulating PGF soft paths}
     \c_spath_closepath_tl
     {
       \int_gincr:N \l__knot_filaments_int
-      \spath_clear_new:n {knot filament \int_use:N \l__knot_filaments_int}
+      \tl_clear_new:c {knot filament \int_use:N \l__knot_filaments_int}
       \tl_clear:N \l_tmpa_tl
-      \tl_put_right:Nx {\tl_item:Nn #2 {1}\tl_item:Nn #2 {2}\tl_item:Nn #2 {3}}
+      \tl_put_right:Nx {\tl_item:nn {#1} {1}\tl_item:nn {#1} {2}\tl_item:nn {#1} {3}}
       \tl_put_right:NV \l_tmpa_tl \c_spath_lineto_tl
-      \tl_put_right:Nx {\tl_item:Nn #2 {5}\tl_item:Nn #2 {6}}
+      \tl_put_right:Nx {\tl_item:nn {#1} {5}\tl_item:nn {#1} {6}}
 
-      \spath_put:nnV {knot filament \int_use:N \l__knot_filaments_int} {path} \l_tmpa_tl
+      \tl_set:cV {knot filament \int_use:N \l__knot_filaments_int} \l_tmpa_tl
       \tl_set_eq:cN {l__knot_options_filament \int_use:N \l__knot_filaments_int} \l__knot_tmpa_tl
       \tl_clear_new:c {knot previous filament \int_use:N \l__knot_filaments_int}
       \int_compare:nF {\l__knot_component_start_int == \l__knot_filaments_int}
