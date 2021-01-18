@@ -6,7 +6,13 @@
 \usepackage{lmodern}
 \usepackage{morefloats}
 \usepackage{tikz}
-\usetikzlibrary{spath3,hobby,patterns,intersections}
+\usetikzlibrary{
+  spath3,
+  hobby,
+  patterns,
+  intersections,
+  arrows.meta,
+}
 \usepackage[numbered]{hypdoc}
 \definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9} 
  
@@ -57,6 +63,14 @@
   However, over time I've found myself wanting to use the routines of this package at a higher level and so have designed some user-level interfaces.
   This document documents those.
 
+  To clarify some terminology, paths are composed of \emph{segment} and \emph{components}.
+A \emph{segment} is a minimal drawing piece.
+Thus it might be a straight line or a B\'ezier curve.
+A \emph{component} is a minimal connected section of the path.
+So every component starts with a move command and continues until the next move command.
+For ease of implementation (and to enable a copperplate pen in the calligraphy package!), an isolated move is considered as a component.
+
+  
   \section{TikZ Keys}
 
 \begin{verbatim}
@@ -64,288 +78,449 @@
 \end{verbatim}
 
 The \texttt{spath3} TikZ library defines a set of keys that can be issued to muck about with soft paths.
+These are all defined in the \texttt{spath} family, so all the following keys should be prefixed by \texttt{spath/}, or the key \texttt{spath/.cd} needs to be used beforehand.
 
+\subsection{Saving and Using Soft Paths}
 
-\DescribeMacro{save spath}\texttt{save spath=<name>}
+\DescribeMacro{save}\texttt{save=<name>}
 
-Saves the current path to an spath object called \texttt{<name>}.
+Saves the current path with name \texttt{<name>}.
 This delays until the path is fully constructed so can be issued in the options to the main command.
 
-Spaths constructed this way are global.
+Soft paths constructed this way are local to the group in which the path command is issued.
 
-\begin{example}
-\begin{tikzpicture}
-\fill[green] (2,0) circle[radius=2pt] (2,2) circle[radius=2pt];
-\draw[save spath=mypath] (2,0) to[out=0,in=180] (2,2);
-\end{tikzpicture}
-\end{example}
+The soft path is actually stored in a macro constructed from the name.
+There are a couple of reasons for using a \emph{name} rather than a macro directly.
+One is so that it is compatible with the \texttt{intersections} library -- by default both this package and that save their paths in the same underlying macro.
+The other is to provide a way to link a soft path with a set of TikZ styles (this is particularly useful when splitting the path into components).
 
-\DescribeMacro{clone spath}\texttt{clone spath={<name>}{<name>}}
+\DescribeMacro{save global}\texttt{save global=<name>}
 
-Clones one spath object into another.
+Saves the current soft path globally.
 
-\DescribeMacro{restore spath}\texttt{restore spath=<name>}
+\DescribeMacro{clone}\texttt{clone={<target>}{<source>}}
 
-Restores a previously saved spath to the current path.
+Clones one soft path into another.
+
+\DescribeMacro{restore}\texttt{restore=<name>}
+
+Restores a previously saved soft path to the current path.
 This happens immediately so can be issued in the options to the main command and then the path can be extended with normal drawing commands.
-Any keys that affect the spath directly should be applied \emph{before} this one.
+Any keys that affect the soft path directly should be applied \emph{before} this one.
 
 One thing should be noted about transformations.
 By the time a soft path is built, all available transformations have been applied.
 This means that when re-inserting a soft path back into a high level command (such as \Verb+\draw+), the effect of existing transformations might produce some confusing effects.
 When restoring a path then the library tries to set the last point correctly, but depending on how this is used it can result in transformations being applied twice.
 
-\begin{example}
-\begin{tikzpicture}
-\fill[green] (2,0) circle[radius=2pt] (2,2) circle[radius=2pt];
-\draw[restore spath=mypath];
-\end{tikzpicture}
 
-\begin{tikzpicture}
-\fill[green] (2,0) circle[radius=2pt] (2,2) circle[radius=2pt] +(2,0) circle[radius=2pt];
-\draw[restore spath=mypath] -- +(2,0);
-\end{tikzpicture}
-\end{example}
+\DescribeMacro{append}\texttt{append=<name>}
 
-
-\DescribeMacro{append spath}\texttt{append spath=<name>}
-
-This inserts an \texttt{spath} into the path at the current point, it is therefore more suited to being used part way through a path construction.
+This inserts a soft path into the path at the current point, it is therefore more suited to being used part way through a path construction.
 In a sense, it is a little like a \texttt{pic} in that it enables the user to construct a path segment early to be reused at various places.
 
 The path is \emph{welded} on to the current path, meaning that it starts from the current point and there is no \texttt{move}.
 This is particularly useful for creating filled regions.
 
-\begin{example}
-\begin{tikzpicture}
-\fill[green] (0,0) circle[radius=2pt] (1,0) circle[radius=2pt] ++(0,2) circle[radius=2pt] ++(2,0) circle[radius=2pt];
-\draw (0,0) -- (1,0) [append spath=mypath] -- ++(2,0);
-\end{tikzpicture}
-\end{example}
-
-\DescribeMacro{reverse spath}\texttt{reverse spath=<name>}
+\DescribeMacro{reverse}\texttt{reverse=<name>}
 
 Reverses the path in the named spath object.
 This doesn't do any actually drawing.
-The effect is local.
+The effect is local, but if you want to work with both the original path and its reversal in the same path then use the \texttt{clone} key to copy it first.
 
-\DescribeMacro{append reverse spath}\texttt{append reverse spath=<name>}
+\DescribeMacro{append reverse}\texttt{append reverse=<name>}
 
-Like \texttt{append spath} except that the inserted path is reversed first.
-
-\begin{example}
-\begin{tikzpicture}
-\fill[green] (0,0) circle[radius=2pt] (-1,0) circle[radius=2pt] ++(0,2) circle[radius=2pt] ++(2,0) circle[radius=2pt] ++(0,-2) circle[radius=2pt];
-\filldraw[fill opacity=.3, ultra thick] (0,0) -- ++(-1,0) [append spath=mypath] -- ++(2,0) [append reverse spath=mypath];
-\end{tikzpicture}
-\end{example}
+Like \texttt{append} except that the inserted path is reversed first.
 
 
-\DescribeMacro{insert spath}\texttt{insert spath=<name>}
+\DescribeMacro{insert}\texttt{insert=<name>}
 
-Like \texttt{append spath} except that it doesn't move the inserted path and there is a move between the current path and the inserted path.
-
-\begin{example}
-\begin{tikzpicture}
-\fill[green] (0,0) circle[radius=2pt] (1,0) circle[radius=2pt] (2,0) circle[radius=2pt] ++(0,2) circle[radius=2pt] ++(2,0) circle[radius=2pt];
-\draw (0,0) -- (1,0) [insert spath=mypath] -- ++(2,0);
-\end{tikzpicture}
-\end{example}
+Like \texttt{append} except that it doesn't move the inserted path and there is a move between the current path and the inserted path.
 
 
-\DescribeMacro{shorten spath at end}
-\DescribeMacro{shorten spath at start}
-\DescribeMacro{shorten spath at both ends}
-\texttt{shorten spath at end={<name>}{<dimen>}}
+\DescribeMacro{shorten at end}
+\DescribeMacro{shorten at start}
+\DescribeMacro{shorten at both ends}
+\texttt{shorten at end={<name>}{<dimen>}}
 
-Shortens the spath by the dimension from one or both ends.
-This shortens the path along its length so that it is guaranteed that the shorter path traces a subset of the original path.
+Shortens the soft path by the dimension from one or both ends.
+This shortens the soft path along its length so that it is guaranteed that the shorter path traces a subset of the original path.
 For B\'ezier curves, however, the amount of shortening is approximate and is better for shorter distances.
 If wanting to shorten by a large amount it is better to shorten by a small amount a number of times.
 
-\begin{example}
-\begin{tikzpicture}
-\draw[shorten spath at both ends={mypath}{5mm}, restore spath=mypath, line width=1mm, green];
-\draw[restore spath=mypath];
-\end{tikzpicture}
-\end{example}
 
-\DescribeMacro{globalise spath}\texttt{globalise spath=<name>}
+\DescribeMacro{translate}\texttt{translate={<name>}{<x-dimen>}{<y-dimen>}}
 
-Converts an spath object to a global one.
-This is useful if doing some adjustments in a scope or a \Verb+\foreach+ loop and you want them to persist outside that.
-
-\DescribeMacro{translate spath}\texttt{translate spath={<name>}{<x-dimen>}{<y-dimen>}}
-
-Translates the spath by the given dimensions.
-
-\begin{example}
-\begin{tikzpicture}
-\draw[translate spath={mypath}{2cm}{0cm}, restore spath=mypath, line width=1mm, green];
-\draw[restore spath=mypath];
-\end{tikzpicture}
-\end{example}
+Translates the soft path by the given dimensions.
 
 
-\DescribeMacro{transform spath}\texttt{transform spath={<name>}{<transformations>}}
+\DescribeMacro{transform}\texttt{transform={<name>}{<transformations>}}
 
-This applies the transformation to the spath.
+This applies the transformation to the soft path.
 The transformation is processed by TikZ so should consist of TikZ-level transformations such as \Verb+shift={(2,2)}+.
 
+
+\subsection{Intersection Routines}
+
+To use these features you need to use the \texttt{intersections} library.
+
+\DescribeMacro{split at self intersections}
+\texttt{split at self intersections={<path>}}
+
+This inserts breaks into the named soft path at the points where it intersects itself.
+
+\DescribeMacro{split at intersections}\texttt{split at intersections={<first>}{<second>}}
+
+This inserts breaks into a pair of paths at their mutual intersections.
+
+\subsection{Working with Components}
+
+\DescribeMacro{get components of}
+\texttt{get components of={<macro>}{<path>}}
+
+This splits the path into a list of its components, which are stored in the macro.
+The macro can be used in a \Verb+\foreach+.
+
+\DescribeMacro{render components}
+\texttt{render components={<path>}}
+
+This renders the components of a given path as separate TikZ commands, so that each can be separately styled.
+It applies the following styles (in this order):
+
+\begin{enumerate}
+\item \texttt{spath components}
+\item \texttt{spath component <number>}
+\item \texttt{spath component=<number>}
+\item \texttt{<path> components}
+\item \texttt{every <path> component}
+\item \texttt{<path> component <number>}
+\item \texttt{<path> component=<number>}
+\end{enumerate}
+
+\DescribeMacro{insert gaps after components}
+\texttt{insert gaps after components={<path>}{<gap>}{<components>}}
+
+This inserts a gap between components of a path by shortening the end of the specified component and start of the next one.
+The list of components is passed through a \Verb+\foreach+ loop so that syntax like \Verb+2,4,...,16+.
+
+\DescribeMacro{join components}
+\texttt{join components={<path>}{<components>}}
+
+This removes the \texttt{move} between the given component and the previous one.
+If the component is the first one then it is joined to the last component.
+
+\DescribeMacro{spot weld}
+\texttt{spot weld={<path>}}
+
+This removes the \texttt{move} between any two components of the path where the end point of one component is the same as the initial point of the next (the tolerance on error here is \(0.01\)pt).
+
+\DescribeMacro{remove empty components}
+\texttt{remove empty components={<path>}}
+
+This removes empty components of the path (which consist of simply a move).
+
+\subsection{Shortening Paths}
+
+\DescribeMacro{shorten path at end}
+\DescribeMacro{shorten path at start}
+\DescribeMacro{shorten path at both ends}
+\texttt{shorten path at end={<path>}{<length>}}
+
+This shortens a path by the given amount from the specified end.
+The shortening is done so that it guarantees that it lies along the original path, but therefore the length is not completely guaranteed to be accurate.
+This is particularly true for B\'ezier paths and if there is a very short segment at the end.
+
+It uses the derivative at the end to work out how much to shorten by.
+
+\subsection{Exporting Paths}
+
+There are two keys to export a path.
+
+\DescribeMacro{save to aux}
+\texttt{save to aux={<path>}}
+
+This will save the path to the auxfile so that it is available again on the next run through.
+
+\DescribeMacro{export to svg}
+\texttt{export to svg={<path>}}
+
+Saves the path to the file \texttt{path.svg} as an SVG document.
+
+
+\subsection{Coordinates}
+
+Soft paths are not natural TikZ objects and so when replaced back into a TikZ path construction then they don't fully interact with other TikZ things, like placing nodes at points on the path.
+To make things a little easier there is defined a coordinate system which identifies a point at a certain location along a soft path.
+
+The location specification is a little technical.
+It is specified as a number from \(0\) to \(1\), but the parameter works as follows.
+Let \(n\) be the number of \emph{segments} on the path (these are the individual drawing elements that make up the path).
+The interval from \(\frac{k-1}{n}\) to \(\frac{k}{n}\) is assigned to the \(k\)th segment of the path.
+Then for a parameter in that interval, the location uses the natural parametrisation of that segment.
+For a straight line, it is simply the proportional position along but for a B\'ezier curve then it uses the B\'ezier parametrisation.
+
+The syntax for this is:
+%
+\begin{verbatim}
+(spath cs:<name> <parameter>)
+\end{verbatim}
+%
+The space is vital, so if the \texttt{name} is contained in a macro then a space has to be inserted somehow.
+One option is to wrap the macro in braces, as seen in the examples in the next section.
+
+\section{Examples}
+
+\begin{enumerate}
+\item Saving, restoring, inserting, and appending.
+
 \begin{example}
 \begin{tikzpicture}
-\draw[transform spath={mypath}{shift={(0,1)},rotate=90, shift={(2,-1)}}, restore spath=mypath, line width=1mm, green];
-\draw[restore spath=mypath];
+\path[spath/save=rpath] (0,0) to[out=30,in=150] (1,1);
+\foreach \k in {1,...,9} {
+  \fill[green] (spath cs:rpath 0.\k) circle[radius=3pt];
+  \node[above left] at (spath cs:rpath 0.\k) {\(0.\k\)};
+}
+\fill[green] (2,2) circle[radius=3pt];
+\draw[blue, spath/transform={rpath}{shift={(2,2)}}, spath/restore=rpath] node[right] {transform};
+\draw[orange] (3,0) [spath/insert=rpath] node[right] {insert};
+\draw[red] (3,-1) -- +(0,2) [spath/append=rpath] node[above] {append};
+\draw[spath/restore=rpath] node[right] {restore};
 \end{tikzpicture}
 \end{example}
 
-\DescribeMacro{split at self intersections}\texttt{split at self intersections={<prefix>}{<splits>}}
-
-This splits the current path into segments at the points where it intersects itself.
-The result is a set of spath objects with names \Verb+<prefix> <index>+, with \Verb+<index>+ running from \(1\) to \Verb+\spathselfintersectioncount+.
-The \Verb+<splits>+ argument can be used to control which intersections are actually used.
-It is a list of numbers from \(0\) to \(3\).
-A \(0\) means that at an intersection then both parts of the path are split.
-A \(1\) means to not split the first, a \(2\) to not split the second, a \(3\) means don't split either.
-(Actually, both are split but then conditionally rejoined.)
+\item Reversing.
 
 \begin{example}
-\begin{tikzpicture}[
-  use Hobby shortcut,
-]
+\begin{tikzpicture}
+\path[spath/save=apath] (0,0) to[out=0,in=180] (2,1) to[out=0,in=180] (4,0);
+\filldraw[
+  green,
+  draw=black,
+  ultra thick,
+  spath/restore=apath
+] -- ++(0,-4) [spath/append reverse=apath] -- cycle;
+\end{tikzpicture}
+\end{example}
 
-\fill[red!50!white] (-3,3) rectangle (3,-3);
-\fill[pattern=bricks, pattern color=white] (-3,3) rectangle (3,-3);
+\item Transformations.
 
-\path
-[
-  split at self intersections={trefoil}{121}
-]
-([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) };
+\begin{example}
+\begin{tikzpicture}
+\draw[spath/save=tpath] (0,0) rectangle +(1,1);
+\draw[rotate=45, xscale=2, yscale=3, ultra thick, red] (0,0) rectangle +(1,1);
+\draw[
+  spath/transform={tpath}{rotate=45, xscale=2, yscale=3},
+  spath/restore={tpath}];
+\end{tikzpicture}
+\end{example}
 
-\foreach \k in {1,..., \spathselfintersectioncount} {
-  \tikzset{shorten spath at both ends={trefoil \k}{5pt}}
-  \draw[line width=\k pt, restore spath=trefoil \k];
+\item Shortening.
+
+\begin{example}
+\begin{tikzpicture}
+\path[spath/save=apath] (0,0) foreach \k in {1,...,4} { -- ++(1,0) +(0,0)};
+\draw[
+  spath/shorten at end={apath}{7pt},
+  spath/shorten at start={apath}{9pt},
+  spath/translate={apath}{0pt}{1pt},
+  spath/restore=apath,
+  ultra thick, red
+];
+\draw (0,0) circle[radius=9pt] [spath/insert=apath] circle[radius=7pt];
+\end{tikzpicture}
+\end{example}
+
+
+\begin{example}
+\begin{tikzpicture}
+\path[spath/save=apath] (0,0) foreach \k in {1,...,4} { to[out=0,in=180] ++(1,0) +(0,0)};
+\draw[
+  ultra thick,
+  red,
+  spath/.cd,
+  shorten at end={apath}{7pt},
+  shorten at start={apath}{9pt},
+  translate={apath}{0pt}{1pt},
+  restore=apath,
+];
+\draw (0,0) circle[radius=9pt] [spath/insert=apath] circle[radius=7pt];
+\end{tikzpicture}
+\end{example}
+
+\begin{example}
+\begin{tikzpicture}
+\draw[spath/save=npath] (0,0) foreach \k in {1,...,4} { -- ++(1,0) +(0,0)};
+\draw[green] (0,0) -- +(0,-3pt) foreach \k in {1,...,4} { -- +(0,-3pt) ++(1,0)} -- +(0,-3pt);
+
+\tikzset{
+  spath/.cd,
+  insert gaps after components={npath}{10pt}{1,3},
+  get components of={npath}\components,
 }
 
+\tikzset{
+  path 1/.style={
+    red,
+  },
+}
+
+\foreach[count=\k] \cpt in \components {
+  \path[
+    draw,
+    path \k/.try,
+    spath/.cd,
+    translate=\cpt{0pt}{\k pt},
+    restore=\cpt,
+  ] +(0,3pt) -- +(0,-3pt);
+  \node[text=red] at (spath cs:{\cpt} .5) {\(\k\)};
+}
 \end{tikzpicture}
 \end{example}
 
-\DescribeMacro{split at intersections}\texttt{split at intersections={<first>}{<second>}{<first prefix>}{<second prefix>}{<splits>}}
+\item Intersections.
 
-This splits a pair of paths at their mutual intersections.
+One of the main motivations for implementing the intersection routines was to provide a different way of drawing knots and links and similar diagrams.
 
+\begin{enumerate}
+
+\item Define the two paths for the braid (usually these will be defined with \Verb+\path+).
 \begin{example}
 \begin{tikzpicture}[
   use Hobby shortcut,
 ]
+\draw[spath/save global=pathA] (0,0) to[out=0,in=180] ++(2,1) to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1);
+\draw[spath/save global=pathB] (0,1) to[out=0,in=180] ++(2,-1) to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1);
+\end{tikzpicture}
+\end{example}
+
+\item Split the paths at their mutual intersections and render them with a count of the components.
+
+\begin{example}
+\begin{tikzpicture}
+\tikzset{
+  spath/.cd,
+  split at intersections={pathA}{pathB},
+  get components of={pathA}\pathAcomponents,
+  get components of={pathB}\pathBcomponents,
+}
+
+\foreach[count=\k] \cpt in \pathAcomponents {
+  \draw[spath/restore=\cpt,-Circle];
+  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+
+\foreach[count=\k] \cpt in \pathBcomponents {
+  \draw[spath/restore=\cpt,-Circle];
+  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+\end{tikzpicture}
+\end{example}
+
+\item Now we insert gaps after certain components in each path and then render the components.
+To show that the gaps are genuine, we use a patterned background.
+Although the paths were defined globally, the splitting in the previous example was local so we need to repeat it in this one.
+
+\begin{example}
+\begin{tikzpicture}
+\tikzset{
+  spath/.cd,
+  split at intersections={pathA}{pathB},
+  insert gaps after components={pathA}{5pt}{1,3},
+  join components={pathA}{3,5},
+  get components of={pathA}\pathAcomponents,
+  insert gaps after components={pathB}{5pt}{2,4},
+  join components={pathB}{2,4},
+  get components of={pathB}\pathBcomponents,
+}
 
 \fill[red!50!white] (-.5,-.5) rectangle (8.5,1.5);
 \fill[pattern=bricks, pattern color=white] (-.5,-.5) rectangle (8.5,1.5);
 
-\path[save spath=pathA] (0,0) to[out=0,in=180] ++(2,1) to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1);
-\path[save spath=pathB] (0,1) to[out=0,in=180] ++(2,-1) to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1);
-
-\tikzset{split at intersections={pathA}{pathB}{pathA}{pathB}{1212}}
-
-\foreach \k in {1,..., \spathfirstintersectioncount} {
-  \tikzset{shorten spath at both ends={pathA \k}{5pt}}
-  \draw[green!50!black, ultra thick, restore spath=pathA \k];
+\foreach[count=\k] \cpt in \pathAcomponents {
+  \draw[blue, line width=2pt,spath/restore=\cpt];
+  \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .3) {\(\k\)};
 }
 
-\foreach \k in {1,..., \spathsecondintersectioncount} {
-  \tikzset{shorten spath at both ends={pathB \k}{5pt}}
-  \draw[blue, ultra thick, restore spath=pathB \k];
+\foreach[count=\k] \cpt in \pathBcomponents {
+  \draw[green, line width=2pt,spath/restore=\cpt];
+  \node[fill=green!50, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .3) {\(\k\)};
 }
+\end{tikzpicture}
+\end{example}
+\end{enumerate}
 
+\item This example is notable because many of the intersection points are where segments of the path end, showing that the algorithm works well even in this circumstance.
+
+\begin{enumerate}
+\item Here's the original path.
+\begin{example}
+\begin{tikzpicture}
+\draw[spath/save global=spiral] (5,0) -- (2.5,0) -- ++(0,-.25) -- ++(-2.5,0)
+arc[radius=2.25cm,start angle=180,end angle=90]
+arc[radius=2cm,start angle=90, delta angle=-180]
+arc[radius=1.75cm,start angle=-90, delta angle=-180]
+arc[radius=1.5cm,start angle=90, delta angle=-180]
+arc[radius=1.25cm,start angle=-90, delta angle=-180]
+arc[radius=1cm,start angle=90, delta angle=-180]
+arc[radius=.75cm,start angle=-90, delta angle=-180]
+arc[radius=.5cm,start angle=90, delta angle=-180]
+;
 \end{tikzpicture}
 \end{example}
 
-\section{Commands}
+\item This renders labels on each component after splitting.
+\begin{example}
+\begin{tikzpicture}
+\tikzset{
+  spath/.cd,
+  split at self intersections=spiral,
+  get components of={spiral}\pathcomponents,
+}
 
-In all the following commands, using a star makes it global.
+\foreach[count=\k] \cpt in \pathcomponents {
+  \draw[spath/restore=\cpt,-|];
+  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+}
+\end{tikzpicture}
+\end{example}
 
-\DescribeMacro{\MakeSPath} \Verb+\MakeSPath*{<name>}{<path>}+
+\item Finally, we put the gaps in where we want them.
 
-Creates an spath object from a path.
+\begin{example}
+\begin{tikzpicture}
+\tikzset{
+  spath/.cd,
+  split at self intersections=spiral,
+  insert gaps after components={spiral}{10pt}{1,3,5,7,10,11,14},
+  spot weld=spiral,
+  get components of={spiral}\pathcomponents,
+}
 
-\DescribeMacro{\CloneSPath} \Verb+\CloneSPath*{<source>}{<target>}+
+\foreach[count=\k] \cpt in \pathcomponents {
+  \draw[blue, line width=2pt,spath/restore=\cpt];
+}
+\end{tikzpicture}
+\end{example}
+\end{enumerate}
 
-Clones the \Verb+source+ into the \Verb+target+.
-
-\DescribeMacro{\SPathInfo}
-\DescribeMacro{\SPathInfoInto}
-\Verb+\SPathInfo{<name>}{<property>}+
-
-\Verb+\SPathInfoInto{<name>}{<property>}{<macro>}+
-
-Extract the \Verb+property+ from the named spath, the second version stores it in the given macro.
-
-\DescribeMacro{\SPathPrepare}
-\Verb+\SPathPrepare{<name>}+
-
-Calculates all of the information associated to an spath.
-
-\DescribeMacro{\SPathShow}
-\Verb+\SPathShow{<name>}+
-
-Dumps the information stored on the given spath to the log file.
-
-\DescribeMacro{\SPathTranslate}
-\DescribeMacro{\SPathTranslateInto}
-\Verb+\SpathTranslate{<name>}{<x dimen>}{<y dimen>}+
-
-\Verb+\SpathTranslateInto{<name>}{<name>}{<x dimen>}{<y dimen>}+
-
-Translates the given spath by the given dimensions.
-The first version modifies the given spath, the second clones it into the a second spath first.
-
-\DescribeMacro{\SPathScale}
-\DescribeMacro{\SPathScaleInto}
-\Verb+\SpathScale{<name>}{<x dimen>}{<y dimen>}+
-
-\Verb+\SpathScaleInto{<name>}{<name>}{<x dimen>}{<y dimen>}+
-
-Scales the given spath by the given dimensions.
-The first version modifies the given spath, the second clones it into the a second spath first.
-
-\DescribeMacro{\SPathWeld}
-\DescribeMacro{\SPathWeldInto}
-\Verb+\SPathWeld*{<first>}{<second>}+
-
-\Verb+\SPathWeldInto*{<first>}{<target>}{<second>}+
-
-Welds the second spath onto the first.
-This involves translating the second path so that it starts where the second ends, and removes the intervening move.
-
-\DescribeMacro{\SPathReverse}
-\Verb+\SPathReverse*{<name>}+
-
-Reverses the spath.
-
-\DescribeMacro{\SPathClose}
-\Verb+\SPathClose*{<name>}+
-
-Adds a closepath to the end of the spath.
-
-\DescribeMacro{\SPathOpen}
-\Verb+\SPathOpen*{<name>}+
-
-Removes all closepaths from the spath, replacing them by lines if appropriate.
-
-\DescribeMacro{\MakeSPathList}
-\Verb+\MakeSPathList*{<path>}{<name>}+
-
-Splits a path into a named list of segments.
-
-\DescribeMacro{\SPathListPrepare}
-\Verb+\SPathListPrepare*{<name>}+
-
-Calculates all of the information for all of the spaths in the named list.
-
-\DescribeMacro{\SPathListOpen}
-\Verb+\SPathListOpen*{<name>}+
-
-Opens all the spaths in the named list.
-
-\end{document}
+\item Here's a trefoil knot, demonstrating a useful style (\texttt{knot}) that simplifies creating knots.
+Also note the use of \texttt{spot weld} to avoid having to specify which components should be rejoined.
+\begin{example}
+\begin{tikzpicture}[
+  use Hobby shortcut,
+  knot/.style 2 args={
+    every #1 component/.style={ultra thick, draw, red},
+    #1 component 1/.style={blue},
+    spath/.cd,
+    split at self intersections=#1,
+    insert gaps after components={#1}{8pt}{#2},
+    spot weld=#1,
+    render components=#1
+  }
+]
+\path[spath/save=trefoil] ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) } (90:2);
+\tikzset{knot={trefoil}{1,3,5}}
+\end{tikzpicture}
+\end{example}
+\end{enumerate}
+  \end{document}
