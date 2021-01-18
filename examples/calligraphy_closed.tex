@@ -1,10 +1,10 @@
 \RequirePackage{shellesc}
-\immediate\write18{cd ..; tex spath3.dtx}
+\immediate\write18{cd ..; tex spath3_code.dtx}
 
 \documentclass{article}
 
 \usepackage{tikz}
-\usetikzlibrary{calligraphy}
+\usetikzlibrary{calligraphy,spath3}
 
 \begin{document}
 
@@ -30,6 +30,15 @@
 \calligraphy[copperplate] (4,0) arc[start angle=0, end angle=360, radius=1] -- cycle;
 \begin{scope}[xshift=6cm]
 \calligraphy[copperplate] (0:1) arc(0:360:1) -- cycle;
+\end{scope}
+
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\calligraphy (0,0) circle[radius=1];
+\calligraphy (4,0) arc[start angle=0, end angle=360, radius=1] -- cycle;
+\begin{scope}[xshift=6cm]
+\calligraphy (0:1) arc(0:360:1) -- cycle;
 \end{scope}
 
 \end{tikzpicture}
