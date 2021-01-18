@@ -73,29 +73,31 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \ExplSyntaxOff
 
 \begin{document}
+\begin{tikzpicture}
+\draw[save spath=oval] (0,0) to[out=0,in=0] (0,2) +(-1,0) to[out=180,in=180] (0,0);
+\tikzset{spot weld spath=oval}
+\end{tikzpicture}
 
 \begin{tikzpicture}
 \draw[save spath=tpath] (0,0) rectangle +(1,1);
 \draw[rotate=45, xscale=2, yscale=3, ultra thick, red] (0,0) rectangle +(1,1);
-\draw[transform spath={tpath}{rotate=45, xscale=2, yscale=3}, restore spath=tpath];
+\draw[
+  transform spath={tpath}{rotate=45, xscale=2, yscale=3},
+  restore spath={tpath}];
 \end{tikzpicture}
-\end{document}
 
 \begin{tikzpicture}
 \path[save spath=rpath] (0,0) to[out=30,in=150] (1,1);
-
 \foreach \k in {1,...,9} {
-  \fill[green] (spath cs:rpath 1.\k) circle[radius=3pt];
-  \node[above left] at (spath cs:rpath 1.\k) {\(1.\k\)};
+  \fill[green] (spath cs:rpath 0.\k) circle[radius=3pt];
+  \node[above left] at (spath cs:rpath 0.\k) {\(0.\k\)};
 }
 \fill[green] (2,2) circle[radius=3pt];
-\draw[blue, transform spath={rpath}{shift={(2,2)}}, restore spath=rpath] node[right] {transform};
-\draw[orange] (3,0) [insert spath=rpath] node[right] {insert};
-\draw[red] (3,-1) -- +(0,2) [append spath=rpath] node[above] {append};
-\draw[restore spath=rpath] node[right] {restore};
+\draw[blue, transform spath={rpath}{shift={(2,2)}}, restore spath={rpath}] node[right] {transform};
+\draw[orange] (3,0) [insert spath={rpath}] node[right] {insert};
+\draw[red] (3,-1) -- +(0,2) [append spath={rpath}] node[above] {append};
+\draw[restore spath={rpath}] node[right] {restore};
 \end{tikzpicture}
-
-\displaypath{rpath}
 
 \begin{tikzpicture}
 \path[save spath=apath] (0,0) foreach \k in {1,...,4} { -- ++(1,0) +(0,0)};
@@ -110,11 +112,26 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \end{tikzpicture}
 
 \begin{tikzpicture}
-\path[save spath=npath] (0,0) foreach \k in {1,...,4} { -- ++(1,0) +(0,0)};
+\path[save spath=apath] (0,0) foreach \k in {1,...,4} { to[out=0,in=180] ++(1,0) +(0,0)};
+\draw[
+  shorten spath at end={apath}{7pt},
+  shorten spath at start={apath}{9pt},
+  translate spath={apath}{0pt}{1pt},
+  restore spath=apath,
+  ultra thick, red
+];
+\draw (0,0) circle[radius=9pt] [insert spath=apath] circle[radius=7pt];
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw[save spath=npath] (0,0) foreach \k in {1,...,4} { -- ++(1,0) +(0,0)};
+\draw[green] (0,0) -- +(0,-3pt) foreach \k in {1,...,4} { -- +(0,-3pt) ++(1,0)} -- +(0,-3pt);
+%\expandafter\show\csname tikz@intersect@path@name@npath\endcsname
 \tikzset{
   insert gaps after components={npath}{10pt}{1,3},
   get components of={npath}\components,
 }
+%\show\components
 
 \tikzset{
   path 1/.style={
@@ -150,13 +167,13 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 }
 
 \foreach[count=\k] \cpt in \pathAcomponents {
-%  \draw[restore spath=\cpt,-|];
-%  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+  \draw[restore spath=\cpt,-|];
+  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
 }
 
 \foreach[count=\k] \cpt in \pathBcomponents {
-%  \draw[restore spath=\cpt,-|];
-%  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+  \draw[restore spath=\cpt,-|];
+  \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
 }
 
 \tikzset{
@@ -170,12 +187,12 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 
 \foreach[count=\k] \cpt in \pathAcomponents {
   \draw[blue, line width=2pt,restore spath=\cpt];
-%  \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+  \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
 }
 
 \foreach[count=\k] \cpt in \pathBcomponents {
   \draw[green, line width=2pt,restore spath=\cpt];
-%  \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
+  \node[fill=green!50, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
 }
 \end{tikzpicture}
 
@@ -218,7 +235,6 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 
 
 \end{tikzpicture}
-
 
 \begin{tikzpicture}
 \draw[
@@ -274,7 +290,7 @@ arc[radius=.5cm,start angle=90, delta angle=-180]
 
 \tikzset{
   insert gaps after components={line}{10pt}{1,3,5,7,10,11,14},
-  join components={path}{2,4,6,8,9,12,13},
+%  join components={line}{2,4,6,8,9,12,13},
   get components of={line}\pathcomponents,
 }
 
@@ -285,139 +301,25 @@ arc[radius=.5cm,start angle=90, delta angle=-180]
 
 
 \end{tikzpicture}
-\end{document}
-
 
 \begin{tikzpicture}[
   use Hobby shortcut,
+  knot/.style 2 args={
+    every #1 component/.style={ultra thick, draw, red},
+    #1 component 1/.style={blue},
+    split at self intersections=#1,
+    remove empty components=#1,
+    insert gaps after components={#1}{8pt}{#2},
+    spot weld spath=#1,
+    render components=#1
+  }
 ]
-
-\fill[red!50!white] (-.5,-.5) rectangle (8.5,1.5);
-\fill[pattern=bricks, pattern color=white] (-.5,-.5) rectangle (8.5,1.5);
-
-\path[save spath=pathA] (0,0) to[out=0,in=180] ++(2,1) to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1);
-\path[save spath=pathB] (0,1) to[out=0,in=180] ++(2,-1) to[out=0,in=180] ++(2,1)  to[out=0,in=180] ++(2,-1)  to[out=0,in=180] ++(2,1);
-
-\tikzset{split at intersections={pathA}{pathB}{pathA}{pathB}{1212}}
-
-\foreach \k in {1,..., \spathfirstintersectioncount} {
-  \tikzset{shorten spath at both ends={pathA \k}{5pt}}
-  \draw[green!50!black, ultra thick, restore spath=pathA \k];
-}
-
-\foreach \k in {1,..., \spathsecondintersectioncount} {
-  \tikzset{shorten spath at both ends={pathB \k}{5pt}}
-  \draw[blue, ultra thick, restore spath=pathB \k];
-}
-
+\path[save spath=trefoil] ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) } (90:2);
+\tikzset{knot={trefoil}{1,3,5}}
 \end{tikzpicture}
-
-\begin{tikzpicture}
-\path[save spath=line] (5,0) -- (2.5,0) -- ++(0,-.25) -- ++(-2.5,0)
-arc[radius=2.25cm,start angle=180,end angle=90]
-arc[radius=2cm,start angle=90, delta angle=-180]
-arc[radius=1.75cm,start angle=-90, delta angle=-180]
-arc[radius=1.5cm,start angle=90, delta angle=-180]
-arc[radius=1.25cm,start angle=-90, delta angle=-180]
-arc[radius=1cm,start angle=90, delta angle=-180]
-arc[radius=.75cm,start angle=-90, delta angle=-180]
-arc[radius=.5cm,start angle=90, delta angle=-180]
-;
-
-\tikzset{split at self intersections={line}{line}{}}
-\foreach \k in {1,...,\spathselfintersectioncount}
-{
-  \draw[red, ultra thick, shorten spath at both ends={line \k}{5pt},restore spath=line \k];
-}
-
-
-\end{tikzpicture}
-\end{document}
-\begin{tikzpicture}
-\path[save spath=horiz] (0,0) -- (2,0) -- (4,0);
-\path[save spath=vert] (2,2) -- (2,0) -- (2,-2);
-\tikzset{split at intersections={horiz}{vert}{horiz}{vert}{0}}
-
-\foreach[count=\k] \ipt in \spathintersectionlist
-{
-  \fill (\ipt) circle[radius=1pt] node[above] {\(\k\)};
-}
-
-\foreach \k in {1,..., \spathfirstintersectioncount} {
-  \tikzset{shorten spath at both ends={horiz \k}{3pt}}
-  \draw[green!50!black, line width=\k pt, restore spath=horiz \k];
-}
-
-\foreach \k in {1,..., \spathsecondintersectioncount} {
-  \tikzset{shorten spath at both ends={vert \k}{3pt}}
-  \draw[blue, ultra thick, restore spath=vert \k];
-}
-
-\draw[restore spath=horiz];
-\draw[restore spath=vert];
-
-\end{tikzpicture}
-\end{document}
-\begin{tikzpicture}
-\path[save spath=line, name path=line] (0,0) -- (5,0);
-\path[save spath=spiral, name path=spiral] (2,2)
-arc[radius=2cm,start angle=90, delta angle=-180]
-arc[radius=1.75cm,start angle=-90, delta angle=-180]
-arc[radius=1.5cm,start angle=90, delta angle=-180]
-arc[radius=1.25cm,start angle=-90, delta angle=-180]
-arc[radius=1cm,start angle=90, delta angle=-180]
-arc[radius=.75cm,start angle=-90, delta angle=-180]
-arc[radius=.5cm,start angle=90, delta angle=-180]
-;
-
-\tikzset{split at intersections={line}{spiral}{line}{spiral}{3}}
-
-\foreach[count=\k] \ipt in \spathintersectionlist
-{
-  \fill (\ipt) circle[radius=1pt] node[above] {\(\k\)};
-}
-
-\foreach \k in {1,..., \spathfirstintersectioncount} {
-  \tikzset{shorten spath at both ends={line \k}{3pt}}
-  \draw[green!50!black, line width=\k pt, restore spath=line \k];
-}
-
-\foreach \k in {1,..., \spathsecondintersectioncount} {
-  \tikzset{shorten spath at both ends={spiral \k}{3pt}}
-  \draw[blue, ultra thick, restore spath=spiral \k];
-}
-
-\draw[restore spath=line];
-\draw[restore spath=spiral];
-
-\end{tikzpicture}
-
-\begin{tikzpicture}
-
-\draw[save spath=short line] (0,0) -- ++(4,0) -- +(1pt,0) coordinate(a);
-\draw (a) ++(-5pt,0) +(0,.2) -- +(0,-.2);
-\tikzset{shorten spath at end={short line}{5pt}}
-\draw[transform spath={short line}{yshift=-1mm}, restore spath=short line];
-
-\draw[save spath=short line b] (0,-.33) -- ++(4cm-3pt,0) -- +(4pt,0) coordinate(d);
-\draw (d) ++(-5pt,0) +(0,.2) -- +(0,-.2);
-\tikzset{shorten spath at end={short line b}{5pt}}
-\draw[transform spath={short line b}{yshift=-1mm}, restore spath=short line b];
-
-\draw[save spath=short curve] (0,-.66) -- ++(4,0) to[out=0,in=180] +(1pt,0) coordinate(b);
-\draw (b) ++(-5pt,0) +(0,.2) -- +(0,-.2);
-\tikzset{shorten spath at end={short curve}{5pt}}
-\draw[transform spath={short curve}{yshift=-1mm}, restore spath=short curve];
-
-\draw[save spath=short curve b] (0,-1) -- ++(4cm-3pt,0) to[out=0,in=180] +(4pt,0) coordinate(c);
-\draw (c) ++(-5pt,0) +(0,.2) -- +(0,-.2);
-\tikzset{shorten spath at end={short curve b}{5pt}}
-\draw[transform spath={short curve b}{yshift=-1mm}, restore spath=short curve b];
-
-\end{tikzpicture}
-
 
 \end{document}
+
 
 \tikz \calligraphy[copperplate] (0,0) .. controls +(1,-1) and +(-1,1) .. ++(3,0) [this stroke style={light,taper=start}] +(0,0) .. controls +(1,-1) and +(-1,1) .. ++(3,0) [this stroke style={taper,heavy}];
 
