@@ -2,6 +2,10 @@
 \immediate\write18{cd ..; tex spath3_code.dtx}
 %\immediate\write18{tex knots.dtx}
 \documentclass{article}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n {check-declarations, deprecation}
+\ExplSyntaxOff
 \usepackage{tikz}
 \usetikzlibrary{knots,intersections,decorations.pathreplacing,hobby}
 

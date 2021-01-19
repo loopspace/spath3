@@ -1,6 +1,10 @@
 \RequirePackage{shellesc}
 \immediate\write18{cd ..; tex spath3_code.dtx}
 \documentclass{article}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n {check-declarations, deprecation}
+\ExplSyntaxOff
 \usepackage{tabularx}
 \usepackage{tikz}
 \usetikzlibrary{spath3,intersections,patterns,hobby}
@@ -264,7 +268,7 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \tikzset{
   spath/.cd,
   insert gaps after components={npath}{10pt}{2},
-  join components={npath}{2},
+   join components={npath}{2},
   get components of={npath}\npathcomponents,
 }
 

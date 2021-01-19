@@ -1,6 +1,10 @@
 \RequirePackage{shellesc}
 \immediate\write18{cd ..; tex spath3_code.dtx}
 \documentclass{article}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n {check-declarations, deprecation}
+\ExplSyntaxOff
 %\documentclass[convert={size=400},border=10]{standalone}
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing,matrix,calligraphy}
