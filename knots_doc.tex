@@ -5,13 +5,20 @@
 \usepackage{lmodern}
 \usepackage{morefloats}
 \usepackage{tikz}
-\usetikzlibrary{knots}
+\usetikzlibrary{knots,spath3,hobby}
 \usepackage[numbered]{hypdoc}
 \definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9} 
  
 \usepackage{listings}
 \lstloadlanguages{[LaTeX]TeX}
-\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+\lstset{
+  breakatwhitespace=true,
+  breaklines=true,
+  language=[LaTeX]TeX,
+  basicstyle=\small\ttfamily,
+  keepspaces=true,
+  columns=fullflexible
+}
  
 \usepackage{fancyvrb}
 
@@ -22,7 +29,6 @@
    \begin{center}
    \setlength{\parindent}{0pt}
    \fbox{\begin{minipage}{.9\linewidth}
-     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
      \lstinputlisting[]{example.out}
    \end{minipage}}
 
@@ -44,8 +50,34 @@
 
 \maketitle
 
-\section{Introduction}
+\section{Pre-Introduction}
 
+This library is built on top of a package for manipulating PGF's \emph{soft paths} called \texttt{spath3}.
+  Version 2.0 of \texttt{spath3} involved considerable reorganisation of the code.
+  I tried to ensure that this didn't affect this library but it is extremely likely that I wasn't fully successful.
+  If something that used to work no longer does, please do let me know either by opening an issue on github (\url{https://github.com/loopspace/spath3}) or at the above email.
+
+  That version of \texttt{spath3} also introduced an alternative way of drawing knots which involves breaking the paths at their crossing points and introducing actual gaps.
+  This makes it easier to do things like have the knots on non-uniform backgrounds, and to style different parts of the knot differently such as illustrating a \(3\)--colouring.
+  To see how that works, look at the documentation of the \texttt{spath3} TikZ library.
+  Here's an example of how to draw a knot with that library.
+
+  \begin{example}
+\begin{tikzpicture}[
+    use Hobby shortcut,
+    every trefoil component/.style={ultra thick, draw},
+    trefoil component 1/.style={red},
+    trefoil component 2/.style={blue},
+    trefoil component 3/.style={green},
+]
+\path[spath/save=trefoil] ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) } (90:2);
+\tikzset{spath/knot={trefoil}{8pt}{1,3,5}}
+\end{tikzpicture}
+\end{example}
+
+
+\section{Introduction}
+  
 The \Verb+knots+ package is a TikZ library for drawing knot (and similar) diagrams.
 It provides a few useful styles and node shapes but its main contribution is the \Verb+knot+ environment.
 The \Verb+knot+ environment allows you to draw some strands of a knot (or braid or tangle or whatever -- we shall use the imprecise term ``knot'' to refer to any similar diagram) and then to modify the crossings via a simple interface.

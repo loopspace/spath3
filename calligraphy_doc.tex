@@ -11,7 +11,14 @@
  
 \usepackage{listings}
 \lstloadlanguages{[LaTeX]TeX}
-\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+\lstset{
+  breakatwhitespace=true,
+  breaklines=true,
+  language=[LaTeX]TeX,
+  basicstyle=\small\ttfamily,
+  keepspaces=true,
+  columns=fullflexible
+}
  
 \usepackage{fancyvrb}
 
@@ -22,7 +29,6 @@
    \begin{center}
    \setlength{\parindent}{0pt}
    \fbox{\begin{minipage}{.9\linewidth}
-     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
      \lstinputlisting[]{example.out}
    \end{minipage}}
 
@@ -42,7 +48,14 @@
 \begin{document}
 
 \maketitle
-% \section{Introduction}
+
+  \section{Pre-Introduction}
+  This library is built on top of a package for manipulating PGF's \emph{soft paths} called \texttt{spath3}.
+  Version 2.0 of \texttt{spath3} involved considerable reorganisation of the code.
+  I tried to ensure that this didn't affect this library but it is extremely likely that I wasn't fully successful.
+  If something that used to work no longer does, please do let me know either by opening an issue on github (\url{https://github.com/loopspace/spath3}) or at the above email.
+
+  \section{Introduction}
 The \Verb+calligraphy+ TikZ library is designed to enable calligraphic style drawings in TikZ.
 The idea is to be able to ``stroke'' a line with a ``pen''.
 As a simple example, compare the two lines in the following picture.

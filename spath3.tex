@@ -1,10 +1,6 @@
 \RequirePackage{shellesc}
 \immediate\write18{tex spath3_code.dtx}
-\documentclass{ltxdoc}
-\usepackage[T1]{fontenc}
-\usepackage{trace}
-\usepackage{lmodern}
-\usepackage{morefloats}
+\documentclass{l3doc}
 \usepackage{tikz}
 \usetikzlibrary{
   spath3,
@@ -13,23 +9,27 @@
   intersections,
   arrows.meta,
 }
-\usepackage[numbered]{hypdoc}
-\definecolor{lstbgcolor}{rgb}{0.9,0.9,0.9} 
  
 \usepackage{listings}
 \lstloadlanguages{[LaTeX]TeX}
-\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+\lstset{
+  breakatwhitespace=true,
+  breaklines=true,
+  language=[LaTeX]TeX,
+  basicstyle=\small\ttfamily,
+  keepspaces=true,
+  columns=fullflexible
+}
  
 \usepackage{fancyvrb}
 
 \newenvironment{example}
-  {\VerbatimEnvironment
-   \begin{VerbatimOut}{example.out}}
-  {\end{VerbatimOut}
+{\VerbatimEnvironment
+\begin{VerbatimOut}[gobble=0]{example.out}}
+{\end{VerbatimOut}
    \begin{center}
    \setlength{\parindent}{0pt}
    \fbox{\begin{minipage}{.9\linewidth}
-     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
      \lstinputlisting[]{example.out}
    \end{minipage}}
 
@@ -73,16 +73,19 @@ For ease of implementation (and to enable a copperplate pen in the calligraphy p
   
   \section{TikZ Keys}
 
-\begin{verbatim}
+\begin{lstlisting}
 \usetikzlibrary{spath3}
-\end{verbatim}
+\end{lstlisting}
 
 The \texttt{spath3} TikZ library defines a set of keys that can be issued to muck about with soft paths.
 These are all defined in the \texttt{spath} family, so all the following keys should be prefixed by \texttt{spath/}, or the key \texttt{spath/.cd} needs to be used beforehand.
 
 \subsection{Saving and Using Soft Paths}
 
-\DescribeMacro{save}\texttt{save=<name>}
+\begin{function}{save}
+\begin{syntax}
+|save=|\meta{name}
+\end{syntax}
 
 Saves the current path with name \texttt{<name>}.
 This delays until the path is fully constructed so can be issued in the options to the main command.
@@ -93,16 +96,28 @@ The soft path is actually stored in a macro constructed from the name.
 There are a couple of reasons for using a \emph{name} rather than a macro directly.
 One is so that it is compatible with the \texttt{intersections} library -- by default both this package and that save their paths in the same underlying macro.
 The other is to provide a way to link a soft path with a set of TikZ styles (this is particularly useful when splitting the path into components).
+\end{function}
 
-\DescribeMacro{save global}\texttt{save global=<name>}
+\begin{function}{save global}
+\begin{syntax}
+|save global=|\meta{name}
+\end{syntax}
 
 Saves the current soft path globally.
+\end{function}
 
-\DescribeMacro{clone}\texttt{clone={<target>}{<source>}}
+\begin{function}{clone}
+\begin{syntax}
+|clone=|\marg{target}\marg{source}
+\end{syntax}
 
 Clones one soft path into another.
+\end{function}
 
-\DescribeMacro{restore}\texttt{restore=<name>}
+\begin{function}{restore}
+\begin{syntax}
+|restore=|\meta{name}
+\end{syntax}
 
 Restores a previously saved soft path to the current path.
 This happens immediately so can be issued in the options to the main command and then the path can be extended with normal drawing commands.
@@ -110,142 +125,228 @@ Any keys that affect the soft path directly should be applied \emph{before} this
 
 One thing should be noted about transformations.
 By the time a soft path is built, all available transformations have been applied.
-This means that when re-inserting a soft path back into a high level command (such as \Verb+\draw+), the effect of existing transformations might produce some confusing effects.
+This means that when re-inserting a soft path back into a high level command (such as |\draw|), the effect of existing transformations might produce some confusing effects.
 When restoring a path then the library tries to set the last point correctly, but depending on how this is used it can result in transformations being applied twice.
+\end{function}
 
-
-\DescribeMacro{append}\texttt{append=<name>}
+\begin{function}{append}
+\begin{syntax}
+|append=|\meta{name}
+\end{syntax}
 
 This inserts a soft path into the path at the current point, it is therefore more suited to being used part way through a path construction.
 In a sense, it is a little like a \texttt{pic} in that it enables the user to construct a path segment early to be reused at various places.
 
 The path is \emph{welded} on to the current path, meaning that it starts from the current point and there is no \texttt{move}.
 This is particularly useful for creating filled regions.
+\end{function}
 
-\DescribeMacro{reverse}\texttt{reverse=<name>}
+\begin{function}{reverse}
+\begin{syntax}
+|reverse=|\meta{name}
+\end{syntax}
 
 Reverses the path in the named spath object.
 This doesn't do any actually drawing.
 The effect is local, but if you want to work with both the original path and its reversal in the same path then use the \texttt{clone} key to copy it first.
+\end{function}
 
-\DescribeMacro{append reverse}\texttt{append reverse=<name>}
+\begin{function}{append reverse}
+\begin{syntax}
+|append reverse=|\meta{name}
+\end{syntax}
 
 Like \texttt{append} except that the inserted path is reversed first.
+\end{function}
 
-
-\DescribeMacro{insert}\texttt{insert=<name>}
+\begin{function}{insert}
+\begin{syntax}
+|insert=|\meta{name}
+\end{syntax}
 
 Like \texttt{append} except that it doesn't move the inserted path and there is a move between the current path and the inserted path.
+\end{function}
 
-
-\DescribeMacro{shorten at end}
-\DescribeMacro{shorten at start}
-\DescribeMacro{shorten at both ends}
-\texttt{shorten at end={<name>}{<dimen>}}
+\begin{function}{
+  shorten at end,
+shorten at start,
+shorten at both ends
+}
+\begin{syntax}
+|shorten at end=|\marg{name}\marg{dimen}
+\end{syntax}
 
 Shortens the soft path by the dimension from one or both ends.
 This shortens the soft path along its length so that it is guaranteed that the shorter path traces a subset of the original path.
 For B\'ezier curves, however, the amount of shortening is approximate and is better for shorter distances.
 If wanting to shorten by a large amount it is better to shorten by a small amount a number of times.
+\end{function}
 
-
-\DescribeMacro{translate}\texttt{translate={<name>}{<x-dimen>}{<y-dimen>}}
+\begin{function}{translate}
+\begin{syntax}
+|translate=|\marg{name}\marg{x-dimen}\marg{y-dimen}
+\end{syntax}
 
 Translates the soft path by the given dimensions.
+\end{function}
 
-
-\DescribeMacro{transform}\texttt{transform={<name>}{<transformations>}}
+\begin{function}{transform}
+\begin{syntax}
+|transform=|\marg{name}\marg{transformations}
+\end{syntax}
 
 This applies the transformation to the soft path.
-The transformation is processed by TikZ so should consist of TikZ-level transformations such as \Verb+shift={(2,2)}+.
-
+The transformation is processed by TikZ so should consist of TikZ-level transformations such as |shift={(2,2)}|.
+\end{function}
 
 \subsection{Intersection Routines}
 
 To use these features you need to use the \texttt{intersections} library.
 
-\DescribeMacro{split at self intersections}
-\texttt{split at self intersections={<path>}}
+\begin{function}{split at self intersections}
+\begin{syntax}
+|split at self intersections=|\meta{path}
+\end{syntax}
 
 This inserts breaks into the named soft path at the points where it intersects itself.
+\end{function}
 
-\DescribeMacro{split at intersections}\texttt{split at intersections={<first>}{<second>}}
+\begin{function}{split at intersections}
+\begin{syntax}
+|split at intersections=|\marg{first}\marg{second}
+\end{syntax}
 
 This inserts breaks into a pair of paths at their mutual intersections.
+\end{function}
 
 \subsection{Working with Components}
 
-\DescribeMacro{get components of}
-\texttt{get components of={<macro>}{<path>}}
-
+\begin{function}{get components of}
+\begin{syntax}
+|get components of=|\marg{macro}\marg{path}
+\end{syntax}
+  
 This splits the path into a list of its components, which are stored in the macro.
-The macro can be used in a \Verb+\foreach+.
+The macro can be used in a |\foreach|.
+\end{function}
 
-\DescribeMacro{render components}
-\texttt{render components={<path>}}
+\begin{function}{render components}
+\begin{syntax}
+|render components=|\meta{path}
+\end{syntax}
 
 This renders the components of a given path as separate TikZ commands, so that each can be separately styled.
 It applies the following styles (in this order):
 
 \begin{enumerate}
-\item \texttt{spath components}
+\item \texttt{every spath component}
 \item \texttt{spath component <number>}
 \item \texttt{spath component=<number>}
-\item \texttt{<path> components}
 \item \texttt{every <path> component}
 \item \texttt{<path> component <number>}
 \item \texttt{<path> component=<number>}
 \end{enumerate}
+\end{function}
 
-\DescribeMacro{insert gaps after components}
-\texttt{insert gaps after components={<path>}{<gap>}{<components>}}
+\begin{function}{insert gaps after components}
+\begin{syntax}
+|insert gaps after components=|\marg{path}\marg{gap}\marg{components}
+\end{syntax}
 
 This inserts a gap between components of a path by shortening the end of the specified component and start of the next one.
-The list of components is passed through a \Verb+\foreach+ loop so that syntax like \Verb+2,4,...,16+.
+The list of components is passed through a |\foreach| loop so that syntax like |2,4,...,16|.
+\end{function}
 
-\DescribeMacro{join components}
-\texttt{join components={<path>}{<components>}}
+\begin{function}{join components}
+\begin{syntax}
+|join components=|\marg{path}\marg{components}
+\end{syntax}
 
 This removes the \texttt{move} between the given component and the previous one.
 If the component is the first one then it is joined to the last component.
+\end{function}
 
-\DescribeMacro{spot weld}
-\texttt{spot weld={<path>}}
+\begin{function}{spot weld}
+\begin{syntax}
+|spot weld=|\meta{path}
+\end{syntax}
 
 This removes the \texttt{move} between any two components of the path where the end point of one component is the same as the initial point of the next (the tolerance on error here is \(0.01\)pt).
+\end{function}
 
-\DescribeMacro{remove empty components}
-\texttt{remove empty components={<path>}}
+\begin{function}{remove empty components}
+\begin{syntax}
+|remove empty components=|\meta{path}
+\end{syntax}
 
 This removes empty components of the path (which consist of simply a move).
+\end{function}
 
 \subsection{Shortening Paths}
 
-\DescribeMacro{shorten path at end}
-\DescribeMacro{shorten path at start}
-\DescribeMacro{shorten path at both ends}
-\texttt{shorten path at end={<path>}{<length>}}
+\begin{function}{
+shorten path at end,
+shorten path at start,
+shorten path at both ends
+}
+\begin{syntax}
+|shorten path at end=|\marg{path}\marg{length}
+\end{syntax}
 
 This shortens a path by the given amount from the specified end.
 The shortening is done so that it guarantees that it lies along the original path, but therefore the length is not completely guaranteed to be accurate.
 This is particularly true for B\'ezier paths and if there is a very short segment at the end.
 
 It uses the derivative at the end to work out how much to shorten by.
+\end{function}
 
 \subsection{Exporting Paths}
 
 There are two keys to export a path.
 
-\DescribeMacro{save to aux}
-\texttt{save to aux={<path>}}
+\begin{function}{save to aux}
+\begin{syntax}
+|save to aux=|\meta{path}
+\end{syntax}
 
 This will save the path to the auxfile so that it is available again on the next run through.
+\end{function}
 
-\DescribeMacro{export to svg}
-\texttt{export to svg={<path>}}
+\begin{function}{export to svg}
+\begin{syntax}
+|export to svg=|\meta{path}
+\end{syntax}
 
 Saves the path to the file \texttt{path.svg} as an SVG document.
+\end{function}
 
+\subsection{Knots}
+
+\begin{function}{knot}
+\begin{syntax}
+|knot=|\meta{path}\meta{gap}\meta{components}
+\end{syntax}
+
+This style combines various of the above to make it simpler to draw knots and links.
+It expands to:
+
+\begin{lstlisting}
+knot/.style n args={3}{
+  spath/.cd,
+  split at self intersections=#1,
+  insert gaps after components={#1}{#2}{#3},
+  maybe spot weld=#1,
+  render components=#1
+}
+\end{lstlisting}
+
+This splits a path at the points where it self-intersects and then inserts gaps between specified components.
+The key |maybe spot weld| does a |spot weld| depending on whether or not the key |draft mode| is set to |true| or |false|.
+The point here is that when designing the knot it is useful to not weld together components since that changes the component count.
+But once the gaps are inserted in the desired places, welding the remaining components produces a nicer diagram.
+
+The components can be styled using the keys as described in |render components|.
+\end{function}
 
 \subsection{Coordinates}
 
@@ -261,9 +362,9 @@ For a straight line, it is simply the proportional position along but for a B\'e
 
 The syntax for this is:
 %
-\begin{verbatim}
+\begin{lstlisting}
 (spath cs:<name> <parameter>)
-\end{verbatim}
+\end{lstlisting}
 %
 The space is vital, so if the \texttt{name} is contained in a macro then a space has to be inserted somehow.
 One option is to wrap the macro in braces, as seen in the examples in the next section.
@@ -383,7 +484,7 @@ One of the main motivations for implementing the intersection routines was to pr
 
 \begin{enumerate}
 
-\item Define the two paths for the braid (usually these will be defined with \Verb+\path+).
+\item Define the two paths for the braid (usually these will be defined with |\path|).
 \begin{example}
 \begin{tikzpicture}[
   use Hobby shortcut,
@@ -503,23 +604,15 @@ arc[radius=.5cm,start angle=90, delta angle=-180]
 \end{example}
 \end{enumerate}
 
-\item Here's a trefoil knot, demonstrating a useful style (\texttt{knot}) that simplifies creating knots.
-Also note the use of \texttt{spot weld} to avoid having to specify which components should be rejoined.
+\item Here's a trefoil knot, demonstrating the \texttt{knot} style that simplifies creating knots.
 \begin{example}
 \begin{tikzpicture}[
   use Hobby shortcut,
-  knot/.style 2 args={
-    every #1 component/.style={ultra thick, draw, red},
-    #1 component 1/.style={blue},
-    spath/.cd,
-    split at self intersections=#1,
-    insert gaps after components={#1}{8pt}{#2},
-    spot weld=#1,
-    render components=#1
-  }
+  every trefoil component/.style={ultra thick, draw, red},
+  trefoil component 1/.style={blue},
 ]
 \path[spath/save=trefoil] ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) } (90:2);
-\tikzset{knot={trefoil}{1,3,5}}
+\tikzset{spath/knot={trefoil}{8pt}{1,3,5}}
 \end{tikzpicture}
 \end{example}
 \end{enumerate}
