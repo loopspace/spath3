@@ -302,6 +302,7 @@ manipulating PGF soft paths}
 \fp_new:N \l_@@_tmpb_fp
 \int_new:N \l_@@_tmpa_int
 
+\bool_new:N \g_@@_output_bool
 \bool_new:N \l_@@_closed_bool
 %    \end{macrocode}
 %
@@ -661,14 +662,14 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \spath_numberofcomponents:Nn #1#2
 {
   \@@_numberofcomponents:n {#2}
-  \int_set_eq:NN #2 \g_@@_output_int
+  \int_set_eq:NN #1 \g_@@_output_int
   \int_gzero:N \g_@@_output_int
 }
 \cs_generate_variant:Nn \spath_numberofcomponents:Nn {NV, cn, cV}
 \cs_new_protected_nopar:Npn \spath_gnumberofcomponents:Nn #1#2
 {
   \@@_numberofcomponents:n {#2}
-  \int_gset_eq:NN #2 \g_@@_output_int
+  \int_gset_eq:NN #1 \g_@@_output_int
   \int_gzero:N \g_@@_output_int
 }
 \cs_generate_variant:Nn \spath_gnumberofcomponents:Nn {NV, cn, cV}
@@ -766,7 +767,7 @@ manipulating PGF soft paths}
   \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
   \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
   
-  \tl_put_left:Nx \l_@@_tmpb_tl
+  \tl_put_left:Nx \l_@@_tmpd_tl
   {
     {\dim_use:N \l_@@_tmpa_dim}
     {\dim_use:N \l_@@_tmpb_dim}
@@ -1832,7 +1833,56 @@ manipulating PGF soft paths}
 \cs_generate_variant:Nn \spath_gremove_empty_components:N {c}
 %    \end{macrocode}
 % \end{macro}
-
+%
+% \begin{macro}{\spath_if_eq:nn}
+% Test if two soft paths are equal, we allow a little tolerance on the calculations.
+%    \begin{macrocode}
+\prg_new_protected_conditional:Npnn \spath_if_eq:nn #1#2 { T, F, TF }
+{
+  \group_begin:
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
+  \tl_set:Nn \l_@@_tmpb_tl {#2}
+  \bool_gset_true:N \g_@@_tmpa_bool
+  \int_compare:nNnTF {\tl_count:N \l_@@_tmpa_tl} = {\tl_count:N \l_@@_tmpb_tl}
+  {
+    \int_step_inline:nnnn {1} {3} {\tl_count:N \l_@@_tmpa_tl}
+    {
+      \tl_set:Nx \l_@@_tmpc_tl {\tl_item:Nn \l_@@_tmpa_tl {##1}}
+      \tl_set:Nx \l_@@_tmpd_tl {\tl_item:Nn \l_@@_tmpb_tl {##1}}
+      \tl_if_eq:NNF \l_@@_tmpc_tl \l_@@_tmpd_tl
+      {
+        \bool_gset_false:N \g_@@_tmpa_bool
+      }
+      \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpa_tl {##1+1}}
+      \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpb_tl {##1+1}}
+      \dim_compare:nF { \dim_abs:n { \l_@@_tmpa_dim - \l_@@_tmpb_dim} < 0.001pt }
+      {
+        \bool_gset_false:N \g_@@_tmpa_bool
+      }
+      \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpa_tl {##1+2}}
+      \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpb_tl {##1+2}}
+      \dim_compare:nF { \dim_abs:n { \l_@@_tmpa_dim - \l_@@_tmpb_dim} < 0.001pt }
+      {
+        \bool_gset_false:N \g_@@_tmpa_bool
+      }
+    }
+  }
+  {
+    \bool_gset_false:N \g_@@_tmpa_bool
+  }
+  \group_end:
+  \bool_if:NTF \g_@@_tmpa_bool
+  {
+    \prg_return_true:
+  }
+  {
+    \prg_return_false:
+  }
+}
+\prg_generate_conditional_variant:Nnn \spath_if_eq:nn {VV, Vn, nV, vv} {TF, T, F}
+%    \end{macrocode}
+% \end{macro}
+%
 % \subsection{Splitting Commands}
 %
 % \begin{macro}{
@@ -3540,6 +3590,24 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\spath_show:n}
+% Displays the soft path on the terminal.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_show:n #1
+{
+  \int_step_inline:nnnn {1} {3} {\tl_count:n {#1}}
+  {
+    \iow_term:x {
+      \tl_item:Nn \l_@@_tmpa_tl {##1}
+      {\tl_item:Nn \l_@@_tmpa_tl {##1+1}}
+      {\tl_item:Nn \l_@@_tmpa_tl {##1+2}}
+    }
+  }
+}
+\cs_generate_variant:Nn \spath_show:n {V, v}
+%    \end{macrocode}
+% \end{macro}
+
 % \subsubsection{PGF and TikZ Interface Functions}
 %
 % Spaths come from PGF so we need some functions that get and set spaths from the pgf system.
@@ -3809,7 +3877,8 @@ manipulating PGF soft paths}
   show~current~path/.code={
     \tikz@addmode{
       \pgfsyssoftpath@getcurrentpath\l_@@_tmpa_tl
-      \tl_show:N \l_@@_tmpa_tl
+      \iow_term:n {---~ current~ soft~ path~ ---}
+      \spath_show:V \l_@@_tmpa_tl
     }
   },
 %    \end{macrocode}
@@ -3820,7 +3889,8 @@ manipulating PGF soft paths}
   show/.code={
     \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_show:c {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \iow_term:n {---~ soft~ path~ #1~ ---}
+      \spath_show:v {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
   },
 %    \end{macrocode}
