@@ -141,7 +141,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{6403}
+% \CheckSum{6824}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -1896,19 +1896,19 @@ manipulating PGF soft paths}
   \group_begin:
   \tl_set_eq:NN \l_@@_tmpa_tl \c_spath_moveto_tl
   \tl_put_right:Nx \l_@@_tmpa_tl {
-    {\tl_item:nn {#2} {2}}
-    {\tl_item:nn {#2} {3}}
+    {\tl_item:nn {#1} {2}}
+    {\tl_item:nn {#1} {3}}
   }
   \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curvetoa_tl
   \tl_put_right:Nx \l_@@_tmpa_tl
   {
     {\fp_to_dim:n
     {
-      (1 - #1) * \tl_item:nn {#2} {2} + (#1) * \tl_item:nn {#2} {5}
+      (1 - #2) * \tl_item:nn {#1} {2} + (#2) * \tl_item:nn {#1} {5}
     }}
     {\fp_to_dim:n
     {
-      (1 - #1) * \tl_item:nn {#2} {3} + (#1) * \tl_item:nn {#2} {6}
+      (1 - #2) * \tl_item:nn {#1} {3} + (#2) * \tl_item:nn {#1} {6}
     }}
   }
 
@@ -1917,11 +1917,11 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
     {
-      (1 - #1)^2 * \tl_item:nn {#2} {2} + 2 * (1 - #1) * (#1) * \tl_item:nn {#2} {5} + (#1)^2 * \tl_item:nn {#2} {8}
+      (1 - #2)^2 * \tl_item:nn {#1} {2} + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {5} + (#2)^2 * \tl_item:nn {#1} {8}
     }}
     {\fp_to_dim:n
     {
-      (1 - #1)^2 * \tl_item:nn {#2} {3} + 2 * (1 - #1) * (#1) * \tl_item:nn {#2} {6} + (#1)^2 * \tl_item:nn {#2} {9}
+      (1 - #2)^2 * \tl_item:nn {#1} {3} + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {6} + (#2)^2 * \tl_item:nn {#1} {9}
     }}
   }
 
@@ -1930,11 +1930,11 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
       {
-      (1 - #1)^3 * \tl_item:nn {#2} {2} + 3 * (1 - #1)^2 * (#1) * \tl_item:nn {#2} {5} + 3 * (1 - #1) * (#1)^2 * \tl_item:nn {#2} {8} + (#1)^3 * \tl_item:nn {#2} {11}
+      (1 - #2)^3 * \tl_item:nn {#1} {2} + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {5} + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {8} + (#2)^3 * \tl_item:nn {#1} {11}
     }}
     {\fp_to_dim:n
     {
-      (1 - #1)^3 * \tl_item:nn {#2} {3} + 3 * (1 - #1)^2 * (#1) * \tl_item:nn {#2} {6} + 3 * (1 - #1) * (#1)^2 * \tl_item:nn {#2} {9} + (#1)^3 * \tl_item:nn {#2} {12}
+      (1 - #2)^3 * \tl_item:nn {#1} {3} + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {6} + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {9} + (#2)^3 * \tl_item:nn {#1} {12}
     }}
   }
 
@@ -1947,11 +1947,11 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
       {
-      (1 - #1)^3 * \tl_item:nn {#2} {2} + 3 * (1 - #1)^2 * (#1) * \tl_item:nn {#2} {5} + 3 * (1 - #1) * (#1)^2 * \tl_item:nn {#2} {8} + (#1)^3 * \tl_item:nn {#2} {11}
+      (1 - #2)^3 * \tl_item:nn {#1} {2} + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {5} + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {8} + (#2)^3 * \tl_item:nn {#1} {11}
     }}
     {\fp_to_dim:n
     {
-      (1 - #1)^3 * \tl_item:nn {#2} {3} + 3 * (1 - #1)^2 * (#1) * \tl_item:nn {#2} {6} + 3 * (1 - #1) * (#1)^2 * \tl_item:nn {#2} {9} + (#1)^3 * \tl_item:nn {#2} {12}
+      (1 - #2)^3 * \tl_item:nn {#1} {3} + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {6} + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {9} + (#2)^3 * \tl_item:nn {#1} {12}
     }}
   }
 
@@ -1960,11 +1960,11 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
     {
-      (1 - #1)^2 * \tl_item:nn {#2} {5} + 2 * (1 - #1) * (#1) * \tl_item:nn {#2} {8} + (#1)^2 * \tl_item:nn {#2} {11}
+      (1 - #2)^2 * \tl_item:nn {#1} {5} + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {8} + (#2)^2 * \tl_item:nn {#1} {11}
     }}
     {\fp_to_dim:n
     {
-      (1 - #1)^2 * \tl_item:nn {#2} {6} + 2 * (1 - #1) * (#1) * \tl_item:nn {#2} {9} + (#1)^2 * \tl_item:nn {#2} {12}
+      (1 - #2)^2 * \tl_item:nn {#1} {6} + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {9} + (#2)^2 * \tl_item:nn {#1} {12}
     }}
   }
   \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curvetob_tl
@@ -1972,17 +1972,17 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
     {
-      (1 - #1) * \tl_item:nn {#2} {8} + (#1) * \tl_item:nn {#2} {11}
+      (1 - #2) * \tl_item:nn {#1} {8} + (#2) * \tl_item:nn {#1} {11}
     }}
     {\fp_to_dim:n
     {
-      (1 - #1) * \tl_item:nn {#2} {9} + (#1) * \tl_item:nn {#2} {12}
+      (1 - #2) * \tl_item:nn {#1} {9} + (#2) * \tl_item:nn {#1} {12}
     }}
   }
   \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curveto_tl
   \tl_put_right:Nx \l_@@_tmpa_tl {
-    {\tl_item:nn {#2} {11}}
-    {\tl_item:nn {#2} {12}}
+    {\tl_item:nn {#1} {11}}
+    {\tl_item:nn {#1} {12}}
   }
 
   \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_tmpa_tl
@@ -2018,19 +2018,19 @@ manipulating PGF soft paths}
   \group_begin:
   \tl_set_eq:NN \l_@@_tmpa_tl \c_spath_moveto_tl
   \tl_put_right:Nx \l_@@_tmpa_tl {
-    {\tl_item:nn {#2} {2}}
-    {\tl_item:nn {#2} {3}}
+    {\tl_item:nn {#1} {2}}
+    {\tl_item:nn {#1} {3}}
   }
   \tl_put_right:NV \l_@@_tmpa_tl \c_spath_lineto_tl
   \tl_put_right:Nx \l_@@_tmpa_tl
   {
     {\fp_to_dim:n
     {
-      (1 - #1) * \tl_item:nn {#2} {2} + (#1) * \tl_item:nn {#2} {5}
+      (1 - #2) * \tl_item:nn {#1} {2} + (#2) * \tl_item:nn {#1} {5}
     }}
     {\fp_to_dim:n
     {
-      (1 - #1) * \tl_item:nn {#2} {3} + (#1) * \tl_item:nn {#2} {6}
+      (1 - #2) * \tl_item:nn {#1} {3} + (#2) * \tl_item:nn {#1} {6}
     }}
   }
   \tl_gclear:N \g_@@_output_tl
@@ -2042,17 +2042,17 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
     {
-      (1 - #1) * \tl_item:nn {#2} {2} + (#1) * \tl_item:nn {#2} {5}
+      (1 - #2) * \tl_item:nn {#1} {2} + (#2) * \tl_item:nn {#1} {5}
     }}
     {\fp_to_dim:n
     {
-      (1 - #1) * \tl_item:nn {#2} {3} + (#1) * \tl_item:nn {#2} {6}
+      (1 - #2) * \tl_item:nn {#1} {3} + (#2) * \tl_item:nn {#1} {6}
     }}
   }
   \tl_put_right:NV \l_@@_tmpa_tl \c_spath_lineto_tl
   \tl_put_right:Nx \l_@@_tmpa_tl {
-    {\tl_item:nn {#2} {5}}
-    {\tl_item:nn {#2} {6}}
+    {\tl_item:nn {#1} {5}}
+    {\tl_item:nn {#1} {6}}
   }
 
   \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_tmpa_tl
@@ -2210,7 +2210,8 @@ manipulating PGF soft paths}
         \spath_split_line:NNVV
         \l_@@_split_intoa_tl
         \l_@@_split_intob_tl
-        \l_@@_split_fp \l_@@_split_pathb_tl
+        \l_@@_split_pathb_tl
+        \l_@@_split_fp
 
         \prg_replicate:nn {3} {
           \tl_set:Nx \l_@@_split_intoa_tl {\tl_tail:N \l_@@_split_intoa_tl}
@@ -2248,7 +2249,7 @@ manipulating PGF soft paths}
         \spath_split_curve:NNVV
         \l_@@_split_intoa_tl
         \l_@@_split_intob_tl
-        \l_@@_split_fp \l_@@_split_pathb_tl
+        \l_@@_split_pathb_tl \l_@@_split_fp
 
         \prg_replicate:nn {3} {
           \tl_set:Nx \l_@@_split_intoa_tl {\tl_tail:N \l_@@_split_intoa_tl}
@@ -2429,13 +2430,15 @@ manipulating PGF soft paths}
         \spath_split_curve:NNVV
         \l_@@_shorten_lasta_tl
         \l_@@_shorten_lastb_tl
-        \l_@@_shorten_len_fp \l_@@_shorten_last_tl
+        \l_@@_shorten_last_tl
+        \l_@@_shorten_len_fp
       }
       {
         \spath_split_line:NNVV
         \l_@@_shorten_lasta_tl
         \l_@@_shorten_lastb_tl
-        \l_@@_shorten_len_fp \l_@@_shorten_last_tl
+        \l_@@_shorten_last_tl
+        \l_@@_shorten_len_fp
       }
 
       \prg_replicate:nn {3}
@@ -2580,13 +2583,15 @@ manipulating PGF soft paths}
       \spath_split_curve:NNVV
       \l_@@_shorten_lasta_tl
       \l_@@_shorten_lastb_tl
-      \l_@@_shorten_len_fp \l_@@_shorten_last_tl
+      \l_@@_shorten_last_tl
+      \l_@@_shorten_len_fp
     }
     {
       \spath_split_line:NNVV
       \l_@@_shorten_lasta_tl
       \l_@@_shorten_lastb_tl
-      \l_@@_shorten_len_fp \l_@@_shorten_last_tl
+      \l_@@_shorten_last_tl
+      \l_@@_shorten_len_fp
     }
 
     \prg_replicate:nn {2}
@@ -5891,7 +5896,7 @@ manipulating PGF soft paths}
           0 < \l_@@_tmpa_fp && \l_@@_tmpa_fp < 1
         }
         {
-          \spath_split_curve:NNVn \l_@@_tmpc_tl \l_@@_tmpd_tl \l_@@_tmpa_fp {#1}
+          \spath_split_curve:NNnV \l_@@_tmpc_tl \l_@@_tmpd_tl {#1} \l_@@_tmpa_fp
           \tl_set:Nx \l_@@_tmpc_tl {\tl_tail:N \l_@@_tmpc_tl}
           \tl_set:Nx \l_@@_tmpc_tl {\tl_tail:N \l_@@_tmpc_tl}
           \tl_set:Nx \l_@@_tmpc_tl {\tl_tail:N \l_@@_tmpc_tl}
