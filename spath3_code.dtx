@@ -623,7 +623,7 @@ manipulating PGF soft paths}
   \int_set_eq:NN #1 \g_@@_output_int
   \int_gzero:N \g_@@_output_int
 }
-\cs_generate_variant:Nn \spath_reallength:Nn {NV, cn, cV}
+\cs_generate_variant:Nn \spath_reallength:Nn {NV, cn, cV, Nv, cv}
 \cs_new_protected_nopar:Npn \spath_greallength:Nn #1#2
 {
   \@@_reallength:n {#2}
@@ -2649,13 +2649,13 @@ manipulating PGF soft paths}
 % \subsection{Points on a Path}
 %
 % \begin{macro}{
-% \spath_get_point_at:Nnn,
-% \spath_gget_point_at:Nnn,
+% \spath_point_at:Nnn,
+% \spath_gpoint_at:Nnn,
 % }
 %
 % Get the location of a point on a path, using the same location specification as the intersection library.
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \@@_get_point_at:nn #1#2
+\cs_new_protected_nopar:Npn \@@_point_at:nn #1#2
 {
   \group_begin:
   \int_set:Nn \l_@@_tmpa_int {\fp_to_int:n {floor(#2) + 1}}
@@ -2774,20 +2774,221 @@ manipulating PGF soft paths}
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpc_tl
   \group_end:
 }
-\cs_new_protected_nopar:Npn \spath_get_point_at:Nnn #1#2#3
+\cs_new_protected_nopar:Npn \spath_point_at:Nnn #1#2#3
 {
-  \@@_get_point_at:nn {#2}{#3}
+  \@@_point_at:nn {#2}{#3}
   \tl_set_eq:NN #1 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_get_point_at:Nnn {NVn, NVV, NnV}
-\cs_new_protected_nopar:Npn \spath_gget_point_at:Nnn #1#2#3
+\cs_generate_variant:Nn \spath_point_at:Nnn {NVn, NVV, NnV}
+\cs_new_protected_nopar:Npn \spath_gpoint_at:Nnn #1#2#3
 {
-  \@@_get_point_at:nn {#2}{#3}
+  \@@_point_at:nn {#2}{#3}
   \tl_gset_eq:NN #1 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_gget_point_at:Nnn {NVn, NVV, NnV}
+\cs_generate_variant:Nn \spath_gpoint_at:Nnn {NVn, NVV, NnV}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{
+% \spath_tangent_at:Nnn,
+% \spath_gtangent_at:Nnn,
+% }
+%
+% Get the tangent at a point on a path, using the same location specification as the intersection library.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_tangent_at:nn #1#2
+{
+  \group_begin:
+  \int_set:Nn \l_@@_tmpa_int {\fp_to_int:n {floor(#2) + 1}}
+  \fp_set:Nn \l_@@_tmpa_fp {#2 - floor(#2)}
+
+  \spath_segments_to_seq:Nn \l_@@_tmpa_seq {#1}
+
+  \int_compare:nTF
+  {
+    \l_@@_tmpa_int < 1
+  }
+  {
+    \spath_initialpoint:Nn \l_@@_tmpc_tl {#1}
+  }
+  {
+    \int_compare:nTF
+    {
+      \l_@@_tmpa_int > \seq_count:N \l_@@_tmpa_seq
+    }
+    {
+      \spath_finalpoint:Nn \l_@@_tmpc_tl {#1}
+    }
+    {
+  
+      \tl_set:Nx \l_@@_tmpa_tl {\seq_item:Nn \l_@@_tmpa_seq { \l_@@_tmpa_int} }
+
+      \int_compare:nTF
+      {
+        \tl_count:N \l_@@_tmpa_tl > 3
+      }
+      {
+        \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {4}}
+      }
+      {
+        \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {1}}
+      }
+
+      \tl_clear:N \l_@@_tmpc_tl
+  
+      \tl_case:Nn \l_@@_tmpb_tl
+      {
+        \c_spath_moveto_tl
+        {
+          \tl_set:Nx \l_@@_tmpc_tl
+          {
+            {
+              \tl_item:Nn \l_@@_tmpa_tl {2}
+            }
+            {
+              \tl_item:Nn \l_@@_tmpa_tl {3}
+            }
+          }
+        }
+        
+        \c_spath_lineto_tl
+        {
+          \tl_set:Nx \l_@@_tmpc_tl
+          {
+            {\fp_to_dim:n
+              {
+                ( \tl_item:Nn \l_@@_tmpa_tl {5} )
+                -
+                ( \tl_item:Nn \l_@@_tmpa_tl {2} )
+              }
+            }
+            {\fp_to_dim:n
+              {
+                ( \tl_item:Nn \l_@@_tmpa_tl {6} )
+                -
+                ( \tl_item:Nn \l_@@_tmpa_tl {3} )
+              }
+            }
+          }
+        }
+
+        \c_spath_closepath_tl
+        {
+          \tl_set:Nx \l_@@_tmpc_tl
+          {
+            {\fp_to_dim:n
+              {
+                ( \tl_item:Nn \l_@@_tmpa_tl {5} )
+                -
+                ( \tl_item:Nn \l_@@_tmpa_tl {2} )
+              }
+            }
+            {\fp_to_dim:n
+              {
+                ( \tl_item:Nn \l_@@_tmpa_tl {6} )
+                -
+                ( \tl_item:Nn \l_@@_tmpa_tl {3} )
+              }
+            }
+          }
+        }
+    
+        \c_spath_curvetoa_tl
+        {
+          \tl_set:Nx \l_@@_tmpc_tl
+          {
+            {\fp_to_dim:n
+              {
+                3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {5} - \tl_item:Nn \l_@@_tmpa_tl {2})
+                + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *  (\tl_item:Nn \l_@@_tmpa_tl {8} - \tl_item:Nn \l_@@_tmpa_tl {5})
+                + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {11} - \tl_item:Nn \l_@@_tmpa_tl {8})
+              }
+            }
+            {\fp_to_dim:n
+              {
+                3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {6} - \tl_item:Nn \l_@@_tmpa_tl {3})
+                + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *  (\tl_item:Nn \l_@@_tmpa_tl {9} - \tl_item:Nn \l_@@_tmpa_tl {6})
+                + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {12} - \tl_item:Nn \l_@@_tmpa_tl {9})
+            }}
+          }
+        }
+      }
+    }
+  }
+
+  \tl_gclear:N \g_@@_output_tl
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpc_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_tangent_at:Nnn #1#2#3
+{
+  \@@_tangent_at:nn {#2}{#3}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_tangent_at:Nnn {NVn, NVV, NnV}
+\cs_new_protected_nopar:Npn \spath_gtangent_at:Nnn #1#2#3
+{
+  \@@_tangent_at:nn {#2}{#3}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gtangent_at:Nnn {NVn, NVV, NnV}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{
+% \spath_transformation_at:Nnn,
+% \spath_gtransformation_at:Nnn
+% }
+% Gets a transformation that will align to a point on the path with the x-axis along the path.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_transformation_at:nn #1#2
+{
+  \group_begin:
+  \tl_clear:N \l_@@_tmpa_tl
+  \@@_tangent_at:nn {#1}{#2}
+  \tl_set_eq:NN \l_@@_tmpb_tl \g_@@_output_tl
+  \fp_set:Nn \l_@@_tmpa_fp { sqrt( (\tl_item:Nn \l_@@_tmpb_tl {1})^2 +  (\tl_item:Nn \l_@@_tmpb_tl {2})^2 ) }
+  \fp_compare:nTF {\l_@@_tmpa_fp = 0}
+  {
+    \fp_set:Nn \l_@@_tmpa_fp {1}
+    \fp_set:Nn \l_@@_tmpb_fp {0}
+  }
+  {
+    \fp_set:Nn \l_@@_tmpb_fp { (\tl_item:Nn \l_@@_tmpb_tl {2}) / \l_@@_tmpa_fp }
+    \fp_set:Nn \l_@@_tmpa_fp { (\tl_item:Nn \l_@@_tmpb_tl {1}) / \l_@@_tmpa_fp }
+  }
+  \tl_set:Nx \l_@@_tmpa_tl
+  {
+    { \fp_to_decimal:n { \l_@@_tmpa_fp } }
+    { \fp_to_decimal:n { \l_@@_tmpb_fp } }
+    { \fp_to_decimal:n {- \l_@@_tmpb_fp } }
+    { \fp_to_decimal:n { \l_@@_tmpa_fp } }
+  }
+  \@@_point_at:nn {#1}{#2}
+  \tl_put_right:NV \l_@@_tmpa_tl \g_@@_output_tl
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_transformation_at:Nnn #1#2#3
+{
+  \@@_transformation_at:nn {#2}{#3}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_transformation_at:Nnn {NVn, NVV, NnV, NvV}
+\cs_new_protected_nopar:Npn \spath_gtransformation_at:Nnn #1#2#3
+{
+  \@@_transformation_at:nn {#2}{#3}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gtransformation_at:Nnn {NVn, NVV, NnV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4275,6 +4476,98 @@ manipulating PGF soft paths}
   },
 %    \end{macrocode}
 %
+% Set the transformation to lie along a path.
+%
+%    \begin{macrocode}
+  transform~ to/.code~ 2~ args={
+    \group_begin:
+    \tl_if_exist:cTF
+    {
+      \tl_use:N \l_@@_prefix_tl
+      #1
+      \tl_use:N \l_@@_suffix_tl
+    }
+    {
+      \spath_reallength:Nv
+      \l_@@_tmpa_int
+      {
+        \tl_use:N \l_@@_prefix_tl
+        #1
+        \tl_use:N \l_@@_suffix_tl
+      }
+      
+      \tl_set:Nx \l_@@_tmpb_tl
+      {\fp_to_decimal:n {(#2) * (\l_@@_tmpa_int)}}
+      \spath_transformation_at:NvV \l_@@_tmpc_tl
+      {
+        \tl_use:N \l_@@_prefix_tl
+        #1
+        \tl_use:N \l_@@_suffix_tl
+      }
+      \l_@@_tmpb_tl
+      \tl_gset_eq:NN \g_@@_smuggle_tl \l_@@_tmpc_tl
+    }
+    {
+      \tl_gset_eq:NN \g_@@_smuggle_tl { {1}{0}{0}{1}{0pt}{0pt} }
+    }
+    \group_end:
+    \exp_last_unbraced:NV \pgfsettransformentries \g_@@_smuggle_tl
+    \tl_gclear:N \g_@@_smuggle_tl
+  },
+%    \end{macrocode}
+%
+% As above, but with a possible extra \(180^\circ\) rotation if needed to ensure that the new \(y\)--axis points vaguely upwards.
+%
+%    \begin{macrocode}
+  upright~ transform~ to/.code~ 2~ args={
+    \group_begin:
+    \tl_if_exist:cTF
+    {
+      \tl_use:N \l_@@_prefix_tl
+      #1
+      \tl_use:N \l_@@_suffix_tl
+    }
+    {
+      \spath_reallength:Nv
+      \l_@@_tmpa_int
+      {
+        \tl_use:N \l_@@_prefix_tl
+        #1
+        \tl_use:N \l_@@_suffix_tl
+      }
+      
+      \tl_set:Nx \l_@@_tmpb_tl
+      {\fp_to_decimal:n {(#2) * (\l_@@_tmpa_int)}}
+      \spath_transformation_at:NvV \l_@@_tmpc_tl
+      {
+        \tl_use:N \l_@@_prefix_tl
+        #1
+        \tl_use:N \l_@@_suffix_tl
+      }
+      \l_@@_tmpb_tl
+      \tl_gset_eq:NN \g_@@_smuggle_tl \l_@@_tmpc_tl
+    }
+    {
+      \tl_gset_eq:NN \g_@@_smuggle_tl { {1}{0}{0}{1}{0pt}{0pt} }
+    }
+    \fp_compare:nT { \tl_item:Nn \g_@@_smuggle_tl {4} < 0}
+    {
+      \tl_gset:Nx \g_@@_smuggle_tl
+      {
+        { \fp_eval:n { - (\tl_item:Nn \g_@@_smuggle_tl {1})} }
+        { \fp_eval:n { - (\tl_item:Nn \g_@@_smuggle_tl {2})} }
+        { \fp_eval:n { - (\tl_item:Nn \g_@@_smuggle_tl {3})} }
+        { \fp_eval:n { - (\tl_item:Nn \g_@@_smuggle_tl {4})} }
+        { \tl_item:Nn \g_@@_smuggle_tl {5} }
+        { \tl_item:Nn \g_@@_smuggle_tl {6} }
+      }
+    }
+    \group_end:
+    \exp_last_unbraced:NV \pgfsettransformentries \g_@@_smuggle_tl
+    \tl_gclear:N \g_@@_smuggle_tl
+  },
+%    \end{macrocode}
+%
 % This is a useful set of styles for drawing a knot diagram.
 %
 %    \begin{macrocode}
@@ -4324,7 +4617,7 @@ manipulating PGF soft paths}
       \spath_reallength:NV \l_@@_tmpa_int \l_@@_tmpa_tl
       \tl_set:Nx \l_@@_tmpb_tl
       {\fp_to_decimal:n {(\l_@@_tmpb_tl) * (\l_@@_tmpa_int)}}
-      \spath_get_point_at:NVV \l_@@_tmpc_tl \l_@@_tmpa_tl \l_@@_tmpb_tl
+      \spath_point_at:NVV \l_@@_tmpc_tl \l_@@_tmpa_tl \l_@@_tmpb_tl
 
       \tl_clear:N \l_@@_tmpd_tl
       \tl_put_right:Nn \l_@@_tmpd_tl {\pgf@x=}

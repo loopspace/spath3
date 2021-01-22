@@ -351,7 +351,12 @@ The components can be styled using the keys as described in |render components|.
 \subsection{Coordinates}
 
 Soft paths are not natural TikZ objects and so when replaced back into a TikZ path construction then they don't fully interact with other TikZ things, like placing nodes at points on the path.
-To make things a little easier there is defined a coordinate system which identifies a point at a certain location along a soft path.
+To make things a little easier there is defined a coordinate system which identifies a point at a certain location along a soft path and keys which apply a transformation.
+
+\begin{function}{spath cs}
+\begin{syntax}
+|(spath cs:|\marg{name} \marg{parameter}|)|
+\end{syntax}
 
 The location specification is a little technical.
 It is specified as a number from \(0\) to \(1\), but the parameter works as follows.
@@ -360,14 +365,23 @@ The interval from \(\frac{k-1}{n}\) to \(\frac{k}{n}\) is assigned to the \(k\)t
 Then for a parameter in that interval, the location uses the natural parametrisation of that segment.
 For a straight line, it is simply the proportional position along but for a B\'ezier curve then it uses the B\'ezier parametrisation.
 
-The syntax for this is:
-%
-\begin{lstlisting}
-(spath cs:<name> <parameter>)
-\end{lstlisting}
-%
 The space is vital, so if the \texttt{name} is contained in a macro then a space has to be inserted somehow.
 One option is to wrap the macro in braces, as seen in the examples in the next section.
+\end{function}
+
+\begin{function}{transform to, upright transform to}
+\begin{syntax}
+|transform to=|\meta{path}\meta{parameter}
+|upright transform to=|\meta{path}\meta{parameter}
+\end{syntax}
+
+These keys (which are in the |spath| family) set the transformation so that the origin is at the specified point of the curve (as described above) and the \(x\)--axis is tangential to the curve.
+The transformation is \emph{orthogonal} in that it is achieved by a rotation and a translation.
+
+The first key aligns the axes so that the \(x\)--axis is in the forward direction of the path as that path was constructed.
+The second key aligns the axes so that the \(y\)--axis points up the page.
+The intention with the second key is that it is similar to what happens with the |sloped| key when a node is placed on a curve.
+\end{function}
 
 \section{Examples}
 
@@ -415,17 +429,34 @@ One option is to wrap the macro in braces, as seen in the examples in the next s
 \end{tikzpicture}
 \end{example}
 
+\begin{example}
+\begin{tikzpicture}
+\draw[spath/save=oval] (0,0) to[out=0,in=0] (0,2) to[out=180,in=180] (0,0);
+\foreach \k in {0,...,9} {
+  \node[transform shape, spath/transform to={oval}{0.\k}] {k};
+}
+\begin{scope}[xshift = 3cm]
+\draw[spath/save=soval] (0,0) to[out=0,in=0] (0,2) to[out=180,in=180] (0,0);
+\foreach \k in {0,...,9} {
+  \node[transform shape, spath/upright transform to={soval}{0.\k}] {k};
+}
+\end{scope}
+\end{tikzpicture}
+\end{example}
+
 \item Shortening.
 
 \begin{example}
 \begin{tikzpicture}
 \path[spath/save=apath] (0,0) foreach \k in {1,...,4} { -- ++(1,0) +(0,0)};
 \draw[
-  spath/shorten at end={apath}{7pt},
-  spath/shorten at start={apath}{9pt},
-  spath/translate={apath}{0pt}{1pt},
-  spath/restore=apath,
-  ultra thick, red
+  ultra thick,
+  red,
+  spath/.cd,
+  shorten at end={apath}{7pt},
+  shorten at start={apath}{9pt},
+  translate={apath}{0pt}{1pt},
+  restore=apath,
 ];
 \draw (0,0) circle[radius=9pt] [spath/insert=apath] circle[radius=7pt];
 \end{tikzpicture}

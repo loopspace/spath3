@@ -33,6 +33,11 @@
 }
 \makeatother
 
+% Note: this was for a previous version and doesn't work with the
+% current one, but it might be useful to adapt it to the current
+% version so I'm keeping it around to remember what it originally
+% looked like.
+
 \newcommand\displaypath[1]{%
 
 Displaying path information for: #1
@@ -77,6 +82,28 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \ExplSyntaxOff
 
 \begin{document}
+
+\begin{tikzpicture}
+\draw[spath/save=oval] (0,0) to[out=0,in=0] (0,2) to[out=180,in=180] (0,0);
+\foreach \k in {0,...,9} {
+  \node[transform shape, allow upside down=false, spath/transform to={oval}{0.\k}, rotate=-90,right] {along};
+}
+\begin{scope}[xshift = 3cm]
+\draw[spath/save=soval] (0,0) to[out=0,in=0] (0,2) to[out=180,in=180] (0,0);
+\foreach \k in {0,...,9} {
+  \node[transform shape, spath/upright transform to={soval}{0.\k}] {q};
+}
+\begin{scope}[xshift = 3cm]
+\draw[spath/save=soval] (0,0) to[out=0,in=0] (0,2) to[out=180,in=180] (0,0);
+\foreach \k in {0,...,9} {
+  \node[transform shape, spath/transform to={soval}{0.\k}] {q};
+}
+\end{scope}
+\end{scope}
+\end{tikzpicture}
+
+
+
 \begin{tikzpicture}
 \draw[spath/save=oval] (0,0) to[out=0,in=0] (0,2) +(-1,0) to[out=180,in=180] (0,0);
 \tikzset{spath/spot weld=oval}
