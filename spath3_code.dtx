@@ -751,6 +751,59 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 % \begin{macro}{
+% \spath_finalmovepoint:Nn,
+% \spath_gfinalmovepoint:Nn
+% }
+% Get the last move on the path.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_finalmovepoint:n #1
+{
+  \group_begin:
+  \tl_set:Nn \l_@@_tmpc_tl { {0pt} {0pt} }
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
+  \bool_do_until:nn
+  {
+    \tl_if_empty_p:N \l_@@_tmpa_tl
+  }
+  {
+    \tl_set:Nn \l_@@_tmpb_tl {##1}
+    \tl_case:Nn \l_@@_tmpb_tl
+    {
+      \c_spath_moveto_tl
+      {
+        \tl_set:Nx \l_@@_tmpc_tl
+        {
+          { \tl_item:Nn \l_@@_tmpa_tl {2} }
+          { \tl_item:Nn \l_@@_tmpa_tl {3} }
+        }
+      }
+    }
+    \prg_replicate:nn {3}
+    {
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+    }
+  }
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpc_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_finalmovepoint:Nn #1#2
+{
+  \@@_finalmovepoint:n {#2}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_finalmovepoint:Nn {NV, cn, cV}
+\cs_new_protected_nopar:Npn \spath_gfinalmovepoint:Nn #1#2
+{
+  \@@_finalmovepoint:n {#2}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gfinalmovepoint:Nn {NV, cn, cV}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{
 % \spath_reverse:Nn,
 % \spath_greverse:Nn
 % }
