@@ -766,7 +766,7 @@ manipulating PGF soft paths}
     \tl_if_empty_p:N \l_@@_tmpa_tl
   }
   {
-    \tl_set:Nn \l_@@_tmpb_tl {##1}
+    \tl_set:Nx \l_@@_tmpb_tl {\tl_head:N \l_@@_tmpa_tl}
     \tl_case:Nn \l_@@_tmpb_tl
     {
       \c_spath_moveto_tl
@@ -4165,6 +4165,16 @@ manipulating PGF soft paths}
     \exp_not:c {tikz@lasty}=\tl_item:Nn \l_@@_tmpa_tl {2}
     \exp_not:c {tikz@lastxsaved}=\tl_item:Nn \l_@@_tmpa_tl {1}
     \exp_not:c {tikz@lastysaved}=\tl_item:Nn \l_@@_tmpa_tl {2}
+  }
+  \tl_use:N \l_@@_tmpa_tl
+  \spath_finalmovepoint:Nn \l_@@_tmpa_tl {#1}
+  \ifpgfsyssoftpathmovetorelevant%
+  \tl_gset_eq:cN {pgfsyssoftpath@lastmoveto} \l_@@_tmpa_tl
+  \fi
+  \tl_set:Nx \l_@@_tmpa_tl
+  {
+    \exp_not:c {tikz@lastmovetox}=\tl_item:Nn \l_@@_tmpa_tl {1}
+    \exp_not:c {tikz@lastmovetoy}=\tl_item:Nn \l_@@_tmpa_tl {2}
   }
   \tl_use:N \l_@@_tmpa_tl
 }
