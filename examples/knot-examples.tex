@@ -1,3 +1,5 @@
+\RequirePackage{shellesc}
+\immediate\write18{cd ..; tex spath3_code.dtx}
 \documentclass{article}
 \usepackage{tikz}
 \usetikzlibrary{
@@ -48,7 +50,7 @@
 %  draft mode=crossings,
   flip crossing={2},
   only when rendering/.style={
-%    show curve controls
+    spath/show current path,
   }
 ]
 \strand (0,2) .. controls +(2.2,0) and +(120:-2.2) .. (210:2) .. controls +(120:2.2) and +(60:2.2) .. (-30:2) .. controls +(60:-2.2) and +(-2.2,0) .. (0,2);

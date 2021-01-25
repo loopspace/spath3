@@ -18,9 +18,12 @@
   ignore endpoint intersections=false,
   clip width=7,
   flip crossing=3,
-  background colour=yellow
+  background colour=yellow,
+  only when rendering/.style={
+    arrowat=0.8
+  }
 ]
-    \strand [thick, arrowat=0.8] (0,0)
+    \strand [thick] (0,0)
     to [out=180, in=270] (-1,1)
     to [out=90, in=180] (1,2.5)
     to [out=0, in=90] (3,1)
@@ -39,7 +42,7 @@
   clip width=7,
   flip crossing=3,
 ]
-    \strand [thick, save spath=strand]
+    \strand [thick, spath/save global=strand]
 (0,0)
     to [out=180, in=270] (-1,1)
     to [out=90, in=180] (1,2.5)
@@ -51,7 +54,7 @@
     to [out=270, in=0] (0,0)
     ;
 \end{knot}
-\draw[restore spath=strand, arrowat=0.5];
+\draw[spath/restore=strand, arrowat=0.5];
 \end{tikzpicture}
 
 \end{document}

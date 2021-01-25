@@ -15,7 +15,7 @@
 
 \path
 [
-split at self intersections={coil}{1111111111111111111111}
+split current path at self intersections={coil}{1111111111111111111111}
 ] ([out angle=0]0,0)
 .. +(.85,1) .. +(.25,2) .. +(-.35,1) .. ++(.5,0)
 .. +(.85,1) .. +(.25,2) .. +(-.35,1) .. ++(.5,0)
@@ -98,7 +98,7 @@ split at self intersections={coil}{1111111111111111111111}
 
 \path
 [
-  split at self intersections={trefoil}{121}
+  split current path at self intersections={trefoil}{121}
 ]
 ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) };
 

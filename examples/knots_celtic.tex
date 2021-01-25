@@ -23,7 +23,9 @@
 
 \begin{tikzpicture}[scale=0.8]
 
-\begin{knot}[consider self intersections=no splits,
+\begin{knot}[
+%  draft mode=crossings,
+  consider self intersections=no splits,
         end tolerance=1pt,%
         line width=2pt ,%
         line join=round,%
@@ -36,6 +38,7 @@
         only when rendering/.style={
           basic strand
         },
+        flip crossing/.list={2,3,6,8}
         ]
 
 \strand (0.5,1) to [out=north, in=south] (2.5,4) to [out=north, in=south]
