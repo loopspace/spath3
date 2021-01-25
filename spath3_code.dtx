@@ -1554,7 +1554,7 @@ manipulating PGF soft paths}
 {
   \spath_append:NVn #1#1{#2}
 }
-\cs_generate_variant:Nn \spath_append:Nn {NV, Nv}
+\cs_generate_variant:Nn \spath_append:Nn {NV, Nv, cv}
 \cs_new_protected_nopar:Npn \spath_gappend:Nnn #1#2#3
 {
   \tl_gset:Nn #1 {#2}
@@ -1565,7 +1565,7 @@ manipulating PGF soft paths}
 {
   \spath_gappend:NVn #1#1{#2}
 }
-\cs_generate_variant:Nn \spath_gappend:Nn {NV, Nv}
+\cs_generate_variant:Nn \spath_gappend:Nn {NV, Nv, cv}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -3928,7 +3928,7 @@ manipulating PGF soft paths}
     \iow_newline:
     <svg~ xmlns="http://www.w3.org/2000/svg"~ version="1.1"~viewBox="
   }
-
+  
   \spath_minbb:Nn \l_@@_tmpb_tl {#1}
   \spath_maxbb:Nn \l_@@_tmpc_tl {#1}
   \tl_put_right:Nx \l_@@_tmpa_tl
@@ -3967,7 +3967,7 @@ manipulating PGF soft paths}
     <path~ d="
   }
   \tl_set:Nn \l_@@_tmpc_tl {use:n}
-  \tl_map_inline:Nn #1
+  \tl_map_inline:nn {#1}
   {
     \tl_set:Nn \l_@@_tmpb_tl {##1}
     \tl_case:NnF \l_@@_tmpb_tl
@@ -4036,7 +4036,7 @@ manipulating PGF soft paths}
 \iow_new:N \g_@@_stream
 \cs_new_protected_nopar:Npn \spath_export_to_svg:nn #1#2
 {
-  \spath_convert_path_to_svg:Nn \l_@@_iterp_tl {#2}
+  \spath_convert_to_svg:Nn \l_@@_iterp_tl {#2}
   \iow_open:Nn \g_@@_stream {#1 .svg}
   \iow_now:Nx \g_@@_stream
   {
@@ -4044,6 +4044,7 @@ manipulating PGF soft paths}
   }
   \iow_close:N \g_@@_stream
 }
+\cs_generate_variant:Nn \spath_export_to_svg:nn {nv, nV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4211,6 +4212,12 @@ manipulating PGF soft paths}
 \bool_new:N \l_@@_draft_bool
 %    \end{macrocode}
 %
+% We surround all the keys with checks to ensure that the soft path under consideration does actually exist, but if it doesn't we should warn the user.
+%
+%    \begin{macrocode}
+\msg_new:nnn { spath3 } { missing soft path } { Soft~ path~ #1~ doesn't~ exist }
+%    \end{macrocode}
+%
 % When saving a soft path, by default we use a naming convention that is compatible with the intersections library so that paths saved here and paths saved by the \texttt{name path} facility of the intersections library are mutually exchangeable.
 %
 %    \begin{macrocode}
@@ -4294,7 +4301,7 @@ manipulating PGF soft paths}
     }
   },
   clone/.code~ 2~ args={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
     {
       \tl_clear_new:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -4302,15 +4309,21 @@ manipulating PGF soft paths}
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+    }
   },
   clone~ global/.code~ 2~ args={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
     {
       \tl_gclear_new:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \tl_gset_eq:cc
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #2 }
     }
   },
   save~ global/.code={
@@ -4328,10 +4341,13 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   save~ to~ aux/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_save_to_aux:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4340,12 +4356,15 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   restore/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_set_current_path:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_set_tikz_coords:v
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4366,10 +4385,13 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   show/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \iow_term:n {---~ soft~ path~ #1~ ---}
       \spath_show:v {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4378,7 +4400,7 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   append/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_get_current_path:N \l_@@_current_tl
       \spath_weld:Nv
@@ -4387,6 +4409,9 @@ manipulating PGF soft paths}
       \spath_set_current_path:N \l_@@_current_tl
       \spath_set_tikz_coords:V \l_@@_current_tl
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
 %    \end{macrocode}
 %
@@ -4394,14 +4419,20 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   join~ with/.code~ 2~ args={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_append:cv
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
         {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+      }
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4410,10 +4441,13 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   spot~ weld/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_spot_weld_components:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4422,10 +4456,13 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   reverse/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4434,7 +4471,7 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   append~ reverse/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:Nv
       \l_@@_reverse_tl
@@ -4444,6 +4481,9 @@ manipulating PGF soft paths}
       \spath_set_current_path:N \l_@@_current_tl
       \spath_set_tikz_coords:V \l_@@_current_tl
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },    
 %    \end{macrocode}
 %
@@ -4451,7 +4491,7 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   insert/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_get_current_path:N \l_@@_current_tl
       \spath_append:Nv
@@ -4460,6 +4500,9 @@ manipulating PGF soft paths}
       \spath_set_current_path:N \l_@@_current_tl
       \spath_set_tikz_coords:V \l_@@_current_tl
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
 %    \end{macrocode}
 %
@@ -4467,7 +4510,7 @@ manipulating PGF soft paths}
 % 
 %    \begin{macrocode}
   insert~ reverse/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:Nv
       \l_@@_reverse_tl
@@ -4477,6 +4520,9 @@ manipulating PGF soft paths}
       \spath_set_current_path:N \l_@@_current_tl
       \spath_set_tikz_coords:V \l_@@_current_tl
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
 %    \end{macrocode}
 %
@@ -4484,26 +4530,35 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   shorten~ at~ end/.code~ 2~ args={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_end:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
   shorten~ at~ start/.code~ 2~ args ={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_start:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
   shorten~ at~ both~ ends/.code~ 2~ args={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_end:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
       \spath_shorten_at_start:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4512,10 +4567,13 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   translate/.code~ n~ args={3}{
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_translate:cnn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}{#2}{#3}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4524,10 +4582,13 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   export~ to~ svg/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \spath_export_to_svg:c
+      \spath_export_to_svg:nv {#1}
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4536,7 +4597,7 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   transform/.code~ 2~ args={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
       \pgftransformreset
@@ -4551,9 +4612,12 @@ manipulating PGF soft paths}
       \group_end:
       \tl_use:N \g_@@_smuggle_tl
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
   transform~global/.code~ 2~ args={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
       \pgftransformreset
@@ -4568,6 +4632,9 @@ manipulating PGF soft paths}
       \group_end:
       \tl_use:N \g_@@_smuggle_tl
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
 %    \end{macrocode}
 %
@@ -4575,14 +4642,20 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   split~ at~ intersections/.code~ n~ args={2}{
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_split_at_intersections:cc
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
         {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+      }
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4591,10 +4664,13 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   split~ at~ self~ intersections/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_split_at_self_intersections:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4603,7 +4679,7 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   get~ components~ of/.code~ 2~ args={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \clist_clear_new:N #2
       \spath_components_to_seq:Nv
@@ -4619,6 +4695,9 @@ manipulating PGF soft paths}
         \int_gincr:N \g_@@_anon_int
       }
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
 %    \end{macrocode}
 %
@@ -4626,7 +4705,7 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   render~ components/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
       \spath_components_to_seq:Nv
@@ -4649,6 +4728,9 @@ manipulating PGF soft paths}
       }
       \group_end:
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
 %    \end{macrocode}
 %
@@ -4657,7 +4739,7 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   insert~ gaps~ after~ components/.code~ n~ args={3}{
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
       \seq_gclear:N \g_@@_tmpa_seq
@@ -4691,6 +4773,9 @@ manipulating PGF soft paths}
       \g_@@_output_tl
       \tl_gclear:N \g_@@_output_tl
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
 %    \end{macrocode}
 %
@@ -4698,7 +4783,7 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   join~ components/.code~ 2~ args={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \seq_gclear:N \g_@@_tmpa_seq
       \foreach \l_@@_tmpa_tl in {#2}
@@ -4717,6 +4802,9 @@ manipulating PGF soft paths}
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}{##1}
       }
     }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
   },
 %    \end{macrocode}
 %
@@ -4724,10 +4812,13 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   remove~ empty~ components/.code={
-    \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_remove_empty_components:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
@@ -4745,10 +4836,13 @@ manipulating PGF soft paths}
   maybe~ spot~ weld/.code={
     \bool_if:NF \l_@@_draft_bool
     {
-      \tl_if_exist:cT {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_spot_weld_components:c
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #1 }
       }
     }
   },
@@ -4786,6 +4880,7 @@ manipulating PGF soft paths}
       \tl_gset_eq:NN \g_@@_smuggle_tl \l_@@_tmpc_tl
     }
     {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
       \tl_gset_eq:NN \g_@@_smuggle_tl { {1}{0}{0}{1}{0pt}{0pt} }
     }
     \group_end:
@@ -4826,6 +4921,7 @@ manipulating PGF soft paths}
       \tl_gset_eq:NN \g_@@_smuggle_tl \l_@@_tmpc_tl
     }
     {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
       \tl_gset_eq:NN \g_@@_smuggle_tl { {1}{0}{0}{1}{0pt}{0pt} }
     }
     \fp_compare:nT { \tl_item:Nn \g_@@_smuggle_tl {4} < 0}
@@ -4908,6 +5004,7 @@ manipulating PGF soft paths}
     }
   }
   {
+    \msg_warning:nnx { spath3 } { missing soft path } { \tl_use:N \l_@@_tmpa_tl }
     \tl_gset_eq:NN \g_@@_smuggle_tl \pgfpointorigin
   }
     \group_end:
@@ -6117,6 +6214,8 @@ manipulating PGF soft paths}
   }
   {
     \tl_clear:N \l_@@_tmpa_tl
+    \spath_initialpoint:Nv \l_@@_tmpa_tl {knot strand #1}
+    \tl_put_left:NV \l_@@_tmpa_tl \c_spath_moveto_tl
     \spath_segments_to_seq:Nv \l_@@_segments_seq {knot strand #1}
     \seq_map_function:NN \l_@@_segments_seq \knot_split_self_intersects:N
     \tl_set_eq:cN {knot strand #1} \l_@@_tmpa_tl
