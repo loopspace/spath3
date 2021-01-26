@@ -6415,7 +6415,7 @@ manipulating PGF soft paths}
     \tl_set:Nv \l_@@_tmpc_tl \l_@@_tmpc_tl
     \tl_if_eq:NNT \l_@@_tmpc_tl \l_@@_tmpb_tl
     {
-      \knot_test_endpoint:VnT \l_@@_tmpb_tl {final point}
+      \knot_test_endpoint:NVnT \l_@@_tolerance_dim \l_@@_tmpb_tl {final point}
       {
         \bool_set_true:N \l_@@_skip_bool
       }
@@ -6426,7 +6426,7 @@ manipulating PGF soft paths}
     \tl_set:Nv \l_@@_tmpc_tl \l_@@_tmpc_tl
     \tl_if_eq:NNT \l_@@_tmpc_tl \l_@@_tmpa_tl
     {
-      \knot_test_endpoint:VnT \l_@@_tmpa_tl {final point}
+      \knot_test_endpoint:NVnT \l_@@_tolerance_dim \l_@@_tmpa_tl {final point}
       {
         \bool_set_true:N \l_@@_skip_bool
       }
@@ -6437,19 +6437,19 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
   \bool_if:NT \l_@@_ignore_ends_bool
   {
-    \knot_test_endpoint:VnT \l_@@_tmpa_tl {initial point}
+    \knot_test_endpoint:NVnT \l_@@_tolerance_dim \l_@@_tmpa_tl {initial point}
     {
       \bool_set_true:N \l_@@_skip_bool
     }
-    \knot_test_endpoint:VnT \l_@@_tmpa_tl {final point}
+    \knot_test_endpoint:NVnT \l_@@_tolerance_dim \l_@@_tmpa_tl {final point}
     {
       \bool_set_true:N \l_@@_skip_bool
     }
-    \knot_test_endpoint:VnT \l_@@_tmpb_tl {initial point}
+    \knot_test_endpoint:NVnT \l_@@_tolerance_dim \l_@@_tmpb_tl {initial point}
     {
       \bool_set_true:N \l_@@_skip_bool
     }
-    \knot_test_endpoint:VnT \l_@@_tmpb_tl {final point}
+    \knot_test_endpoint:NVnT \l_@@_tolerance_dim \l_@@_tmpb_tl {final point}
     {
       \bool_set_true:N \l_@@_skip_bool
     }
@@ -6498,14 +6498,14 @@ manipulating PGF soft paths}
 %    \begin{macrocode} 
       \bool_if:NT \l_@@_self_intersections_bool
       {
-        \knot_test_endpoint:VnT \l_@@_tmpg_tl {initial point}
+        \knot_test_endpoint:NVnT \l_@@_clip_bg_radius_dim \l_@@_tmpg_tl {initial point}
         {
           \bool_set_true:N \l_@@_prepend_prev_bool
         }
         {
           \bool_set_false:N \l_@@_prepend_prev_bool
         }
-        \knot_test_endpoint:VnT \l_@@_tmpg_tl {final point}
+        \knot_test_endpoint:NVnT \l_@@_clip_bg_radius_dim \l_@@_tmpg_tl {final point}
         {
           \bool_set_true:N \l_@@_append_next_bool
         }
@@ -6548,7 +6548,7 @@ manipulating PGF soft paths}
               !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
             }
             {
-              \knot_test_endpoint:vnT {knot previous \tl_use:N \l_@@_tmpg_tl} {initial point}
+              \knot_test_endpoint:NvnT \l_@@_clip_bg_radius_dim {knot previous \tl_use:N \l_@@_tmpg_tl} {initial point}
               {
                 
                 \spath_prepend_no_move:cv {knot \tl_use:N \l_@@_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}}
@@ -6579,7 +6579,7 @@ manipulating PGF soft paths}
               !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
             }
             {
-              \knot_test_endpoint:vnT {knot previous \tl_use:N \l_@@_tmpg_tl} {final point}
+              \knot_test_endpoint:NvnT \l_@@_clip_bg_radius_dim {knot previous \tl_use:N \l_@@_tmpg_tl} {final point}
               {
                 \spath_append_no_move:cv {knot \tl_use:N \l_@@_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}}
                 
@@ -6621,15 +6621,15 @@ manipulating PGF soft paths}
 % \begin{macro}[internal]{\knot_test_endpoint:N}
 % Test whether the point is near the intersection point.
 %    \begin{macrocode}
-\prg_new_conditional:Npnn \knot_test_endpoint:N #1 {p,T,F,TF}
+\prg_new_conditional:Npnn \knot_test_endpoint:NN #1#2 {p,T,F,TF}
 {
   \dim_compare:nTF
   {
-    \dim_abs:n { \l_@@_tmpa_dim - \tl_item:Nn #1 {1}}
+    \dim_abs:n { \l_@@_tmpa_dim - \tl_item:Nn #2 {1}}
     +
-    \dim_abs:n { \l_@@_tmpb_dim - \tl_item:Nn #1 {2}}
+    \dim_abs:n { \l_@@_tmpb_dim - \tl_item:Nn #2 {2}}
     <
-    \l_@@_tolerance_dim
+    #1
   }
   {
     \prg_return_true:
@@ -6644,10 +6644,10 @@ manipulating PGF soft paths}
 % \begin{macro}[internal]{\knot_test_endpoint:nn}
 % Wrapper around the above.
 %    \begin{macrocode}
-\prg_new_protected_conditional:Npnn \knot_test_endpoint:nn #1#2 {T,F,TF}
+\prg_new_protected_conditional:Npnn \knot_test_endpoint:Nnn #1#2#3 {T,F,TF}
 {
-  \use:c {spath_#2:Nv} \l_@@_tmpd_tl {knot #1}
-  \knot_test_endpoint:NTF \l_@@_tmpd_tl
+  \use:c {spath_#3:Nv} \l_@@_tmpd_tl {knot #2}
+  \knot_test_endpoint:NNTF #1 \l_@@_tmpd_tl
   {
     \prg_return_true:
   }
@@ -6656,9 +6656,9 @@ manipulating PGF soft paths}
   }
 }
 
-\cs_generate_variant:Nn \knot_test_endpoint:nnT {VnT,vnT}
-\cs_generate_variant:Nn \knot_test_endpoint:nnF {VnF,vnF}
-\cs_generate_variant:Nn \knot_test_endpoint:nnTF {VnTF,vnTF}
+\cs_generate_variant:Nn \knot_test_endpoint:NnnT {NVnT,NvnT}
+\cs_generate_variant:Nn \knot_test_endpoint:NnnF {NVnF,NvnF}
+\cs_generate_variant:Nn \knot_test_endpoint:NnnTF {NVnTF,NvnTF}
 %    \end{macrocode}
 % \end{macro}
 %
