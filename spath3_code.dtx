@@ -5860,6 +5860,7 @@ manipulating PGF soft paths}
 \dim_new:N \l_@@_tmpa_dim
 \dim_new:N \l_@@_tmpb_dim
 \dim_new:N \l_@@_tolerance_dim
+\dim_new:N \l_@@_redraw_tolerance_dim
 \dim_new:N \l_@@_clip_bg_radius_dim
 \dim_new:N \l_@@_clip_draw_radius_dim
 
@@ -6102,6 +6103,14 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
   \pgfscope
   \pgftransformreset
+%    \end{macrocode}
+% Set the dimension for deciding when to include neighbouring strands
+%    \begin{macrocode}
+  \dim_set:Nn \l_@@_redraw_tolerance_dim {\fp_to_dim:n
+    {
+      sqrt(2) * max(\l_@@_clip_bg_radius_dim, \l_@@_clip_draw_radius_dim)
+    }
+  }
 %    \end{macrocode}
 % Loop through the strands drawing each one for the first time.
 %    \begin{macrocode}
@@ -6498,14 +6507,14 @@ manipulating PGF soft paths}
 %    \begin{macrocode} 
       \bool_if:NT \l_@@_self_intersections_bool
       {
-        \knot_test_endpoint:NVnT \l_@@_clip_bg_radius_dim \l_@@_tmpg_tl {initial point}
+        \knot_test_endpoint:NVnT \l_@@_redraw_tolerance_dim \l_@@_tmpg_tl {initial point}
         {
           \bool_set_true:N \l_@@_prepend_prev_bool
         }
         {
           \bool_set_false:N \l_@@_prepend_prev_bool
         }
-        \knot_test_endpoint:NVnT \l_@@_clip_bg_radius_dim \l_@@_tmpg_tl {final point}
+        \knot_test_endpoint:NVnT \l_@@_redraw_tolerance_dim \l_@@_tmpg_tl {final point}
         {
           \bool_set_true:N \l_@@_append_next_bool
         }
@@ -6548,7 +6557,7 @@ manipulating PGF soft paths}
               !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
             }
             {
-              \knot_test_endpoint:NvnT \l_@@_clip_bg_radius_dim {knot previous \tl_use:N \l_@@_tmpg_tl} {initial point}
+              \knot_test_endpoint:NvnT \l_@@_redraw_tolerance_dim {knot previous \tl_use:N \l_@@_tmpg_tl} {initial point}
               {
                 
                 \spath_prepend_no_move:cv {knot \tl_use:N \l_@@_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}}
@@ -6579,7 +6588,7 @@ manipulating PGF soft paths}
               !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
             }
             {
-              \knot_test_endpoint:NvnT \l_@@_clip_bg_radius_dim {knot previous \tl_use:N \l_@@_tmpg_tl} {final point}
+              \knot_test_endpoint:NvnT \l_@@_redraw_tolerance_dim {knot previous \tl_use:N \l_@@_tmpg_tl} {final point}
               {
                 \spath_append_no_move:cv {knot \tl_use:N \l_@@_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}}
                 
