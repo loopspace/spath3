@@ -435,6 +435,99 @@ inner sep=0pt
 \end{lstlisting}
 \end{itemize}
 
+
+\subsection{Celtic Knots}
+
+By ``Celtic knot'' here, I mean a knot drawn in a way to suggest a carved object.
+Usually, this is achieved by using the \Verb+double+ style to outline the path.
+This interacts a little oddly with how the knots package redraws the curve near crossings which can result in small artefacts visible when the diagram is viewed (my understanding is that they are not present when the diagram is printed).
+There is, however, a way to get these diagrams right, as this section will show.
+
+I will just note here that there is the \href{celtic knots}{https://ctan.org/pkg/celtic} package which works for a particular type of Celtic knots.
+If your Celtic knot fits what that package can produce, it is a better choice.
+See that package for details.
+
+Back to what this package can provide.
+When rendering a crossing, the over-strand is redrawn clipped to a small region around the crossing.
+The clipping, however, interacts badly with the \Verb+double+ effect.
+The \Verb+double+ effect is achieved by drawing the line twice, once thicker with the outer colour and once thinner with the inner colour.
+At the boundary of the clipping region there is ``bleed through'' of the outer colour into the inner colour, at least when the image is displayed on a screen.
+If the inner colour is darker, this is not noticeable.
+But with a Celtic style knot then the inner colour is usually a lighter colour, such as the page colour, and so the effect is visible.
+
+The solution to this is to exploit the fact that when using the Celtic style then one doesn't actually want gaps in the under-strand to show that it is the under-strand.
+The Celtic style makes it very obvious which strand is which without that.
+These gaps are achieved by drawing the over-strand in a thicker line with the colour of the background.
+This is almost exactly what the \Verb+double+ key does.
+So rather than using the \Verb+double+ key directly, we use the mechanism of how the knot crossings are rendered to reproduce the effect.
+This avoids the artefacts because when the knot library draws the two paths then it clips them to slightly different sized regions.
+
+\begin{example}
+\begin{tikzpicture}[scale=0.8]
+\begin{knot}[
+  consider self intersections=no splits,
+  end tolerance=1pt,
+  line join=round,
+  clip width=1,
+  ignore endpoint intersections=true,
+  background color=red,
+  every intersection/.style={
+    line width=13pt,
+    only when rendering/.style={
+      draw=white,
+      line width=9pt,
+      double=none,
+    }
+  },
+  only when rendering/.style={
+    red,
+    line width=2pt,
+    double=white,
+    double distance=9pt,
+  },
+  flip crossing/.list={2,3,6,8}
+]
+
+\strand
+(0.5,1) to [out=north, in=south]
+(2.5,4) to [out=north, in=south]
+(0.5,7) -- (0.5,7) -- (0.5,7.5) --
+(1,7.5) to [out=east, in=west]
+(3,6.5) to [out=east, in=225]
+(4.5,7.5) to [out=45, in=south]
+(5.5,9) to [out=north, in=-45]
+(4.5,10.5) to [out=135,in=east]
+(3,11.5) to [out=west,in=45]
+(1.5,10.5) to [out=225,in=north]
+(0.5,9) -- (0.5,8.5) --
+(1,8.5) to [out=east, in=south]
+(2.5,10) to [out=north, in=east]
+(1,11.5) -- (0.5,11.5) --
+(0.5,11) to [out=south, in=north]
+(2.5,8) to [out=south, in=north]
+(0.5,5) -- (0.5,4.5) --
+(1,4.5) to [out=east, in=west]
+(3,5.5) to [out=east, in=135]
+(4.5,4.5) to [out=-45, in=north]
+(5.5,3) to [out=south, in=45]
+(4.5,1.5) to [out=225, in=east]
+(3,0.5) to [out=west, in=-45]
+(1.5,1.5) to [out=135, in=south]
+(0.5,3) -- (0.5,3.5) --
+(1,3.5) to [out=east, in=north]
+(2.5,2) to [out=south, in=east]
+(1,0.5) -- (0.5,0.5) -- (0.5,1);
+\end{knot}
+
+\end{tikzpicture}
+
+\end{example}
+
+
+
+
+
+
 \subsection{Other Styles}
 
 The other things defined by this package are for drawing knot diagrams when the user knows in advance either the locations of the crossings or can arrange that the paths are drawn in the correct order.
