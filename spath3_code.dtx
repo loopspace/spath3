@@ -291,6 +291,7 @@ manipulating PGF soft paths}
 
 \seq_new:N \l_@@_tmpa_seq
 \seq_new:N \l_@@_tmpb_seq
+\seq_new:N \l_@@_tmpc_seq
 
 \tl_new:N \g_@@_output_tl
 \int_new:N \g_@@_output_int
@@ -3292,158 +3293,192 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 % \begin{macro}{
-% \spath_split_at_intersections:NNnn,
-% \spath_split_at_intersections:NN,
-% \spath_gsplit_at_intersections:NNnn,
-% \spath_gsplit_at_intersections:NN
+% \spath_split_component_at_intersections:Nnn
 % }
-% Given two paths, split them at points where they intersect and store them in the macros.
+% Split a component where it intersects a path.
+% Key assumption is that the first path is a single component, so if it is closed then the end joins up to the beginning.
+% The component is modified but the path is not.
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \@@_split_at_intersections:nn #1#2
+\cs_new_protected_nopar:Npn \@@_split_component_at_intersections:nn #1#2
 {
   \group_begin:
-
-  % Clear some token lists and sequences
   \tl_clear:N \l_@@_split_path_a_final_tl
-  \tl_clear:N \l_@@_split_path_b_final_tl
   \seq_clear:N \l_@@_split_first_seq
-  \seq_clear:N \l_@@_split_second_seq
-
-  \pgfintersectionsortbyfirstpath
+  
   % Find the intersections of these segments
   \tl_set:Nn \l_@@_split_path_a_tl {#1}
   \tl_set:Nn \l_@@_split_path_b_tl {#2}
 
-  % Open the paths, for now; we should figure out whether we need to close them up afterwards.
-  \spath_open:N \l_@@_split_path_a_tl
-  \spath_open:N \l_@@_split_path_b_tl
-  
-  % Remove empty components
-%  \spath_path_remove_empty_components:N \l_@@_split_path_a_tl
-%  \spath_path_remove_empty_components:N \l_@@_split_path_b_tl
+  % Remember if the component is closed
+  \spath_finalaction:NV \l_@@_tmpa_tl \l_@@_split_path_a_tl
 
+  \bool_set:Nn \l_@@_closed_bool
+  {
+    \tl_if_eq_p:NN \l_@@_tmpa_tl \c_spath_closepath_tl
+  }
+
+  % Open it
+  \spath_open:N \l_@@_split_path_a_tl
+
+  % Sort intersections along the component
+  \pgfintersectionsortbyfirstpath
   \spath_intersect:NN \l_@@_split_path_a_tl \l_@@_split_path_b_tl
   
   % If we get intersections
   \int_compare:nT {\pgfintersectionsolutions > 0}
   {
-    % Find the times of the intersections on each path
+    % Find the times of the intersections on the component
     \int_step_inline:nnnn {1} {1} {\pgfintersectionsolutions}
     {
     \pgfintersectiongetsolutiontimes{##1}{\l_@@_split_first_tl}{\l_@@_split_second_tl}
       \seq_put_left:NV \l_@@_split_first_seq \l_@@_split_first_tl
     }
-  }
 
-  \spath_intersect:NN \l_@@_split_path_b_tl \l_@@_split_path_a_tl
-  
-  % If we get intersections
-  \int_compare:nT {\pgfintersectionsolutions > 0}
-  {
-    % Find the times of the intersections on each path
-    \int_step_inline:nnnn {1} {1} {\pgfintersectionsolutions}
+    \tl_set:Nn \l_@@_split_prev_first_tl {-1}
+
+    \seq_map_inline:Nn \l_@@_split_first_seq
     {
-    \pgfintersectiongetsolutiontimes{##1}{\l_@@_split_first_tl}{\l_@@_split_second_tl}
-      \seq_put_left:NV \l_@@_split_second_seq \l_@@_split_first_tl
-    }
-  }
-
-  \tl_set:Nn \l_@@_split_prev_first_tl {-1}
-
-  \seq_map_inline:Nn \l_@@_split_first_seq
-  {
-    \tl_set:Nn \l_@@_split_first_tl {##1}
+      \tl_set:Nn \l_@@_split_first_tl {##1}
     
-    \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_split_first_tl
-    \int_compare:nT
-    {
-      \fp_to_int:n {floor( \l_@@_split_first_tl) }
-      =
-      \fp_to_int:n {floor( \l_@@_split_prev_first_tl) }
-    }
-    {
-      \tl_set:Nx \l_@@_split_first_tl
+      \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_split_first_tl
+      \int_compare:nT
       {
-        \fp_eval:n {
-          floor( \l_@@_split_first_tl )
-          +
-          ( \l_@@_split_first_tl - floor( \l_@@_split_first_tl) )
-          /
-          ( \l_@@_split_prev_first_tl - floor( \l_@@_split_prev_first_tl) )
+        \fp_to_int:n {floor( \l_@@_split_first_tl) }
+        =
+        \fp_to_int:n {floor( \l_@@_split_prev_first_tl) }
+      }
+      {
+        \tl_set:Nx \l_@@_split_first_tl
+        {
+          \fp_eval:n {
+            floor( \l_@@_split_first_tl )
+            +
+            ( \l_@@_split_first_tl - floor( \l_@@_split_first_tl) )
+            /
+            ( \l_@@_split_prev_first_tl - floor( \l_@@_split_prev_first_tl) )
+          }
         }
       }
+      \tl_set_eq:NN \l_@@_split_prev_first_tl \l_@@_tmpa_tl
+    
+      \spath_split_at:NNVV \l_@@_split_path_a_start_tl \l_@@_split_path_a_end_tl  \l_@@_split_path_a_tl \l_@@_split_first_tl
+    
+      \tl_put_left:NV \l_@@_split_path_a_final_tl \l_@@_split_path_a_end_tl
+      \tl_set_eq:NN \l_@@_split_path_a_tl \l_@@_split_path_a_start_tl
+    
     }
-    \tl_set_eq:NN \l_@@_split_prev_first_tl \l_@@_tmpa_tl
-    
-    \spath_split_at:NNVV \l_@@_split_path_a_start_tl \l_@@_split_path_a_end_tl  \l_@@_split_path_a_tl \l_@@_split_first_tl
-    
-    \tl_put_left:NV \l_@@_split_path_a_final_tl \l_@@_split_path_a_end_tl
-    \tl_set_eq:NN \l_@@_split_path_a_tl \l_@@_split_path_a_start_tl
-    
-  }
-    
-  \tl_set:Nn \l_@@_split_prev_second_tl {-1}
 
-  \seq_map_inline:Nn \l_@@_split_second_seq
-  {
-    \tl_set:Nn \l_@@_split_second_tl {##1}
-    
-    \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_split_second_tl
-    \int_compare:nT
-    {
-      \fp_to_int:n {floor( \l_@@_split_second_tl) }
-      =
-      \fp_to_int:n {floor( \l_@@_split_prev_second_tl) }
-    }
-    {
-      \tl_set:Nx \l_@@_split_second_tl
-      {
-        \fp_eval:n {
-          floor( \l_@@_split_second_tl )
-          +
-          ( \l_@@_split_second_tl - floor( \l_@@_split_second_tl) )
-          /
-          ( \l_@@_split_prev_second_tl - floor( \l_@@_split_prev_second_tl) )
-        }
-      }
-    }
-    \tl_set_eq:NN \l_@@_split_prev_second_tl \l_@@_tmpa_tl
 
-    \spath_split_at:NNVV \l_@@_split_path_b_start_tl \l_@@_split_path_b_end_tl  \l_@@_split_path_b_tl\l_@@_split_second_tl
-      
-    \tl_put_left:NV \l_@@_split_path_b_final_tl \l_@@_split_path_b_end_tl
-    \tl_set_eq:NN \l_@@_split_path_b_tl \l_@@_split_path_b_start_tl
-    
-  }
-
-  \tl_put_left:NV \l_@@_split_path_a_final_tl \l_@@_split_path_a_tl
-  \tl_put_left:NV \l_@@_split_path_b_final_tl \l_@@_split_path_b_tl
-
-  \tl_if_empty:NT \l_@@_split_path_a_final_tl
-  {
-    \tl_set_eq:NN \l_@@_split_path_a_final_tl \l_@@_split_path_a_tl
-  }
-  \tl_if_empty:NT \l_@@_split_path_b_final_tl
-  {
-    \tl_set_eq:NN \l_@@_split_path_b_final_tl \l_@@_split_path_b_tl
-  }
+    \tl_put_left:NV \l_@@_split_path_a_final_tl \l_@@_split_path_a_tl
   
-  \spath_remove_empty_components:N \l_@@_split_path_a_final_tl
-  \spath_remove_empty_components:N \l_@@_split_path_b_final_tl
-  
+    \spath_remove_empty_components:N \l_@@_split_path_a_final_tl
+
+    \tl_set_eq:NN \l_@@_split_path_a_tl \l_@@_split_path_a_final_tl
+  }
+
+  \bool_if:NT \l_@@_closed_bool
+  {
+    \spath_join_component:Nn \l_@@_split_path_a_tl {1}
+  }
+
   \tl_gclear:N \g_@@_output_tl
-  \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_split_path_a_final_tl
-  \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_split_path_b_final_tl
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_split_path_a_tl
+  
   \group_end:
 }
-\cs_new_protected_nopar:Npn \spath_split_at_intersections:NNnn #1#2#3#4
+\cs_new_protected_nopar:Npn \spath_split_component_at_intersections:Nnn #1#2#3
 {
-  \@@_split_at_intersections:nn {#3}{#4}
-  \tl_set:Nx #1 {\tl_item:Nn \g_@@_output_tl {1}}
-  \tl_set:Nx #2 {\tl_item:Nn \g_@@_output_tl {2}}
+  \@@_split_component_at_intersections:nn {#2}{#3}
+  \tl_set_eq:NN #1 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_split_at_intersections:NNnn {NNVV, ccVV, ccvv}
+\cs_generate_variant:Nn \spath_split_component_at_intersections:Nnn {NVn, NVV}
+\cs_new_protected_nopar:Npn \spath_split_component_at_intersections:Nn #1#2
+{
+  \spath_split_component_at_intersections:NVn #1#1{#2}
+}
+\cs_generate_variant:Nn \spath_split_component_at_intersections:Nn {cn, cv}
+\cs_new_protected_nopar:Npn \spath_gsplit_component_at_intersections:Nnn #1#2#3
+{
+  \@@_split_component_at_intersections:nn {#2}{#3}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gsplit_component_at_intersections:Nnn {NVn, NVV}
+\cs_new_protected_nopar:Npn \spath_gsplit_component_at_intersections:Nn #1#2
+{
+  \spath_gsplit_component_at_intersections:NVn #1#1{#2}
+}
+\cs_generate_variant:Nn \spath_gsplit_component_at_intersections:Nn {cn, cv}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{
+% \spath_split_path_at_intersections:Nnn,
+% \spath_split_path_at_intersections:Nn,
+% \spath_gsplit_path_at_intersections:Nnn,
+% \spath_gsplit_path_at_intersections:Nn,
+% \spath_split_at_intersections:NNnn,
+% \spath_split_at_intersections:NN,
+% \spath_gsplit_at_intersections:NNnn,
+% \spath_gsplit_at_intersections:NN,
+% }
+% Split paths at their intersections.
+% The \Verb+path+ versions only split the first path.
+% The others split both paths.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_split_path_at_intersections:nn #1#2
+{
+  \group_begin:
+
+  \seq_clear:N \l_@@_split_first_seq
+  \seq_clear:N \l_@@_split_second_seq
+  
+  \spath_components_to_seq:Nn \l_@@_split_first_seq {#1}
+  \seq_map_inline:Nn \l_@@_split_first_seq
+  {
+    \spath_split_component_at_intersections:Nnn \l_@@_tmpa_tl {##1} {#2}
+    \seq_put_right:NV \l_@@_split_second_seq \l_@@_tmpa_tl
+  }
+
+  \tl_gclear:N \g_@@_output_tl
+  \tl_gset:Nx \g_@@_output_tl {\seq_use:Nn \l_@@_split_second_seq {} }
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_split_path_at_intersections:Nnn #1#2#3
+{
+  \@@_split_path_at_intersections:nn {#2}{#3}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_split_path_at_intersections:Nnn {NVn, NVV, cVn, cVV, cvn, cvv}
+\cs_new_protected_nopar:Npn \spath_split_path_at_intersections:Nn #1#2
+{
+  \spath_split_path_at_intersections:NVn #1#1{#2}
+}
+\cs_generate_variant:Nn \spath_split_path_at_intersections:Nn {cv, NV}
+\cs_new_protected_nopar:Npn \spath_gsplit_path_at_intersections:Nnn #1#2#3
+{
+  \@@_split_path_at_intersections:nn {#2}{#3}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gsplit_path_at_intersections:Nnn {NVn, NVV, cVn, cVV, cvn, cvv}
+\cs_new_protected_nopar:Npn \spath_gsplit_path_at_intersections:Nn #1#2
+{
+  \spath_gsplit_path_at_intersections:NVn #1#1{#2}
+}
+\cs_generate_variant:Nn \spath_gsplit_path_at_intersections:Nn {cv, NV}
+\cs_new_protected_nopar:Npn \spath_split_at_intersections:NNnn #1#2#3#4
+{
+  \@@_split_path_at_intersections:nn {#3}{#4}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \@@_split_path_at_intersections:nn {#4}{#3}
+  \tl_set_eq:NN #2 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_split_at_intersections:NNnn {NNVn, NNVV, ccVn, ccVV, ccvn, ccvv}
 \cs_new_protected_nopar:Npn \spath_split_at_intersections:NN #1#2
 {
   \spath_split_at_intersections:NNVV #1#2#1#2
@@ -3451,12 +3486,13 @@ manipulating PGF soft paths}
 \cs_generate_variant:Nn \spath_split_at_intersections:NN {cc}
 \cs_new_protected_nopar:Npn \spath_gsplit_at_intersections:NNnn #1#2#3#4
 {
-  \@@_split_at_intersections:nn {#3}{#4}
-  \tl_gset:Nx #1 {\tl_item:Nn \g_@@_output_tl {1}}
-  \tl_gset:Nx #2 {\tl_item:Nn \g_@@_output_tl {2}}
+  \@@_split_path_at_intersections:nn {#3}{#4}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \@@_split_path_at_intersections:nn {#4}{#3}
+  \tl_gset_eq:NN #2 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_gsplit_at_intersections:NNnn {NNVV, ccVV, ccvv}
+\cs_generate_variant:Nn \spath_gsplit_at_intersections:NNnn {NNVn, NNVV, ccVn, ccVV, ccvn, ccvv}
 \cs_new_protected_nopar:Npn \spath_gsplit_at_intersections:NN #1#2
 {
   \spath_gsplit_at_intersections:NNVV #1#2#1#2
@@ -3465,25 +3501,33 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+%
 % \begin{macro}{
-% \spath_split_at_self_intersections:Nn,
-% \spath_split_at_self_intersections:N,
-% \spath_gsplit_at_self_intersections:Nn,
-% \spath_gsplit_at_self_intersections:N,
+% \spath_split_component_at_self_intersections:Nn,
+% \spath_split_component_at_self_intersections:N,
+% \spath_gsplit_component_at_self_intersections:Nn,
+% \spath_gsplit_component_at_self_intersections:N,
 % }
-% Given a path, split it at points where it self-intersects and store in the given macro.
+% Given a component of a path, split it at points where it self-intersects.
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \@@_split_at_self_intersections:n #1
+\cs_new_protected_nopar:Npn \@@_split_component_at_self_intersections:n #1
 {
   \group_begin:
+  \tl_set:Nn \l_@@_split_path_b_tl {#1}
+
+  % Remember if the component is closed
+  \spath_finalaction:NV \l_@@_tmpa_tl \l_@@_split_path_b_tl
+
+  \bool_set:Nn \l_@@_closed_bool
+  {
+    \tl_if_eq_p:NN \l_@@_tmpa_tl \c_spath_closepath_tl
+  }
   
   % Copy the path
   \tl_set:Nn \l_@@_split_path_b_tl {#1}
 
   % Open the path
   \spath_open:N \l_@@_split_path_b_tl
-  % Remove empty components
-  \spath_remove_empty_components:N \l_@@_split_path_b_tl
   % Ensure beziers don't self-intersect
   \spath_split_curves:N \l_@@_split_path_b_tl
 
@@ -3661,18 +3705,107 @@ manipulating PGF soft paths}
   }
 
   \spath_remove_empty_components:N \l_@@_split_path_b_final_tl
+
+  % Do something with closed
+  \bool_if:NT \l_@@_closed_bool
+  {
+    \spath_join_component:Nn \l_@@_split_path_b_final_tl {1}
+  }
   
   \tl_gclear:N \g_@@_output_tl
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_split_path_b_final_tl
   \group_end:
 }
+\cs_new_protected_nopar:Npn \spath_split_component_at_self_intersections:Nn #1#2
+{
+  \@@_split_component_at_self_intersections:n {#2}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_split_component_at_self_intersections:Nn {NV}
+\cs_new_protected_nopar:Npn \spath_split_component_at_self_intersections:N #1
+{
+  \spath_split_component_at_self_intersections:NV #1#1
+}
+\cs_generate_variant:Nn \spath_split_component_at_self_intersections:N {c}
+\cs_new_protected_nopar:Npn \spath_gsplit_component_at_self_intersections:Nn #1#2
+{
+  \@@_split_component_at_self_intersections:n {#2}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gsplit_component_at_self_intersections:Nn {NV}
+\cs_new_protected_nopar:Npn \spath_gsplit_component_at_self_intersections:N #1
+{
+  \spath_gsplit_component_at_self_intersections:NV #1#1
+}
+\cs_generate_variant:Nn \spath_gsplit_component_at_self_intersections:N {c}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{
+% \spath_split_at_self_intersections:Nn,
+% \spath_split_at_self_intersections:N,
+% \spath_gsplit_at_self_intersections:Nn,
+% \spath_gsplit_at_self_intersections:N,
+% }
+% Split a path at its self intersections.
+% We iterate over the components, splitting each where it meets all the others and itself.
+% To make this more efficient, we split against the components of the original path rather than updating each time.
+%
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_split_at_self_intersections:n #1
+{
+  \group_begin:
+  \spath_components_to_seq:Nn \l_@@_tmpa_seq {#1}
+  \seq_clear:N \l_@@_tmpb_seq
+  \seq_clear:N \l_@@_tmpc_seq
+
+  % Iterate over the components of the original path.
+  \bool_do_until:nn
+  {
+    \seq_if_empty_p:N \l_@@_tmpa_seq
+  }
+  {
+    % Get the next component
+    \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+    % Copy for later
+    \tl_set_eq:NN \l_@@_tmpc_tl \l_@@_tmpa_tl
+    \int_compare:nT
+    {
+      \tl_count:N \l_@@_tmpa_tl > 3
+    }
+    {
+    
+      % Split against itself
+      \spath_split_component_at_self_intersections:N \l_@@_tmpa_tl
+      % Grab the rest of the path
+      \tl_set:Nx \l_@@_tmpb_tl
+      {
+        \seq_use:Nn \l_@@_tmpb_seq {}
+        \seq_use:Nn \l_@@_tmpa_seq {}
+      }
+      % Split against the rest of the path
+      \spath_split_path_at_intersections:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
+    }
+    % Save the split path
+    \seq_put_right:NV \l_@@_tmpc_seq \l_@@_tmpa_tl
+    % Add the original copy to the sequence of processed components
+    \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpc_tl
+  }
+
+  \tl_gclear:N \g_@@_output_tl
+  \tl_gset:Nx \g_@@_output_tl {\seq_use:Nn \l_@@_tmpc_seq {} }
+  \group_end:
+}
+\cs_generate_variant:Nn \@@_split_at_self_intersections:n {V, v}
 \cs_new_protected_nopar:Npn \spath_split_at_self_intersections:Nn #1#2
 {
   \@@_split_at_self_intersections:n {#2}
   \tl_set_eq:NN #1 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_split_at_self_intersections:Nn {NV}
+\cs_generate_variant:Nn \spath_split_at_self_intersections:Nn {NV, cn, cV, cv}
 \cs_new_protected_nopar:Npn \spath_split_at_self_intersections:N #1
 {
   \spath_split_at_self_intersections:NV #1#1
@@ -3684,7 +3817,7 @@ manipulating PGF soft paths}
   \tl_gset_eq:NN #1 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_gsplit_at_self_intersections:Nn {NV}
+\cs_generate_variant:Nn \spath_gsplit_at_self_intersections:Nn {NV, cn, cV, cv}
 \cs_new_protected_nopar:Npn \spath_gsplit_at_self_intersections:N #1
 {
   \spath_gsplit_at_self_intersections:NV #1#1
@@ -3692,7 +3825,6 @@ manipulating PGF soft paths}
 \cs_generate_variant:Nn \spath_gsplit_at_self_intersections:N {c}
 %    \end{macrocode}
 % \end{macro}
-%
 %
 % \begin{macro}{
 % \spath_join_component:Nnn,
@@ -3706,54 +3838,73 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_join_component:nn #1#2
 {
   \group_begin:
-  \spath_components_to_seq:Nn \l_@@_tmpa_seq {#1}
-  \int_compare:nT
-  {
-    #2 == 1
-  }
-  {
-    \tl_clear:N \l_@@_tmpj_tl
-    \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpj_tl
-    
-    \prg_replicate:nn {3}
-    {
-      \tl_set:Nx \l_@@_tmpj_tl {\tl_tail:N \l_@@_tmpj_tl}
-    }
+  \spath_numberofcomponents:Nn \l_@@_tmpa_int {#1}
 
-    \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpj_tl
-  }
-  \bool_if:nT
+  \bool_if:nTF
   {
-    \int_compare_p:n
-    {
-      #2 > 1
-    }
+    \int_compare_p:n { #2 >= 1 }
     &&
-    \int_compare_p:n
-    {
-      #2 <= \seq_count:N \l_@@_tmpa_seq
-    }
+    \int_compare_p:n { #2 <= \l_@@_tmpa_int }
   }
   {
-
-    \seq_clear:N \l_@@_tmpb_seq
-    \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
+    \int_compare:nTF
     {
-      \tl_set:Nn \l_@@_tmpj_tl {##2}
-      \int_compare:nT {##1 = #2}
+      #2 == 1
+    }
+    {
+      \int_compare:nTF
       {
+        \l_@@_tmpa_int == 1
+      }
+      {
+        \tl_set:Nn \l_@@_tmpa_tl {#1}
+        \spath_initialpoint:Nn \l_@@_tmpb_tl {#1}
+        \tl_put_right:NV \l_@@_tmpa_tl \c_spath_closepath_tl
+        \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
+        \tl_gclear:N \g_@@_output_tl
+        \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
+      }
+      {
+        \spath_components_to_seq:Nn \l_@@_tmpa_seq {#1}
+        \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+    
         \prg_replicate:nn {3}
         {
-          \tl_set:Nx \l_@@_tmpj_tl {\tl_tail:N \l_@@_tmpj_tl}
+          \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
         }
-      }
-      \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpj_tl
-    }
 
-    \seq_set_eq:NN \l_@@_tmpa_seq \l_@@_tmpb_seq
+        \seq_put_right:NV \l_@@_tmpa_seq \l_@@_tmpa_tl
+
+        \tl_gclear:N \g_@@_output_tl
+        \tl_gset:Nx \g_@@_output_tl {\seq_use:Nn \l_@@_tmpa_seq {}}
+      }
+    }
+    {
+      \spath_components_to_seq:Nn \l_@@_tmpa_seq {#1}
+      
+      \seq_clear:N \l_@@_tmpb_seq
+      \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
+      {
+        \tl_set:Nn \l_@@_tmpa_tl {##2}
+        \int_compare:nT {##1 = #2}
+        {
+          \prg_replicate:nn {3}
+          {
+            \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+          }
+        }
+        \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpa_tl
+      }
+
+      \tl_gclear:N \g_@@_output_tl
+      \tl_gset:Nx \g_@@_output_tl {\seq_use:Nn \l_@@_tmpb_seq {}}
+    }
+  }
+  {
+    \tl_gclear:N \g_@@_output_tl
+    \tl_gset:Nn \g_@@_output_tl {#1}
   }
 
-  \tl_gset:Nx \g_@@_output_tl {\seq_use:Nn \l_@@_tmpa_seq {} }
   \group_end:
 }
 \cs_new_protected_nopar:Npn \spath_join_component:Nnn #1#2#3
@@ -4631,6 +4782,28 @@ manipulating PGF soft paths}
       \tl_gput_right:NV \g_@@_smuggle_tl \l_@@_tmpa_tl
       \group_end:
       \tl_use:N \g_@@_smuggle_tl
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%
+% Splits first path where it intersects with the second.
+%
+%    \begin{macrocode}
+  split~ at~ intersections~ with/.code~ n~ args={2}{
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      {
+        \spath_split_path_at_intersections:cv
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+      }
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
