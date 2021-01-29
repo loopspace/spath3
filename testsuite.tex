@@ -5,6 +5,9 @@
 \usepackage{expl3}
 \usepackage{spath3}
 
+\usepackage{tikz}
+\usetikzlibrary{intersections}
+
 \ExplSyntaxOn
 
 \msg_new:nnn { test suite } { passed } { Test~ #1~ passed~ for:~ #2}
@@ -160,7 +163,22 @@
 }
 \cs_generate_variant:Nn \test_cs_path:Nnnn {NnnV, NnVV}
 
+\cs_new_protected_nopar:Npn \test_cs_other_path:Nnnn #1#2#3#4
+{
+  \seq_map_indexed_inline:Nn #1
+  {
+    \tl_set:Nx \l_test_expected_tl {\clist_item:nn {#4} {##1}}
+    \test_cs:nnnn
+    { ##1 }
+    { #2 }
+    { \l_test_return_tl #3 {##2} }
+    { \test_check_path_tl:VV \l_test_return_tl \l_test_expected_tl }
+  }
+}
+\cs_generate_variant:Nn \test_cs_other_path:Nnnn {NnnV, NnVV}
+
 \seq_new:N \l_test_paths_seq
+\seq_new:N \l_test_components_seq
 \makeatletter
 \seq_put_right:Nn \l_test_paths_seq {
   \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
@@ -198,6 +216,156 @@
   \pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
   \pgfsyssoftpath@closepathtoken {56.90549pt}{28.45274pt}
 }
+
+\seq_put_right:Nn \l_test_components_seq {
+  \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
+  \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
+}
+\seq_put_right:Nn \l_test_components_seq {
+\pgfsyssoftpath@movetotoken {21.33955pt}{-56.90549pt}
+\pgfsyssoftpath@movetotoken {21.33955pt}{-56.90549pt}
+\pgfsyssoftpath@linetotoken {21.33955pt}{0.0pt}
+\pgfsyssoftpath@linetotoken {-7.11319pt}{0.0pt}
+\pgfsyssoftpath@linetotoken {-7.11319pt}{-56.90549pt}
+\pgfsyssoftpath@closepathtoken {21.33955pt}{-56.90549pt}
+}
+\seq_put_right:Nn \l_test_components_seq {
+\pgfsyssoftpath@movetotoken {-28.45274pt}{14.22636pt}
+\pgfsyssoftpath@movetotoken {-28.45274pt}{14.22636pt}
+\pgfsyssoftpath@linetotoken {-28.45274pt}{42.67911pt}
+\pgfsyssoftpath@linetotoken {28.45274pt}{42.67911pt}
+\pgfsyssoftpath@linetotoken {28.45274pt}{14.22636pt}
+\pgfsyssoftpath@closepathtoken {-28.45274pt}{14.22636pt}
+}
+\seq_put_right:Nn \l_test_components_seq {
+  \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
+  \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
+  \pgfsyssoftpath@curvetosupportatoken {76.12387pt}{39.54845pt}
+  \pgfsyssoftpath@curvetosupportbtoken {94.59259pt}{39.54845pt}
+  \pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
+}
+\seq_put_right:Nn \l_test_components_seq {
+  \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
+  \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
+  \pgfsyssoftpath@curvetosupportatoken {76.12387pt}{39.54845pt}
+  \pgfsyssoftpath@curvetosupportbtoken {94.59259pt}{39.54845pt}
+  \pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
+  \pgfsyssoftpath@closepathtoken {0.0pt}{0.0pt}
+}
+
+\tl_new:N \l_test_components_tl
+\tl_set:Nn \l_test_components_tl
+{
+  \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
+  \pgfsyssoftpath@linetotoken {22.0895731082pt}{11.0447846132pt}
+  \pgfsyssoftpath@movetotoken {22.0895731082pt}{11.0447846132pt}
+  \pgfsyssoftpath@linetotoken {36.4826786939pt}{18.2413361414pt}
+  \pgfsyssoftpath@movetotoken {36.4826786939pt}{18.2413361414pt}
+  \pgfsyssoftpath@linetotoken {47.652657326pt}{23.826324476pt}
+  \pgfsyssoftpath@movetotoken {47.652657326pt}{23.826324476pt}
+  \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
+  ,
+  \pgfsyssoftpath@movetotoken {21.33955pt}{-26.5355990419pt}
+  \pgfsyssoftpath@linetotoken {21.33955pt}{0.0pt}
+  \pgfsyssoftpath@linetotoken {-7.11319pt}{0.0pt}
+  \pgfsyssoftpath@linetotoken {-7.11319pt}{-56.90549pt}
+  \pgfsyssoftpath@linetotoken {21.33955pt}{-56.90549pt}
+  \pgfsyssoftpath@linetotoken {21.33955pt}{-26.5355990419pt}
+  ,
+  \pgfsyssoftpath@movetotoken {16.6994821608pt}{42.67911pt}
+  \pgfsyssoftpath@linetotoken {28.45274pt}{42.67911pt}
+  \pgfsyssoftpath@linetotoken {28.45274pt}{14.22636pt}
+  \pgfsyssoftpath@linetotoken {21.3674386852pt}{14.22636pt}
+  \pgfsyssoftpath@movetotoken {21.3674386852pt}{14.22636pt}
+  \pgfsyssoftpath@linetotoken {-28.45274pt}{14.22636pt}
+  \pgfsyssoftpath@linetotoken {-28.45274pt}{42.67911pt}
+  \pgfsyssoftpath@linetotoken {16.6994821608pt}{42.67911pt}
+  ,
+\pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
+\pgfsyssoftpath@linetotoken {22.0895731082pt}{11.0447846132pt}
+\pgfsyssoftpath@movetotoken {22.0895731082pt}{11.0447846132pt}
+\pgfsyssoftpath@linetotoken {36.4826786939pt}{18.2413361414pt}
+\pgfsyssoftpath@movetotoken {36.4826786939pt}{18.2413361414pt}
+\pgfsyssoftpath@linetotoken {47.652657326pt}{23.826324476pt}
+\pgfsyssoftpath@movetotoken {47.652657326pt}{23.826324476pt}
+\pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
+\pgfsyssoftpath@curvetosupportatoken {60.61213895060001pt}{30.5927695877pt}
+\pgfsyssoftpath@curvetosupportbtoken {64.29090142112955pt}{32.32005166882031pt}
+\pgfsyssoftpath@curvetotoken {67.95253434241103pt}{33.63458624336091pt}
+\pgfsyssoftpath@movetotoken {67.95253434241103pt}{33.63458624336091pt}
+\pgfsyssoftpath@curvetosupportatoken {69.99209064838535pt}{34.36679161144769pt}
+\pgfsyssoftpath@curvetosupportbtoken {72.02633238933044pt}{34.97093911691348pt}
+\pgfsyssoftpath@curvetotoken {74.05711852959721pt}{35.4470287597583pt}
+\pgfsyssoftpath@movetotoken {74.05711852959721pt}{35.4470287597583pt}
+\pgfsyssoftpath@curvetosupportatoken {81.60711373040281pt}{37.21702041341389pt}
+\pgfsyssoftpath@curvetosupportbtoken {89.10934626959721pt}{37.2170204134139pt}
+\pgfsyssoftpath@curvetotoken {96.6593414704028pt}{35.4470287597583pt}
+\pgfsyssoftpath@movetotoken {96.6593414704028pt}{35.4470287597583pt}
+\pgfsyssoftpath@curvetosupportatoken {102.3360153782694pt}{34.1162112995861pt}
+\pgfsyssoftpath@curvetosupportbtoken {108.039690486pt}{31.784781713pt} 
+  \pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
+  ,
+  \pgfsyssoftpath@movetotoken {22.08957pt}{11.04478pt}
+\pgfsyssoftpath@linetotoken {36.48268pt}{18.24133pt}
+\pgfsyssoftpath@movetotoken {36.48268pt}{18.24133pt}
+\pgfsyssoftpath@linetotoken {47.65266pt}{23.82632pt}
+\pgfsyssoftpath@movetotoken {47.65266pt}{23.82632pt}
+\pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
+\pgfsyssoftpath@curvetosupportatoken {60.61214pt}{30.59277pt}
+\pgfsyssoftpath@curvetosupportbtoken {64.29091pt}{32.32005pt}
+\pgfsyssoftpath@curvetotoken {67.95253pt}{33.63458pt}
+\pgfsyssoftpath@movetotoken {67.95253pt}{33.63458pt}
+\pgfsyssoftpath@curvetosupportatoken {69.9921pt}{34.36679pt}
+\pgfsyssoftpath@curvetosupportbtoken {72.02634pt}{34.97093pt}
+\pgfsyssoftpath@curvetotoken {74.05711pt}{35.44702pt}
+\pgfsyssoftpath@movetotoken {74.05711pt}{35.44702pt}
+\pgfsyssoftpath@curvetosupportatoken {81.60712pt}{37.21703pt}
+\pgfsyssoftpath@curvetosupportbtoken {89.10934pt}{37.21703pt}
+\pgfsyssoftpath@curvetotoken {96.65935pt}{35.44702pt}
+\pgfsyssoftpath@movetotoken {96.65935pt}{35.44702pt}
+\pgfsyssoftpath@curvetosupportatoken {102.33601pt}{34.11621pt}
+\pgfsyssoftpath@curvetosupportbtoken {108.03969pt}{31.78477pt}
+\pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
+\pgfsyssoftpath@linetotoken {94.61105pt}{23.65276pt}
+\pgfsyssoftpath@movetotoken {94.61105pt}{23.65276pt}
+\pgfsyssoftpath@linetotoken {77.10579pt}{19.27644pt}
+\pgfsyssoftpath@movetotoken {77.10579pt}{19.27644pt}
+\pgfsyssoftpath@linetotoken {64.43521pt}{16.10881pt}
+\pgfsyssoftpath@movetotoken {64.43521pt}{16.10881pt}
+\pgfsyssoftpath@linetotoken {50.15308pt}{12.53827pt}
+\pgfsyssoftpath@movetotoken {50.15308pt}{12.53827pt}
+\pgfsyssoftpath@linetotoken {34.31514pt}{8.57878pt}
+\pgfsyssoftpath@movetotoken {34.31514pt}{8.57878pt}
+\pgfsyssoftpath@linetotoken {23.25728pt}{5.81432pt}
+\pgfsyssoftpath@movetotoken {23.25728pt}{5.81432pt}
+\pgfsyssoftpath@linetotoken {0.0pt}{0.0pt}
+\pgfsyssoftpath@linetotoken {22.08957pt}{11.04478pt}
+}
+
+\tl_new:N \l_test_intersection_path_tl
+\tl_set:Nn \l_test_intersection_path_tl
+{{
+  \pgfsyssoftpath@movetotoken {14.22636pt}{-28.45274pt}
+  \pgfsyssoftpath@curvetosupportatoken {48.0399pt}{-28.45274pt}
+  \pgfsyssoftpath@curvetosupportbtoken {-5.36081pt}{56.90549pt}
+  \pgfsyssoftpath@curvetotoken {28.45273pt}{56.90549pt}
+  \pgfsyssoftpath@curvetosupportatoken {62.26627pt}{56.90549pt}
+  \pgfsyssoftpath@curvetosupportbtoken {8.86555pt}{-28.45274pt}
+  \pgfsyssoftpath@curvetotoken {42.6791pt}{-28.45274pt}
+  \pgfsyssoftpath@curvetosupportatoken {76.49263pt}{-28.45274pt}
+  \pgfsyssoftpath@curvetosupportbtoken {23.09192pt}{56.90549pt}
+  \pgfsyssoftpath@curvetotoken {56.90546pt}{56.90549pt}
+  \pgfsyssoftpath@curvetosupportatoken {90.719pt}{56.90549pt}
+  \pgfsyssoftpath@curvetosupportbtoken {37.31828pt}{-28.45274pt}
+  \pgfsyssoftpath@curvetotoken {71.13182pt}{-28.45274pt}
+  \pgfsyssoftpath@curvetosupportatoken {104.94536pt}{-28.45274pt}
+  \pgfsyssoftpath@curvetosupportbtoken {51.54465pt}{56.90549pt}
+  \pgfsyssoftpath@curvetotoken {85.35818pt}{56.90549pt}
+  \pgfsyssoftpath@curvetosupportatoken {119.17172pt}{56.90549pt}
+  \pgfsyssoftpath@curvetosupportbtoken {65.77101pt}{-28.45274pt}
+  \pgfsyssoftpath@curvetotoken {99.58455pt}{-28.45274pt}
+}}
+  
 
 \tl_new:N \l_test_paths_tl
 \tl_set:Nn \l_test_paths_tl
@@ -683,6 +851,11 @@
 
 \test_cs_path:NnVV \l_test_paths_seq { spath_append:Nnn } \l_test_another_path_tl \l_test_append_paths_tl
 \test_cs_path:NnVV \l_test_paths_seq { spath_gappend:Nnn } \l_test_another_path_tl \l_test_append_paths_tl
+
+\test_cs_other_path:NnVV \l_test_paths_seq { spath_prepend:Nnn } \l_test_another_path_tl \l_test_append_paths_tl
+\test_cs_other_path:NnVV \l_test_paths_seq { spath_gprepend:Nnn } \l_test_another_path_tl \l_test_append_paths_tl
+
+\test_cs_path:NnVV \l_test_components_seq { spath_split_component_at_intersections:Nnn } \l_test_intersection_path_tl \l_test_components_tl
 
 
 \ExplSyntaxOff
