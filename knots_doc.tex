@@ -393,8 +393,10 @@ The \Verb+flip crossing=<number>+ key flips the \Verb+<number>+ crossing.
 \item \DescribeMacro{background colour} \DescribeMacro{background color}
 The keys \Verb+background colour=<colour>+ and  \Verb+background color=<color>+ set the background colour for the crossings.
 
-\item \DescribeMacro{intersection <number>}
-The style in \Verb+intersection <number>+ is applied just before that crossing is drawn so can be used to modify the crossing style just for that crossing.
+\item \DescribeMacro{every intersection>} \DescribeMacro{intersection <number>}
+The style in \Verb+every intersection+ is applied before rendering each crossing, with \Verb+intersection <number>+ applied just before that specific crossing.
+These can be used to change how the over-strands are rendered when they are redrawn.
+For an example on using \Verb+every intersection+, see Section~\ref{sec:celtic}.
 
 
 \item \DescribeMacro{draft mode}
@@ -437,6 +439,7 @@ inner sep=0pt
 
 
 \subsection{Celtic Knots}
+\label{sec:celtic}
 
 By ``Celtic knot'' here, I mean a knot drawn in a way to suggest a carved object.
 Usually, this is achieved by using the \Verb+double+ style to outline the path.
