@@ -83,6 +83,23 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 
 \begin{document}
 
+\begin{tikzpicture}[
+  use Hobby shortcut,
+  knot/.style 2 args={
+    every #1 component/.style={ultra thick, draw, red},
+    #1 component 1/.style={blue},
+    spath/.cd,
+    split at self intersections=#1,
+    remove empty components=#1,
+    insert gaps after components={#1}{8pt}{#2},
+    spot weld=#1,
+    render components=#1
+  }
+]
+\path[spath/save=trefoil] ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) } (90:2);
+\tikzset{knot={trefoil}{1,3,5}}
+\end{tikzpicture}
+
 \begin{tikzpicture}
 \draw[spath/save=oval] (0,0) to[out=0,in=0] (0,2) to[out=180,in=180] (0,0);
 \foreach \k in {0,...,9} {
@@ -345,22 +362,6 @@ arc[radius=.5cm,start angle=90, delta angle=-180]
 
 \end{tikzpicture}
 
-\begin{tikzpicture}[
-  use Hobby shortcut,
-  knot/.style 2 args={
-    every #1 component/.style={ultra thick, draw, red},
-    #1 component 1/.style={blue},
-    spath/.cd,
-    split at self intersections=#1,
-    remove empty components=#1,
-    insert gaps after components={#1}{8pt}{#2},
-    spot weld=#1,
-    render components=#1
-  }
-]
-\path[spath/save=trefoil] ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) } (90:2);
-\tikzset{knot={trefoil}{1,3,5}}
-\end{tikzpicture}
 
 \end{document}
 
