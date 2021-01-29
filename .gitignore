@@ -11,6 +11,7 @@
 *.ins
 *.out
 *.png
+*.tmp
 README.txt
 spath3.sty
 tikzlibrarycalligraphy.code.tex
