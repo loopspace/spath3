@@ -4308,20 +4308,40 @@ manipulating PGF soft paths}
   \spath_finalpoint:Nn \l_@@_tmpa_tl {#1}
   \tl_set:Nx \l_@@_tmpa_tl
   {
-    \exp_not:c {tikz@lastx}=\tl_item:Nn \l_@@_tmpa_tl {1}
-    \exp_not:c {tikz@lasty}=\tl_item:Nn \l_@@_tmpa_tl {2}
-    \exp_not:c {tikz@lastxsaved}=\tl_item:Nn \l_@@_tmpa_tl {1}
-    \exp_not:c {tikz@lastysaved}=\tl_item:Nn \l_@@_tmpa_tl {2}
+    \exp_not:c {pgf@x}=\tl_item:Nn \l_@@_tmpa_tl {1}
+    \exp_not:c {pgf@y}=\tl_item:Nn \l_@@_tmpa_tl {2}
+  }
+  \use:c {pgf@process}{%
+    \tl_use:N \l_@@_tmpa_tl
+    \pgftransforminvert
+    \use:c {pgf@pos@transform@glob}
+  }
+  \tl_set:Nx \l_@@_tmpa_tl
+  {
+    \exp_not:c {tikz@lastx}=\exp_not:c {pgf@x}
+    \exp_not:c {tikz@lasty}=\exp_not:c {pgf@y}
+    \exp_not:c {tikz@lastxsaved}=\exp_not:c {pgf@x}
+    \exp_not:c {tikz@lastysaved}=\exp_not:c {pgf@y}
   }
   \tl_use:N \l_@@_tmpa_tl
   \spath_finalmovepoint:Nn \l_@@_tmpa_tl {#1}
+  \tl_set:Nx \l_@@_tmpa_tl
+  {
+    \exp_not:c {pgf@x}=\tl_item:Nn \l_@@_tmpa_tl {1}
+    \exp_not:c {pgf@y}=\tl_item:Nn \l_@@_tmpa_tl {2}
+  }
+  \use:c {pgf@process}{%
+    \tl_use:N \l_@@_tmpa_tl
+    \pgftransforminvert
+    \use:c {pgf@pos@transform@glob}
+  }
   \ifpgfsyssoftpathmovetorelevant%
   \tl_gset_eq:cN {pgfsyssoftpath@lastmoveto} \l_@@_tmpa_tl
   \fi
   \tl_set:Nx \l_@@_tmpa_tl
   {
-    \exp_not:c {tikz@lastmovetox}=\tl_item:Nn \l_@@_tmpa_tl {1}
-    \exp_not:c {tikz@lastmovetoy}=\tl_item:Nn \l_@@_tmpa_tl {2}
+    \exp_not:c {tikz@lastmovetox}=\exp_not:c {pgf@x}
+    \exp_not:c {tikz@lastmovetoy}=\exp_not:c {pgf@y}
   }
   \tl_use:N \l_@@_tmpa_tl
 }
@@ -4513,6 +4533,25 @@ manipulating PGF soft paths}
     {
       \spath_set_current_path:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \spath_set_tikz_coords:v
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%
+% Restores the reverse of a soft path to the current path.
+%
+%    \begin{macrocode}
+  restore~ reverse/.code={
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \spath_reverse:Nv
+      \l_@@_reverse_tl
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \spath_set_current_path:N \l_@@_reverse_tl
       \spath_set_tikz_coords:v
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
@@ -5184,8 +5223,12 @@ manipulating PGF soft paths}
     \msg_warning:nnx { spath3 } { missing soft path } { \tl_use:N \l_@@_tmpa_tl }
     \tl_gset_eq:NN \g_@@_smuggle_tl \pgfpointorigin
   }
-    \group_end:
+  \group_end:
+  \use:c {pgf@process}{%
     \tl_use:N \g_@@_smuggle_tl
+    \pgftransforminvert
+    \use:c {pgf@pos@transform@glob}
+  }
 }
 
 \ExplSyntaxOff

@@ -83,6 +83,30 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \ExplSyntaxOff
 \begin{document}
 
+\begin{tikzpicture}[scale=.5]
+\fill
+(0,0) circle[radius=2pt]
+(2,1) circle[radius=2pt]
+(4,1) circle[radius=2pt]
+(4,2) circle[radius=2pt]
+;
+\draw[spath/save=a, line width=5pt, orange] (2,1) -- +(2,0) [show last coords];
+\tikzset{spath/show=a}
+\draw[spath/restore=a,show last coords] -- +(0,1);
+\tikzset{spath/show=a}
+\begin{scope}[scale=3]
+\draw[spath/restore=a,show last coords] -- +(0,1);
+\end{scope}
+\end{tikzpicture}
+\end{document}
+
+\begin{tikzpicture}
+\path[spath/save=figure8] ([closed]0,0) .. (1.5,1) .. (.5,2) .. (-.5,1) .. (.5,0) .. (0,-.5) .. (-.5,0) .. (.5,1) .. (-.5,2) .. (-1.5,1) .. (0,0);
+\tikzset{spath/knot={figure8}{8pt}{2,4,6,8}}
+\path (0,-.7);
+\end{tikzpicture}
+\end{document}
+
 \begin{tikzpicture}
 \path[spath/save=curve,draw] (0,0) to[out=-90,in=180] (2,0) to[out=0,in=90] (4,0) to[out=-90,in=-90] (2,0) to[out=90,in=90] cycle;
 \tikzset{
@@ -121,7 +145,7 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
   spath/knot={6-3}{8pt}{},%2,4,...,12}
 }
 \end{tikzpicture}
-\end{document}
+
 \begin{tikzpicture}[
   use Hobby shortcut,
   knot/.style 2 args={
