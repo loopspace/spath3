@@ -45,7 +45,6 @@
 }
 
 \begin{document}
-%\tikzset{external/force remake=true}
 \begin{figure}
 \tikzsetnextfilename{unknot}
 \centering
@@ -58,11 +57,14 @@
 
 \begin{figure}
 %% Trefoil
+%\tikzset{external/export next=false}
 \tikzsetnextfilename{trefoil}
 \centering
 \begin{tikzpicture}
 \path[spath/save=trefoil] ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) } (90:2);
-\tikzset{spath/knot={trefoil}{8pt}{1,3,5}}
+\tikzset{
+  spath/knot={trefoil}{8pt}{1,3,5},
+}
 \end{tikzpicture}
 \caption{Trefoil}
 \autolabel
@@ -141,8 +143,10 @@
 \tikzsetnextfilename{6-3}
 %\tikzset{external/export next=false}
 \begin{tikzpicture}
-\path[spath/save=6-3,scale=1.3] ([closed]0,0) .. (1.5,1) .. (.5,2) .. (-.5,1.5) .. (-.5,2.5) .. (.5,2.5) .. (.5,.5) .. (-1,0) .. (0,-.5) .. (-.5,2) .. (-1.5,1) .. (0,0);
-\tikzset{spath/knot={6-3}{8pt}{2,4,...,12}}
+\path[spath/save=6-3,scale=1.3] ([closed]0,0) .. (1.5,1) .. (.5,2) .. (-.7,1.5) .. (-.7,2.5) .. (.5,2.5) .. (.5,.5) .. (-1,0) .. (0,-.5) .. (-.5,2) .. (-1.5,1) .. (0,0);
+\tikzset{
+  spath/knot={6-3}{8pt}{2,4,...,12}
+}
 \end{tikzpicture}
 \caption{\(6_3\)}
 \autolabel
