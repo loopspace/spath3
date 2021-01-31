@@ -4300,10 +4300,10 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\spath_set_tikz_coords:n}
+% \begin{macro}{\spath_set_tikz_data:n}
 % Sets the \Verb+\tikz@lastx+ and other coordinates from the soft path.
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \spath_set_tikz_coords:n #1
+\cs_new_protected_nopar:Npn \spath_set_tikz_data:n #1
 {
   \spath_finalpoint:Nn \l_@@_tmpa_tl {#1}
   \tl_set:Nx \l_@@_tmpa_tl
@@ -4325,6 +4325,9 @@ manipulating PGF soft paths}
   }
   \tl_use:N \l_@@_tmpa_tl
   \spath_finalmovepoint:Nn \l_@@_tmpa_tl {#1}
+  \ifpgfsyssoftpathmovetorelevant%
+  \tl_gset_eq:cN {pgfsyssoftpath@lastmoveto} \l_@@_tmpa_tl
+  \fi
   \tl_set:Nx \l_@@_tmpa_tl
   {
     \exp_not:c {pgf@x}=\tl_item:Nn \l_@@_tmpa_tl {1}
@@ -4335,17 +4338,61 @@ manipulating PGF soft paths}
     \pgftransforminvert
     \use:c {pgf@pos@transform@glob}
   }
-  \ifpgfsyssoftpathmovetorelevant%
-  \tl_gset_eq:cN {pgfsyssoftpath@lastmoveto} \l_@@_tmpa_tl
-  \fi
   \tl_set:Nx \l_@@_tmpa_tl
   {
     \exp_not:c {tikz@lastmovetox}=\exp_not:c {pgf@x}
     \exp_not:c {tikz@lastmovetoy}=\exp_not:c {pgf@y}
   }
   \tl_use:N \l_@@_tmpa_tl
+  \tl_clear_new:c {tikz@timer}
+  \tl_set:cn {tikz@timer}
+  {
+    \spath_reallength:Nn \l_@@_tmpa_int {#1}
+    \tl_set_eq:Nc \l_@@_tmpb_tl {tikz@time}
+    \tl_set:Nx \l_@@_tmpb_tl
+    {\fp_to_decimal:n {(\l_@@_tmpb_tl) * (\l_@@_tmpa_int)}}
+    \spath_transformation_at:NnV \l_@@_tmpc_tl {#1} \l_@@_tmpb_tl
+    
+    \tl_set:Nx \l_@@_tmpa_tl
+    {
+      \exp_not:N \pgfpoint
+      { \tl_item:Nn \l_@@_tmpc_tl {5} }
+      { \tl_item:Nn \l_@@_tmpc_tl {6} }
+    }
+    \exp_args:NV \pgftransformshift \l_@@_tmpa_tl
+
+    \ifpgfresetnontranslationattime
+    \pgftransformresetnontranslations
+    \fi
+
+    \ifpgfslopedattime
+
+    \tl_set:Nx \l_@@_tmpa_tl
+    {
+      { \tl_item:Nn \l_@@_tmpc_tl {1} }
+      { \tl_item:Nn \l_@@_tmpc_tl {2} }
+      { \tl_item:Nn \l_@@_tmpc_tl {3} }
+      { \tl_item:Nn \l_@@_tmpc_tl {4} }
+    }
+    \ifpgfallowupsidedownattime
+    \else
+    \fp_compare:nT { \tl_item:Nn \l_@@_tmpc_tl {4} < 0}
+    {
+      \tl_set:Nx \l_@@_tmpa_tl
+      {
+        { \fp_eval:n { - (\tl_item:Nn \l_@@_tmpc_tl {1})} }
+        { \fp_eval:n { - (\tl_item:Nn \l_@@_tmpc_tl {2})} }
+        { \fp_eval:n { - (\tl_item:Nn \l_@@_tmpc_tl {3})} }
+        { \fp_eval:n { - (\tl_item:Nn \l_@@_tmpc_tl {4})} }
+      }
+    }
+    \fi
+    \tl_put_right:Nn \l_@@_tmpa_tl {{\pgfpointorigin}}
+    \exp_last_unbraced:NV \pgftransformcm \l_@@_tmpa_tl
+    \fi
+  }
 }
-\cs_generate_variant:Nn \spath_set_tikz_coords:n {V, v}
+\cs_generate_variant:Nn \spath_set_tikz_data:n {V, v}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4533,7 +4580,7 @@ manipulating PGF soft paths}
     {
       \spath_set_current_path:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \spath_set_tikz_coords:v
+      \spath_set_tikz_data:v
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
     {
@@ -4552,7 +4599,7 @@ manipulating PGF soft paths}
       \l_@@_reverse_tl
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_set_current_path:N \l_@@_reverse_tl
-      \spath_set_tikz_coords:v
+      \spath_set_tikz_data:v
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
     {
@@ -4599,7 +4646,7 @@ manipulating PGF soft paths}
       \l_@@_current_tl
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_coords:V \l_@@_current_tl
+      \spath_set_tikz_data:V \l_@@_current_tl
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -4671,7 +4718,7 @@ manipulating PGF soft paths}
       \spath_get_current_path:N \l_@@_current_tl
       \spath_weld:NV \l_@@_current_tl \l_@@_reverse_tl
       \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_coords:V \l_@@_current_tl
+      \spath_set_tikz_data:V \l_@@_current_tl
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -4690,7 +4737,7 @@ manipulating PGF soft paths}
       \l_@@_current_tl
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_coords:V \l_@@_current_tl
+      \spath_set_tikz_data:V \l_@@_current_tl
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -4710,7 +4757,7 @@ manipulating PGF soft paths}
       \spath_get_current_path:N \l_@@_current_tl
       \spath_append:NV \l_@@_current_tl \l_@@_reverse_tl
       \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_coords:V \l_@@_current_tl
+      \spath_set_tikz_data:V \l_@@_current_tl
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }

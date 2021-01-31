@@ -65,9 +65,14 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
       \the\tikz@lastx,
       \the\tikz@lasty), (%
       \the\tikz@lastxsaved,
-      \the\tikz@lastysaved)%
+      \the\tikz@lastysaved), (%
+      \the\tikz@lastmovetox,
+      \the\tikz@lastmovetoy)%
     }%
     \show\tikz@last@coords
+  },
+  show tikz timer/.code={
+    \show\tikz@timer
   }
 }
 \makeatother
@@ -83,20 +88,45 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \ExplSyntaxOff
 \begin{document}
 
-\begin{tikzpicture}[scale=.5]
-\fill
-(0,0) circle[radius=2pt]
-(2,1) circle[radius=2pt]
-(4,1) circle[radius=2pt]
-(4,2) circle[radius=2pt]
+\begin{tikzpicture}
+\path[spath/save=a] (0,0) -- node[pos=.5,auto] {\(a\)}
+ ++(2,0) to[out=0,in=-90] node[pos=.5,auto] {\(b\)} ++(2,2) to[out=90,in=0] node[pos=.5,auto] {\(c\)} ++(-2,2)
 ;
-\draw[spath/save=a, line width=5pt, orange] (2,1) -- +(2,0) [show last coords];
+\draw[spath/restore=a]
+node[pos=.16,auto,swap] {\(a\)}
+node[pos=.5,auto,swap,sloped] {\(b\)}
+node[pos=.84,auto,swap,sloped,allow upside down] {\(c\)}
+;
+\end{tikzpicture}
+\end{document}
+
+\begin{tikzpicture}
+\begin{scope}[scale=.5, rotate=30, xscale=2, shift={(3,-1)}]
+\path
+(0,0) node[circle,fill] {}
+(2,1) node[circle,fill] {}
+++(2,0) node[circle,fill] {}
++(0,1) node[circle,fill] {}
++(0,3) node[circle,fill] {}
++(1,0) node[circle,fill] {}
+;
+\draw[spath/save global=a, line width=5pt, orange] (2,1) -- ++(1,1) -- +(1,-1) [show last coords];
+\end{scope}
+\path
+(spath cs:a 1) node[circle,fill=blue] {}
++(0,1) node[circle,fill=blue] {}
++(0,3) node[circle,fill=blue] {}
++(1,0) node[circle,fill=blue] {}
+;
+
 \tikzset{spath/show=a}
 \draw[spath/restore=a,show last coords] -- +(0,1);
 \tikzset{spath/show=a}
 \begin{scope}[scale=3]
 \draw[spath/restore=a,show last coords] -- +(0,1);
 \end{scope}
+\draw[spath/restore=a] to[out=-90,in=-90] +(1,0);
+\draw[spath/restore=a] to[out=-90,in=-90] cycle;
 \end{tikzpicture}
 \end{document}
 
