@@ -4821,10 +4821,10 @@ manipulating PGF soft paths}
   },
 %    \end{macrocode}
 %
-% Inserts the named path into the current path as-is, meaning without transforming or welding it, but removes the move at the start.
+% Appends the named path to the current path without translating it.
 %
 %    \begin{macrocode}
-  insert~ no~ move/.code={
+  append~ no~ move/.code={
     \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_get_current_path:N \l_@@_current_tl
@@ -4841,10 +4841,10 @@ manipulating PGF soft paths}
   },
 %    \end{macrocode}
 %
-% Inserts the reverse of the named path without an intervening move.
+% Appends the reverse of the named path without translating it.
 % 
 %    \begin{macrocode}
-  insert~ reverse~ no~ move/.code={
+  append~ reverse~ no~ move/.code={
     \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:Nv
