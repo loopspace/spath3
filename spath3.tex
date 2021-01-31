@@ -63,7 +63,7 @@
   However, over time I've found myself wanting to use the routines of this package at a higher level and so have designed some user-level interfaces.
   This document documents those.
 
-  To clarify some terminology, paths are composed of \emph{segment} and \emph{components}.
+  To clarify some terminology used in this document (and more generally, this package), I regard paths as being composed of \emph{segments} and \emph{components}.
 A \emph{segment} is a minimal drawing piece.
 Thus it might be a straight line or a B\'ezier curve.
 A \emph{component} is a minimal connected section of the path.
@@ -78,7 +78,7 @@ For ease of implementation (and to enable a copperplate pen in the calligraphy p
 \end{lstlisting}
 
 The \texttt{spath3} TikZ library defines a set of keys that can be issued to muck about with soft paths.
-These are all defined in the \texttt{spath} family, so all the following keys should be prefixed by \texttt{spath/}, or the key \texttt{spath/.cd} needs to be used beforehand.
+These are all defined in the \texttt{spath} family, so all the following keys should be prefixed by \texttt{spath/}, or the key \texttt{spath/.cd} needs to be used beforehand (but note that as yet I haven't implemented sending unknown keys back to the main \Verb+tikz+ directory).
 
 \subsection{Saving and Using Soft Paths}
 
@@ -104,22 +104,27 @@ The other is to provide a way to link a soft path with a set of TikZ styles (thi
 \end{syntax}
 
 Saves the current soft path globally.
+Useful when the original path is inside a scope or even another tikzpicture.
 \end{function}
 
-\begin{function}{clone}
+\begin{function}{clone, clone globally}
 \begin{syntax}
 |clone=|\marg{target}\marg{source}
+|clone globally=|\marg{target}\marg{source}
 \end{syntax}
 
 Clones one soft path into another.
+In the second, the clone is global (the original need not be).
 \end{function}
 
-\begin{function}{restore}
+\begin{function}{restore, restore reverse}
 \begin{syntax}
 |restore=|\meta{name}
+|restore reverse=|\meta{name}
 \end{syntax}
 
 Restores a previously saved soft path to the current path.
+The \Verb+reverse+ version reverses the soft path first.
 This happens immediately so can be issued in the options to the main command and then the path can be extended with normal drawing commands.
 Any keys that affect the soft path directly should be applied \emph{before} this one.
 
@@ -127,18 +132,29 @@ One thing should be noted about transformations.
 By the time a soft path is built, all available transformations have been applied.
 This means that when re-inserting a soft path back into a high level command (such as |\draw|), the effect of existing transformations might produce some confusing effects.
 When restoring a path then the library tries to set the last point correctly, but depending on how this is used it can result in transformations being applied twice.
+
+Restoring a path also sets things right for positioning nodes along the path.
+Using the \Verb+pos=D+ key on a node positions that node at a particular point on the path.
+Exactly how the parameter is interpreted is the same as for the \Verb+spath+ coordinate system described in Section~\ref{sec:coordinates}.
 \end{function}
 
 \begin{function}{append}
 \begin{syntax}
 |append=|\meta{name}
+|append reverse=|\meta{name}
+|append no move=|\meta{name}
+|append reverse no move=|\meta{name}
 \end{syntax}
 
-This inserts a soft path into the path at the current point, it is therefore more suited to being used part way through a path construction.
+This inserts a soft path, or its reverse, into the path at the current point, it is therefore more suited to being used part way through a path construction.
 In a sense, it is a little like a \texttt{pic} in that it enables the user to construct a path segment early to be reused at various places.
 
-The path is \emph{welded} on to the current path, meaning that it starts from the current point and there is no \texttt{move}.
+The path is \emph{welded} on to the current path, meaning that the intervening \Verb+move+ is removed.
 This is particularly useful for creating filled regions.
+The first two versions translate the path so that it starts at the last point on the existing path, the second two versions don't do this translation.
+
+As with restoring a path, the last point and node positioning machinery is established.
+The positioning is relative to the appended part of the path.
 \end{function}
 
 \begin{function}{reverse}
@@ -151,35 +167,14 @@ This doesn't do any actually drawing.
 The effect is local, but if you want to work with both the original path and its reversal in the same path then use the \texttt{clone} key to copy it first.
 \end{function}
 
-\begin{function}{append reverse}
-\begin{syntax}
-|append reverse=|\meta{name}
-\end{syntax}
-
-Like \texttt{append} except that the inserted path is reversed first.
-\end{function}
-
-\begin{function}{insert}
+\begin{function}{insert, insert reverse}
 \begin{syntax}
 |insert=|\meta{name}
+|insert reverse=|\meta{name}
 \end{syntax}
 
-Like \texttt{append} except that it doesn't move the inserted path and there is a move between the current path and the inserted path.
-\end{function}
-
-\begin{function}{
-  shorten at end,
-shorten at start,
-shorten at both ends
-}
-\begin{syntax}
-|shorten at end=|\marg{name}\marg{dimen}
-\end{syntax}
-
-Shortens the soft path by the dimension from one or both ends.
-This shortens the soft path along its length so that it is guaranteed that the shorter path traces a subset of the original path.
-For B\'ezier curves, however, the amount of shortening is approximate and is better for shorter distances.
-If wanting to shorten by a large amount it is better to shorten by a small amount a number of times.
+Like \Verb+append+ except that it doesn't move the inserted path.
+The \Verb+reverse+ version reverses the path first.
 \end{function}
 
 \begin{function}{translate}
@@ -223,11 +218,16 @@ This inserts breaks into a pair of paths at their mutual intersections.
 
 \begin{function}{get components of}
 \begin{syntax}
-|get components of=|\marg{macro}\marg{path}
+|get components of=|\marg{path}\marg{macro}
+|\getComponentOf|\marg{macro}\marg{number}
 \end{syntax}
   
 This splits the path into a list of its components, which are stored in the macro.
 The macro can be used in a |\foreach|.
+
+The macro consists of a comma separated list of names of the components (the actual names used are of the form \Verb+anonymous_N+).
+To access an individual component, use the command \Verb+\getComponentOf+.
+This can be used directly in place of a path name in any other key, such as \Verb+restore+, (it is just the \LaTeX3 command \Verb+\clist_item:Nn+).
 \end{function}
 
 \begin{function}{render components}
@@ -254,7 +254,7 @@ It applies the following styles (in this order):
 \end{syntax}
 
 This inserts a gap between components of a path by shortening the end of the specified component and start of the next one.
-The list of components is passed through a |\foreach| loop so that syntax like |2,4,...,16|.
+The list of components is passed through a |\foreach| loop so that syntax like |2,4,...,16| can be used.
 \end{function}
 
 \begin{function}{join components}
@@ -262,7 +262,8 @@ The list of components is passed through a |\foreach| loop so that syntax like |
 |join components=|\marg{path}\marg{components}
 \end{syntax}
 
-This removes the \texttt{move} between the given component and the previous one.
+This removes the |move| between each of the given components and the previous one.
+The list of components is processed by |\foreach|.
 If the component is the first one then it is joined to the last component.
 \end{function}
 
@@ -285,12 +286,14 @@ This removes empty components of the path (which consist of simply a move).
 \subsection{Shortening Paths}
 
 \begin{function}{
-shorten path at end,
-shorten path at start,
-shorten path at both ends
+shorten at end,
+shorten at start,
+shorten at both ends
 }
 \begin{syntax}
-|shorten path at end=|\marg{path}\marg{length}
+|shorten at start=|\marg{path}\marg{length}
+|shorten at end=|\marg{path}\marg{length}
+|shorten at both ends=|\marg{path}\marg{length}
 \end{syntax}
 
 This shortens a path by the given amount from the specified end.
@@ -298,6 +301,7 @@ The shortening is done so that it guarantees that it lies along the original pat
 This is particularly true for B\'ezier paths and if there is a very short segment at the end.
 
 It uses the derivative at the end to work out how much to shorten by.
+If wanting to shorten by a large amount it is better to shorten by a small amount a number of times.
 \end{function}
 
 \subsection{Exporting Paths}
@@ -349,6 +353,7 @@ The components can be styled using the keys as described in |render components|.
 \end{function}
 
 \subsection{Coordinates}
+\label{sec:coordinates}
 
 Soft paths are not natural TikZ objects and so when replaced back into a TikZ path construction then they don't fully interact with other TikZ things, like placing nodes at points on the path.
 To make things a little easier there is defined a coordinate system which identifies a point at a certain location along a soft path and keys which apply a transformation.
@@ -441,6 +446,17 @@ The intention with the second key is that it is similar to what happens with the
   \node[transform shape, spath/upright transform to={soval}{0.\k}] {k};
 }
 \end{scope}
+\end{tikzpicture}
+\end{example}
+
+\item Node placement.
+
+\begin{example}
+\begin{tikzpicture}
+\path[spath/save=curve] (0,0) to[out=0,in=180] +(1,1);
+
+\draw (0,0) -- (2,0) [spath/append=curve] node[pos=.5,auto,sloped] {node} -- +(2,0);
+
 \end{tikzpicture}
 \end{example}
 
