@@ -1184,7 +1184,7 @@ manipulating PGF soft paths}
 % \spath_gtranslate:Nnnn,
 % \spath_gtranslate:Nnn
 % }
-% Translates a path.
+% Translates a path by an amount.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \@@_translate:nnn #1#2#3
 {
@@ -1213,6 +1213,7 @@ manipulating PGF soft paths}
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpb_tl
   \group_end:
 }
+\cs_generate_variant:Nn \@@_translate:nnn {nVV}
 \cs_new_protected_nopar:Npn \spath_translate:Nnnn #1#2#3#4
 {
   \@@_translate:nnn {#2}{#3}{#4}
@@ -1251,6 +1252,78 @@ manipulating PGF soft paths}
   \spath_gtranslate:Nnn #1 #2
 }
 \cs_generate_variant:Nn \spath_gtranslate:Nn {NV}
+%    \end{macrocode}
+% \end{macro}
+%
+% 
+%
+% \begin{macro}{
+% \spath_translate_to:Nnnn,
+% \spath_translate_to:Nnn,
+% \spath_gtranslate_to:Nnnn,
+% \spath_gtranslate_to:Nnn
+% }
+% Translates a path so that it starts at a point.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_translate_to:nnn #1#2#3
+{
+  \group_begin:
+  \spath_initialpoint:Nn \l_@@_tmpd_tl {#1}
+
+  \dim_set:Nn \l_@@_tmpa_dim
+  {
+    #2
+    -
+    \tl_item:Nn \l_@@_tmpd_tl {1}
+  }
+  \dim_set:Nn \l_@@_tmpb_dim
+  {
+    #3
+    -
+    \tl_item:Nn \l_@@_tmpd_tl {2}
+  }
+
+  \@@_translate:nVV {#1} \l_@@_tmpa_dim \l_@@_tmpb_dim
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_translate_to:Nnnn #1#2#3#4
+{
+  \@@_translate_to:nnn {#2}{#3}{#4}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_translate_to:Nnnn {NVxx, NVVV, NVnn}
+\cs_new_protected_nopar:Npn \spath_translate_to:Nnn #1#2#3
+{
+  \spath_translate_to:NVnn #1#1{#2}{#3}
+}
+\cs_generate_variant:Nn \spath_translate_to:Nnn {NVV, cnn, cVV}
+\cs_new_protected_nopar:Npn \spath_gtranslate_to:Nnnn #1#2#3#4
+{
+  \@@_translate_to:nnn {#2}{#3}{#4}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gtranslate_to:Nnnn {NVxx, NVVV, NVnn}
+\cs_new_protected_nopar:Npn \spath_gtranslate_to:Nnn #1#2#3
+{
+  \spath_gtranslate_to:NVnn #1#1{#2}{#3}
+}
+\cs_generate_variant:Nn \spath_gtranslate_to:Nnn {NVV, cnn, cVV}
+%    \end{macrocode}
+%
+% This variant allows for passing the coordinates as a single braced group as it strips off the outer braces of the second argument.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \spath_translate_to:Nn #1#2
+{
+  \spath_translate_to:Nnn #1 #2
+}
+\cs_generate_variant:Nn \spath_translate_to:Nn {NV}
+\cs_new_protected_nopar:Npn \spath_gtranslate_to:Nn #1#2
+{
+  \spath_gtranslate_to:Nnn #1 #2
+}
+\cs_generate_variant:Nn \spath_gtranslate_to:Nn {NV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1432,32 +1505,10 @@ manipulating PGF soft paths}
   \group_begin:
   \tl_set:Nn \l_@@_tmpa_tl {#1}
   \tl_set:Nn \l_@@_tmpb_tl {#2}
+  \spath_finalpoint:Nn \l_@@_tmpc_tl {#1}
+  \spath_translate_to:NV \l_@@_tmpb_tl \l_@@_tmpc_tl
 
-  \spath_finalpoint:NV \l_@@_tmpc_tl \l_@@_tmpa_tl
-  \spath_initialpoint:NV \l_@@_tmpd_tl \l_@@_tmpb_tl
-
-  \dim_set:Nn \l_@@_tmpa_dim
-  {
-    \tl_item:Nn \l_@@_tmpc_tl {1}
-    -
-    \tl_item:Nn \l_@@_tmpd_tl {1}
-  }
-  \dim_set:Nn \l_@@_tmpb_dim
-  {
-    \tl_item:Nn \l_@@_tmpc_tl {2}
-    -
-    \tl_item:Nn \l_@@_tmpd_tl {2}
-  }
-
-  \spath_translate:NVV \l_@@_tmpb_tl \l_@@_tmpa_dim \l_@@_tmpb_dim
-
-  \prg_replicate:nn {3}
-  {
-    \tl_set:Nx \l_@@_tmpb_tl {\tl_tail:N \l_@@_tmpb_tl}
-  }
-
-  \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
-  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
+  \@@_append_no_move:VV \l_@@_tmpa_tl \l_@@_tmpb_tl
   \group_end:
 }
 \cs_new_protected_nopar:Npn \spath_weld:Nnn #1#2#3
@@ -1510,6 +1561,7 @@ manipulating PGF soft paths}
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
   \group_end:
 }
+\cs_generate_variant:Nn \@@_append_no_move:nn {VV}
 \cs_new_protected_nopar:Npn \spath_append_no_move:Nnn #1#2#3
 {
   \@@_append_no_move:nn {#2}{#3}
@@ -4599,8 +4651,7 @@ manipulating PGF soft paths}
       \l_@@_reverse_tl
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_set_current_path:N \l_@@_reverse_tl
-      \spath_set_tikz_data:v
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \spath_set_tikz_data:V \l_@@_reverse_tl
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -4642,11 +4693,12 @@ manipulating PGF soft paths}
     \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_get_current_path:N \l_@@_current_tl
-      \spath_weld:Nv
-      \l_@@_current_tl
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \spath_finalpoint:NV \l_@@_tmpa_tl \l_@@_current_tl
+      \tl_set_eq:Nc \l_@@_tmpb_tl {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \spath_translate_to:NV \l_@@_tmpb_tl \l_@@_tmpa_tl
+      \spath_append_no_move:NV \l_@@_current_tl \l_@@_tmpb_tl
       \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:V \l_@@_current_tl
+      \spath_set_tikz_data:V \l_@@_tmpb_tl
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -4716,9 +4768,11 @@ manipulating PGF soft paths}
       \l_@@_reverse_tl
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_get_current_path:N \l_@@_current_tl
-      \spath_weld:NV \l_@@_current_tl \l_@@_reverse_tl
+      \spath_finalpoint:NV \l_@@_tmpa_tl \l_@@_current_tl
+      \spath_translate_to:NV \l_@@_reverse_tl \l_@@_tmpa_tl
+      \spath_append_no_move:NV \l_@@_current_tl \l_@@_reverse_tl
       \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:V \l_@@_current_tl
+      \spath_set_tikz_data:V \l_@@_reverse_tl
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -4737,7 +4791,8 @@ manipulating PGF soft paths}
       \l_@@_current_tl
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:V \l_@@_current_tl
+      \spath_set_tikz_data:v {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -4757,7 +4812,48 @@ manipulating PGF soft paths}
       \spath_get_current_path:N \l_@@_current_tl
       \spath_append:NV \l_@@_current_tl \l_@@_reverse_tl
       \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:V \l_@@_current_tl
+      \spath_set_tikz_data:V \l_@@_reverse_tl
+
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%
+% Inserts the named path into the current path as-is, meaning without transforming or welding it, but removes the move at the start.
+%
+%    \begin{macrocode}
+  insert~ no~ move/.code={
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \spath_get_current_path:N \l_@@_current_tl
+      \spath_append_no_move:Nv
+      \l_@@_current_tl
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \spath_set_current_path:N \l_@@_current_tl
+      \spath_set_tikz_data:v
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%
+% Inserts the reverse of the named path without an intervening move.
+% 
+%    \begin{macrocode}
+  insert~ reverse~ no~ move/.code={
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \spath_reverse:Nv
+      \l_@@_reverse_tl
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \spath_get_current_path:N \l_@@_current_tl
+      \spath_append_no_move:NV \l_@@_current_tl \l_@@_reverse_tl
+      \spath_set_current_path:N \l_@@_current_tl
+      \spath_set_tikz_data:V \l_@@_reverse_tl
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
