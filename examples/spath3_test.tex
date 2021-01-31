@@ -89,6 +89,21 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \begin{document}
 
 \begin{tikzpicture}
+\path[spath/save=g,draw]
+(0,0) -- ++(1,0)
+++(0,0) -- ++(1,0)
+++(0,0) -- ++(1,0)
+++(0,0) -- ++(1,0)
+++(0,0) -- ++(1,0)
+;
+\tikzset{spath/get components of={g}\cpts}
+
+\draw[line width=3pt, orange, spath/restore=\getComponentOf{\cpts}{3}];
+\draw[line width=3pt, magenta, spath/restore=\getComponentOf{\cpts}{4}];
+\end{tikzpicture}
+
+
+\begin{tikzpicture}
 \path[spath/save=a] (0,0) -- node[pos=.5,auto] {\(a\)}
  ++(2,0) to[out=0,in=-90] node[pos=.5,auto] {\(b\)} ++(2,2) to[out=90,in=0] node[pos=.5,auto] {\(c\)} ++(-2,2)
 ;
