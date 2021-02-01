@@ -143,7 +143,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{6848}
+% \CheckSum{7501}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -256,6 +256,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 %
 % Utilities copied from \url{https://github.com/loopspace/LaTeX3-Utilities} for adding something in braces to a token list.
+% I find I use this quite a lot in my packages.
 %    \begin{macrocode}
 \cs_new_protected:Nn \@@_tl_put_right_braced:Nn
 {
@@ -281,32 +282,75 @@ manipulating PGF soft paths}
 \cs_generate_variant:Nn \@@_tl_gput_left_braced:Nn { NV, cV, cv, Nx, cx }
 %    \end{macrocode}
 %
-% We need a slew of temporary variables.
+%
+% I had to think a bit about how to get \TeX\ to work the way I wanted.
+% I'm really defining \emph{functions} but \TeX\ doesn't really have that concept, even with all the amazing \LaTeX3 stuff.
+% The main issue I had was with scoping and return values.
+% By default, \TeX\ functions aren't scoped -- they work on the same level as the calling functions.
+% To protect the internals from being overwritten, each core function works inside a group.
+% But then I have to work to get the answer out of it.
+% So each of my core functions finishes by storing its return value in an appropriate \Verb+output+ variable.
+% The core functions are then wrapped in a more user friendly interface that will take that output and assign it to a variable.
+% This also means that I can deal with local and global versions without duplicating code.
+%
+%    \begin{macrocode}
+\tl_new:N \g_@@_output_tl
+\int_new:N \g_@@_output_int
+\seq_new:N \g_@@_output_seq
+\bool_new:N \g_@@_output_bool
+%    \end{macrocode}
+%
+% To avoid creating vast numbers of variables, we provide ourselves with a few that we reuse frequently.
+% For that reason, most of them don't have very exciting names.
+%
+% These are general purpose variables.
 %    \begin{macrocode}
 \tl_new:N \l_@@_tmpa_tl
 \tl_new:N \l_@@_tmpb_tl
 \tl_new:N \l_@@_tmpc_tl
 \tl_new:N \l_@@_tmpd_tl
 \tl_new:N \l_@@_tmpe_tl
+\tl_new:N \l_@@_tmpf_tl
+\tl_new:N \l_@@_tmpg_tl
+\tl_new:N \l_@@_tmph_tl
+\tl_new:N \l_@@_tmpi_tl
 
 \seq_new:N \l_@@_tmpa_seq
 \seq_new:N \l_@@_tmpb_seq
 \seq_new:N \l_@@_tmpc_seq
 
-\tl_new:N \g_@@_output_tl
-\int_new:N \g_@@_output_int
-\seq_new:N \g_@@_output_seq
-
 \dim_new:N \l_@@_tmpa_dim
 \dim_new:N \l_@@_tmpb_dim
-\dim_new:N \l_@@_move_x_dim
-\dim_new:N \l_@@_move_y_dim
+
 \fp_new:N \l_@@_tmpa_fp
 \fp_new:N \l_@@_tmpb_fp
-\int_new:N \l_@@_tmpa_int
+\fp_new:N \l_@@_tmpc_fp
 
-\bool_new:N \g_@@_output_bool
+\int_new:N \l_@@_tmpa_int
+\int_new:N \l_@@_tmpb_int
+
+\bool_new:N \l_@@_tmpa_bool
+%    \end{macrocode}
+%
+% Whenever I need more than two \Verb+dim+ variables it is because I need to remember the position of a move.
+%
+%    \begin{macrocode}
+\dim_new:N \l_@@_move_x_dim
+\dim_new:N \l_@@_move_y_dim
+%    \end{macrocode}
+%
+% Closed paths often need special handling.
+% When it's needed, this will say whether the path is closed or not.
+%
+%    \begin{macrocode}
 \bool_new:N \l_@@_closed_bool
+%    \end{macrocode}
+%
+% The intersection routine can't happen inside a group so we need two token lists to hold the paths that we'll intersect.
+%
+%    \begin{macrocode}
+\tl_new:N \l_@@_intersecta_tl
+\tl_new:N \l_@@_intersectb_tl
 %    \end{macrocode}
 %
 % We need to be able to compare against the macros that can occur in  a soft path so these token lists contain them.
@@ -320,23 +364,10 @@ manipulating PGF soft paths}
 \tl_const:Nn \c_spath_closepath_tl {\pgfsyssoftpath@closepathtoken}
 %    \end{macrocode}
 %
-%
 % We will want to be able to use anonymous spaths internally, so we create a global counter that we can use to refer to them.
 %    \begin{macrocode}
 \int_new:N \g_@@_anon_int
 \int_gzero:N \g_@@_anon_int
-%    \end{macrocode}
-%
-% Groups and iterations don't mix well and I haven't got a good scheme for protecting local calculations when iterating, so we do our best with iteration-specific variables.
-%    \begin{macrocode}
-\tl_new:N \l_@@_itera_tl
-\tl_new:N \l_@@_iterb_tl
-\tl_new:N \l_@@_iterc_tl
-\tl_new:N \l_@@_iterd_tl
-\tl_new:N \l_@@_iterp_tl
-\dim_new:N \l_@@_itera_dim
-\dim_new:N \l_@@_iterb_dim
-\seq_new:N \l_@@_iter_seq
 %    \end{macrocode}
 %
 % And some error messages
@@ -361,131 +392,131 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_segments_to_seq:n #1
 {
   \group_begin:
-  \tl_set:Nn \l_@@_itera_tl {#1}
-  \tl_clear:N \l_@@_iterb_tl
-  \seq_clear:N \l_@@_iter_seq
-  \dim_zero:N \l_@@_itera_dim
-  \dim_zero:N \l_@@_iterb_dim
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
+  \tl_clear:N \l_@@_tmpb_tl
+  \seq_clear:N \l_@@_tmpa_seq
+  \dim_zero:N \l_@@_tmpa_dim
+  \dim_zero:N \l_@@_tmpb_dim
 
   \bool_until_do:nn {
-    \tl_if_empty_p:N \l_@@_itera_tl
+    \tl_if_empty_p:N \l_@@_tmpa_tl
   }
   {
-    \tl_set:Nx \l_@@_iterc_tl {\tl_head:N \l_@@_itera_tl}
-    \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
-    \tl_case:NnF \l_@@_iterc_tl
+    \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
+    \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+    \tl_case:NnF \l_@@_tmpc_tl
     {
       \c_spath_moveto_tl
       {
-        \tl_set_eq:NN \l_@@_iterb_tl \c_spath_moveto_tl
-        \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-        \dim_set:Nn \l_@@_itera_dim {\tl_head:N \l_@@_itera_tl}
-        \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+        \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_moveto_tl
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-        \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-        \dim_set:Nn \l_@@_iterb_dim {\tl_head:N \l_@@_itera_tl}
-        \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-        \tl_set:Nx \l_@@_iterd_tl {\tl_head:N \l_@@_itera_tl}
-        \tl_if_eq:NNF \l_@@_iterd_tl \c_spath_moveto_tl
+        \tl_set:Nx \l_@@_tmpd_tl {\tl_head:N \l_@@_tmpa_tl}
+        \tl_if_eq:NNF \l_@@_tmpd_tl \c_spath_moveto_tl
         {
-          \tl_clear:N \l_@@_iterb_tl
+          \tl_clear:N \l_@@_tmpb_tl
         }
 
       }
 
       \c_spath_lineto_tl
       {
-        \tl_set_eq:NN \l_@@_iterb_tl \c_spath_moveto_tl
-        \tl_put_right:Nx \l_@@_iterb_tl
+        \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_moveto_tl
+        \tl_put_right:Nx \l_@@_tmpb_tl
         {
-          {\dim_use:N \l_@@_itera_dim}
-          {\dim_use:N \l_@@_iterb_dim}
+          {\dim_use:N \l_@@_tmpa_dim}
+          {\dim_use:N \l_@@_tmpb_dim}
         }
-        \tl_put_right:NV \l_@@_iterb_tl \c_spath_lineto_tl
+        \tl_put_right:NV \l_@@_tmpb_tl \c_spath_lineto_tl
 
-        \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-        \dim_set:Nn \l_@@_itera_dim {\tl_head:N \l_@@_itera_tl}
-        \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-        \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-        \dim_set:Nn \l_@@_iterb_dim {\tl_head:N \l_@@_itera_tl}
-        \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
       }
 
       \c_spath_curvetoa_tl
       {
-        \tl_set_eq:NN \l_@@_iterb_tl \c_spath_moveto_tl
-        \tl_put_right:Nx \l_@@_iterb_tl
+        \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_moveto_tl
+        \tl_put_right:Nx \l_@@_tmpb_tl
         {
-          {\dim_use:N \l_@@_itera_dim}
-          {\dim_use:N \l_@@_iterb_dim}
+          {\dim_use:N \l_@@_tmpa_dim}
+          {\dim_use:N \l_@@_tmpb_dim}
         }
-        \tl_put_right:NV \l_@@_iterb_tl \c_spath_curvetoa_tl
+        \tl_put_right:NV \l_@@_tmpb_tl \c_spath_curvetoa_tl
 
         \prg_replicate:nn {2} {
-          \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-          \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
-          \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N               \l_@@_itera_tl}}
-          \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
-          \tl_put_right:Nx \l_@@_iterb_tl {\tl_head:N             \l_@@_itera_tl}
-          \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+          \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+          \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+          \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N               \l_@@_tmpa_tl}}
+          \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+          \tl_put_right:Nx \l_@@_tmpb_tl {\tl_head:N             \l_@@_tmpa_tl}
+          \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
         }
 
-        \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-        \dim_set:Nn \l_@@_itera_dim {\tl_head:N \l_@@_itera_tl}
-        \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-        \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-        \dim_set:Nn \l_@@_iterb_dim {\tl_head:N \l_@@_itera_tl}
-        \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
       }
 
       \c_spath_closepath_tl
       {
-        \tl_set_eq:NN \l_@@_iterb_tl \c_spath_moveto_tl
-        \tl_put_right:Nx \l_@@_iterb_tl
+        \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_moveto_tl
+        \tl_put_right:Nx \l_@@_tmpb_tl
         {
-          {\dim_use:N \l_@@_itera_dim}
-          {\dim_use:N \l_@@_iterb_dim}
+          {\dim_use:N \l_@@_tmpa_dim}
+          {\dim_use:N \l_@@_tmpb_dim}
         }
-        \tl_put_right:NV \l_@@_iterb_tl \c_spath_lineto_tl
+        \tl_put_right:NV \l_@@_tmpb_tl \c_spath_lineto_tl
 
-        \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-        \dim_set:Nn \l_@@_itera_dim {\tl_head:N \l_@@_itera_tl}
-        \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-        \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-        \dim_set:Nn \l_@@_iterb_dim {\tl_head:N \l_@@_itera_tl}
-        \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
       }
       
     }    
     {
 
-      \tl_set_eq:NN \l_@@_iterb_tl \l_@@_iterc_tl
-      \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-      \dim_set:Nn \l_@@_itera_dim {\tl_head:N \l_@@_itera_tl}
-      \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+      \tl_set_eq:NN \l_@@_tmpb_tl \l_@@_tmpc_tl
+      \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+      \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-      \tl_put_right:Nx \l_@@_iterb_tl {{\tl_head:N \l_@@_itera_tl}}
-      \dim_set:Nn \l_@@_iterb_dim {\tl_head:N \l_@@_itera_tl}
-      \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+      \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+      \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
       
     }
 
-    \tl_if_empty:NF \l_@@_iterb_tl
+    \tl_if_empty:NF \l_@@_tmpb_tl
     {
-      \seq_put_right:NV \l_@@_iter_seq \l_@@_iterb_tl
+      \seq_put_right:NV \l_@@_tmpa_seq \l_@@_tmpb_tl
     }
-    \tl_clear:N \l_@@_iterb_tl
+    \tl_clear:N \l_@@_tmpb_tl
   }
 
   \seq_gclear:N \g_@@_output_seq
-  \seq_gset_eq:NN \g_@@_output_seq \l_@@_iter_seq
+  \seq_gset_eq:NN \g_@@_output_seq \l_@@_tmpa_seq
   \group_end:
 }
 \cs_new_protected_nopar:Npn \spath_segments_to_seq:Nn #1#2
@@ -518,33 +549,33 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_components_to_seq:n #1
 {
   \group_begin:
-  \tl_set:Nn \l_@@_itera_tl {#1}
-  \seq_clear:N \l_@@_iter_seq
-  \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
-  \tl_put_right:NV \l_@@_itera_tl \c_spath_moveto_tl
-  \tl_set_eq:NN \l_@@_iterb_tl \c_spath_moveto_tl
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
+  \seq_clear:N \l_@@_tmpa_seq
+  \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+  \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
+  \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_moveto_tl
   \bool_do_until:nn {
-    \tl_if_empty_p:N \l_@@_itera_tl
+    \tl_if_empty_p:N \l_@@_tmpa_tl
   }
   {
-    \tl_set:Nx \l_@@_iterc_tl {\tl_head:N \l_@@_itera_tl}
-    \tl_if_eq:NNT \l_@@_iterc_tl \c_spath_moveto_tl
+    \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
+    \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_moveto_tl
     {
-      \seq_put_right:NV \l_@@_iter_seq \l_@@_iterb_tl
-      \tl_clear:N \l_@@_iterb_tl
+      \seq_put_right:NV \l_@@_tmpa_seq \l_@@_tmpb_tl
+      \tl_clear:N \l_@@_tmpb_tl
     }
-    \tl_if_single:NTF \l_@@_iterc_tl
+    \tl_if_single:NTF \l_@@_tmpc_tl
     {
-      \tl_put_right:NV \l_@@_iterb_tl \l_@@_iterc_tl
+      \tl_put_right:NV \l_@@_tmpb_tl \l_@@_tmpc_tl
     }
     {
-      \tl_put_right:Nx \l_@@_iterb_tl {{\l_@@_iterc_tl}}
+      \tl_put_right:Nx \l_@@_tmpb_tl {{\l_@@_tmpc_tl}}
     }
-    \tl_set:Nx \l_@@_itera_tl {\tl_tail:N \l_@@_itera_tl}
+    \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
   }
 
   \seq_gclear:N \g_@@_output_seq
-  \seq_gset_eq:NN \g_@@_output_seq \l_@@_iter_seq
+  \seq_gset_eq:NN \g_@@_output_seq \l_@@_tmpa_seq
   \group_end:
 }
 \cs_new_protected_nopar:Npn \spath_components_to_seq:Nn #1#2
@@ -605,8 +636,8 @@ manipulating PGF soft paths}
   \group_begin:
   \int_set:Nn \l_@@_tmpa_int {0}
   \tl_map_inline:nn {#1} {
-    \tl_set:Nn \l_@@_tmpc_tl {##1}
-    \tl_case:NnT \l_@@_tmpc_tl
+    \tl_set:Nn \l_@@_tmpa_tl {##1}
+    \tl_case:NnT \l_@@_tmpa_tl
     {
       \c_spath_lineto_tl {}
       \c_spath_curveto_tl {}
@@ -688,13 +719,13 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_initialpoint:n #1
 {
   \group_begin:
-  \tl_clear:N \l_@@_tmpb_tl
-  \tl_set:Nx \l_@@_tmpb_tl
+  \tl_clear:N \l_@@_tmpa_tl
+  \tl_set:Nx \l_@@_tmpa_tl
   {
     { \tl_item:nn {#1} {2} }
     { \tl_item:nn {#1} {3} }
   }
-  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpb_tl
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
   \group_end:
 }
 \cs_new_protected_nopar:Npn \spath_initialpoint:Nn #1#2
@@ -1268,19 +1299,19 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_translate_to:nnn #1#2#3
 {
   \group_begin:
-  \spath_initialpoint:Nn \l_@@_tmpd_tl {#1}
+  \spath_initialpoint:Nn \l_@@_tmpa_tl {#1}
 
   \dim_set:Nn \l_@@_tmpa_dim
   {
     #2
     -
-    \tl_item:Nn \l_@@_tmpd_tl {1}
+    \tl_item:Nn \l_@@_tmpa_tl {1}
   }
   \dim_set:Nn \l_@@_tmpb_dim
   {
     #3
     -
-    \tl_item:Nn \l_@@_tmpd_tl {2}
+    \tl_item:Nn \l_@@_tmpa_tl {2}
   }
 
   \@@_translate:nVV {#1} \l_@@_tmpa_dim \l_@@_tmpb_dim
@@ -2129,7 +2160,6 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_maybe_split_curve:n #1
 {
   \group_begin:
-  \tl_set:Nx \l_@@_tmpc_tl {\tl_item:nn {#1} {4}}
   \fp_set:Nn \l_@@_tmpa_fp
   {
     (\tl_item:nn {#1} {3} - 3 * \tl_item:nn {#1} {6} + 3 * \tl_item:nn {#1} {9} - \tl_item:nn {#1} {12})
@@ -2373,20 +2403,6 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-%    \begin{macrocode}
-\int_new:N \l_@@_split_int
-\int_new:N \l_@@_splitat_int
-\fp_new:N \l_@@_split_fp
-\bool_new:N \l_@@_split_bool
-\tl_new:N \l_@@_split_path_tl
-\tl_new:N \l_@@_split_patha_tl
-\tl_new:N \l_@@_split_pathb_tl
-\tl_new:N \l_@@_split_intoa_tl
-\tl_new:N \l_@@_split_intob_tl
-\dim_new:N \l_@@_splitx_dim
-\dim_new:N \l_@@_splity_dim
-%    \end{macrocode}
-%
 % \begin{macro}{
 % \spath_split_at:NNnn,
 % \spath_split_at:Nnn,
@@ -2401,165 +2417,165 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_split_at:nn #1#2
 {
   \group_begin:
-  \int_set:Nn \l_@@_splitat_int {\fp_to_int:n {floor(#2) + 1}}
-  \fp_set:Nn \l_@@_split_fp {#2 - floor(#2)}
+  \int_set:Nn \l_@@_tmpa_int {\fp_to_int:n {floor(#2) + 1}}
+  \fp_set:Nn \l_@@_tmpa_fp {#2 - floor(#2)}
 
   % Is split point near one end or other of a component?
   \fp_compare:nT
   {
-    \l_@@_split_fp < 0.01
+    \l_@@_tmpa_fp < 0.01
   }
   {
     % Near the start, so we'll place it at the start
-    \fp_set:Nn \l_@@_split_fp {0}
+    \fp_set:Nn \l_@@_tmpa_fp {0}
   }
   \fp_compare:nT
   {
-    \l_@@_split_fp > 0.99
+    \l_@@_tmpa_fp > 0.99
   }
   {
     % Near the end, so we'll place it at the end
-    \fp_set:Nn \l_@@_split_fp {0}
-    \int_incr:N \l_@@_splitat_int
+    \fp_set:Nn \l_@@_tmpa_fp {0}
+    \int_incr:N \l_@@_tmpa_int
   }
   
-  \int_zero:N \l_@@_split_int
-  \bool_set_true:N \l_@@_split_bool
+  \int_zero:N \l_@@_tmpb_int
+  \bool_set_true:N \l_@@_tmpa_bool
 
-  \tl_set:Nn \l_@@_split_path_tl {#1}
-  \tl_clear:N \l_@@_split_patha_tl
+  \tl_set:Nn \l_@@_tmpe_tl {#1}
+  \tl_clear:N \l_@@_tmpc_tl
 
-  \dim_zero:N \l_@@_splitx_dim
-  \dim_zero:N \l_@@_splity_dim
+  \dim_zero:N \l_@@_tmpa_dim
+  \dim_zero:N \l_@@_tmpb_dim
 
   \bool_until_do:nn {
-    \tl_if_empty_p:N \l_@@_split_path_tl
+    \tl_if_empty_p:N \l_@@_tmpe_tl
     ||
-    \int_compare_p:n { \l_@@_splitat_int == \l_@@_split_int  }
+    \int_compare_p:n { \l_@@_tmpa_int == \l_@@_tmpb_int  }
   }
   {
-    \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_split_path_tl}
-    \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
-    \tl_case:Nn \l_@@_tmpc_tl
+    \tl_set:Nx \l_@@_tmpf_tl {\tl_head:N \l_@@_tmpe_tl}
+    \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
+    \tl_case:Nn \l_@@_tmpf_tl
     {
       \c_spath_lineto_tl
       {
-        \int_incr:N \l_@@_split_int
+        \int_incr:N \l_@@_tmpb_int
       }
       \c_spath_curvetoa_tl
       {
-        \int_incr:N \l_@@_split_int
+        \int_incr:N \l_@@_tmpb_int
       }
     }
-    \int_compare:nT { \l_@@_split_int < \l_@@_splitat_int  }
+    \int_compare:nT { \l_@@_tmpb_int < \l_@@_tmpa_int  }
     {
-      \tl_put_right:NV \l_@@_split_patha_tl \l_@@_tmpc_tl
+      \tl_put_right:NV \l_@@_tmpc_tl \l_@@_tmpf_tl
       
-      \tl_put_right:Nx \l_@@_split_patha_tl
-      {{ \tl_head:N \l_@@_split_path_tl }}
-      \dim_set:Nn \l_@@_splitx_dim {\tl_head:N \l_@@_split_path_tl}
-      \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
+      \tl_put_right:Nx \l_@@_tmpc_tl
+      {{ \tl_head:N \l_@@_tmpe_tl }}
+      \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpe_tl}
+      \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
       
-      \tl_put_right:Nx \l_@@_split_patha_tl
-      {{ \tl_head:N \l_@@_split_path_tl }}
-      \dim_set:Nn \l_@@_splity_dim {\tl_head:N \l_@@_split_path_tl}
-      \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
+      \tl_put_right:Nx \l_@@_tmpc_tl
+      {{ \tl_head:N \l_@@_tmpe_tl }}
+      \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpe_tl}
+      \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
       
     }
   }
 
-  \tl_clear:N \l_@@_split_pathb_tl
-  \tl_put_right:NV \l_@@_split_pathb_tl \c_spath_moveto_tl
-  \tl_put_right:Nx \l_@@_split_pathb_tl
+  \tl_clear:N \l_@@_tmpd_tl
+  \tl_put_right:NV \l_@@_tmpd_tl \c_spath_moveto_tl
+  \tl_put_right:Nx \l_@@_tmpd_tl
   {
-    {\dim_use:N \l_@@_splitx_dim}
-    {\dim_use:N \l_@@_splity_dim}
+    {\dim_use:N \l_@@_tmpa_dim}
+    {\dim_use:N \l_@@_tmpb_dim}
   }
 
   \fp_compare:nTF
   {
-    \l_@@_split_fp == 0
+    \l_@@_tmpa_fp == 0
   }
   {
-    \tl_set_eq:NN \l_@@_split_intob_tl \l_@@_split_pathb_tl
-    \tl_if_empty:NF \l_@@_split_path_tl
+    \tl_set_eq:NN \l_@@_tmpb_tl \l_@@_tmpd_tl
+    \tl_if_empty:NF \l_@@_tmpe_tl
     {
-      \tl_put_right:NV \l_@@_split_intob_tl \l_@@_tmpc_tl
-      \tl_put_right:NV \l_@@_split_intob_tl \l_@@_split_path_tl
+      \tl_put_right:NV \l_@@_tmpb_tl \l_@@_tmpf_tl
+      \tl_put_right:NV \l_@@_tmpb_tl \l_@@_tmpe_tl
     }
   }
   {
 
-    \tl_case:Nn \l_@@_tmpc_tl
+    \tl_case:Nn \l_@@_tmpf_tl
     {
       \c_spath_lineto_tl
       {
-        \tl_put_right:NV \l_@@_split_pathb_tl \l_@@_tmpc_tl
-        \tl_put_right:Nx \l_@@_split_pathb_tl
-        {{ \tl_head:N \l_@@_split_path_tl }}
-        \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
+        \tl_put_right:NV \l_@@_tmpd_tl \l_@@_tmpf_tl
+        \tl_put_right:Nx \l_@@_tmpd_tl
+        {{ \tl_head:N \l_@@_tmpe_tl }}
+        \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
       
-        \tl_put_right:Nx \l_@@_split_pathb_tl
-        {{ \tl_head:N \l_@@_split_path_tl }}
-        \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
+        \tl_put_right:Nx \l_@@_tmpd_tl
+        {{ \tl_head:N \l_@@_tmpe_tl }}
+        \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
 
         \spath_split_line:NNVV
-        \l_@@_split_intoa_tl
-        \l_@@_split_intob_tl
-        \l_@@_split_pathb_tl
-        \l_@@_split_fp
+        \l_@@_tmpa_tl
+        \l_@@_tmpb_tl
+        \l_@@_tmpd_tl
+        \l_@@_tmpa_fp
 
         \prg_replicate:nn {3} {
-          \tl_set:Nx \l_@@_split_intoa_tl {\tl_tail:N \l_@@_split_intoa_tl}
+          \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
         }
 
-        \tl_put_right:NV \l_@@_split_patha_tl \l_@@_split_intoa_tl
-        \tl_put_right:NV \l_@@_split_intob_tl \l_@@_split_path_tl
+        \tl_put_right:NV \l_@@_tmpc_tl \l_@@_tmpa_tl
+        \tl_put_right:NV \l_@@_tmpb_tl \l_@@_tmpe_tl
       }
       \c_spath_curvetoa_tl
       {
-        \tl_put_right:NV \l_@@_split_pathb_tl \l_@@_tmpc_tl
-        \tl_put_right:Nx \l_@@_split_pathb_tl
-        {{ \tl_head:N \l_@@_split_path_tl }}
-        \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
+        \tl_put_right:NV \l_@@_tmpd_tl \l_@@_tmpf_tl
+        \tl_put_right:Nx \l_@@_tmpd_tl
+        {{ \tl_head:N \l_@@_tmpe_tl }}
+        \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
       
-        \tl_put_right:Nx \l_@@_split_pathb_tl
-        {{ \tl_head:N \l_@@_split_path_tl }}
-        \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
+        \tl_put_right:Nx \l_@@_tmpd_tl
+        {{ \tl_head:N \l_@@_tmpe_tl }}
+        \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
       
         \prg_replicate:nn {2} {
         
-          \tl_put_right:Nx \l_@@_split_pathb_tl
-          { \tl_head:N \l_@@_split_path_tl }
-          \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
+          \tl_put_right:Nx \l_@@_tmpd_tl
+          { \tl_head:N \l_@@_tmpe_tl }
+          \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
         
-          \tl_put_right:Nx \l_@@_split_pathb_tl
-          {{ \tl_head:N \l_@@_split_path_tl }}
-          \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
+          \tl_put_right:Nx \l_@@_tmpd_tl
+          {{ \tl_head:N \l_@@_tmpe_tl }}
+          \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
       
-          \tl_put_right:Nx \l_@@_split_pathb_tl
-          {{ \tl_head:N \l_@@_split_path_tl }}
-          \tl_set:Nx \l_@@_split_path_tl {\tl_tail:N \l_@@_split_path_tl }
+          \tl_put_right:Nx \l_@@_tmpd_tl
+          {{ \tl_head:N \l_@@_tmpe_tl }}
+          \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
         }
 
         \spath_split_curve:NNVV
-        \l_@@_split_intoa_tl
-        \l_@@_split_intob_tl
-        \l_@@_split_pathb_tl \l_@@_split_fp
+        \l_@@_tmpa_tl
+        \l_@@_tmpb_tl
+        \l_@@_tmpd_tl \l_@@_tmpa_fp
 
         \prg_replicate:nn {3} {
-          \tl_set:Nx \l_@@_split_intoa_tl {\tl_tail:N \l_@@_split_intoa_tl}
+          \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
         }
 
-        \tl_put_right:NV \l_@@_split_patha_tl \l_@@_split_intoa_tl
-        \tl_put_right:NV \l_@@_split_intob_tl \l_@@_split_path_tl
+        \tl_put_right:NV \l_@@_tmpc_tl \l_@@_tmpa_tl
+        \tl_put_right:NV \l_@@_tmpb_tl \l_@@_tmpe_tl
       }
     }
   }
 
   \tl_gclear:N \g_@@_output_tl
-  \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_split_patha_tl
-  \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_split_intob_tl
+  \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_tmpc_tl
+  \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_tmpb_tl
   \group_end:
 }
 \cs_new_protected_nopar:Npn \spath_split_at:NNnn #1#2#3#4
@@ -2617,18 +2633,6 @@ manipulating PGF soft paths}
 % As in the previous section, there are various versions.
 % In particular, there are versions where the path can be specified by a macro and is saved back into that macro.
 %
-%    \begin{macrocode}
-\tl_new:N \l_@@_shorten_fa_tl
-\tl_new:N \l_@@_shorten_path_tl
-\tl_new:N \l_@@_shorten_last_tl
-\tl_new:N \l_@@_shorten_lasta_tl
-\tl_new:N \l_@@_shorten_lastb_tl
-\int_new:N \l_@@_shorten_int
-\fp_new:N \l_@@_shorten_x_fp
-\fp_new:N \l_@@_shorten_y_fp
-\fp_new:N \l_@@_shorten_len_fp
-%    \end{macrocode}
-%
 % \begin{macro}{
 % \spath_shorten_at_end:Nnn
 % }
@@ -2643,121 +2647,121 @@ manipulating PGF soft paths}
   }
   {
     \group_begin:
-    \tl_set:Nn \l_@@_shorten_path_tl {#1}
-    \tl_reverse:N \l_@@_shorten_path_tl
+    \tl_set:Nn \l_@@_tmpa_tl {#1}
+    \tl_reverse:N \l_@@_tmpa_tl
 
-    \tl_set:Nx \l_@@_shorten_fa_tl {\tl_item:Nn \l_@@_shorten_path_tl {3}}
+    \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {3}}
 
-    \tl_clear:N \l_@@_shorten_last_tl
-    \tl_if_eq:NNTF \l_@@_shorten_fa_tl \c_spath_curveto_tl
+    \tl_clear:N \l_@@_tmpe_tl
+    \tl_if_eq:NNTF \l_@@_tmpb_tl \c_spath_curveto_tl
     {
-      \int_set:Nn \l_@@_shorten_int {3}
+      \int_set:Nn \l_@@_tmpa_int {3}
     }
     {
-      \int_set:Nn \l_@@_shorten_int {1}
+      \int_set:Nn \l_@@_tmpa_int {1}
     }
 
-    \prg_replicate:nn { \l_@@_shorten_int }
+    \prg_replicate:nn { \l_@@_tmpa_int }
     {
-      \tl_put_right:Nx \l_@@_shorten_last_tl
+      \tl_put_right:Nx \l_@@_tmpe_tl
       {
-        {\tl_head:N \l_@@_shorten_path_tl}
+        {\tl_head:N \l_@@_tmpa_tl}
       }
-      \tl_set:Nx \l_@@_shorten_path_tl {\tl_tail:N \l_@@_shorten_path_tl}
-      \tl_put_right:Nx \l_@@_shorten_last_tl
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+      \tl_put_right:Nx \l_@@_tmpe_tl
       {
-        {\tl_head:N \l_@@_shorten_path_tl}
+        {\tl_head:N \l_@@_tmpa_tl}
       }
-      \tl_set:Nx \l_@@_shorten_path_tl {\tl_tail:N \l_@@_shorten_path_tl}
-      \tl_put_right:Nx \l_@@_shorten_last_tl
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+      \tl_put_right:Nx \l_@@_tmpe_tl
       {
-        \tl_head:N \l_@@_shorten_path_tl
+        \tl_head:N \l_@@_tmpa_tl
       }
-      \tl_set:Nx \l_@@_shorten_path_tl {\tl_tail:N \l_@@_shorten_path_tl}
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     }
 
-    \tl_put_right:Nx \l_@@_shorten_last_tl
+    \tl_put_right:Nx \l_@@_tmpe_tl
     {
-      {\tl_item:Nn \l_@@_shorten_path_tl {1}}
-      {\tl_item:Nn \l_@@_shorten_path_tl {2}}
+      {\tl_item:Nn \l_@@_tmpa_tl {1}}
+      {\tl_item:Nn \l_@@_tmpa_tl {2}}
     }
-    \tl_put_right:NV \l_@@_shorten_last_tl \c_spath_moveto_tl
+    \tl_put_right:NV \l_@@_tmpe_tl \c_spath_moveto_tl
     
-    \tl_reverse:N \l_@@_shorten_path_tl
+    \tl_reverse:N \l_@@_tmpa_tl
 
-    \fp_set:Nn \l_@@_shorten_x_fp
+    \fp_set:Nn \l_@@_tmpa_fp
     {
-      \dim_to_fp:n {\tl_item:Nn \l_@@_shorten_last_tl {4}}
+      \dim_to_fp:n {\tl_item:Nn \l_@@_tmpe_tl {4}}
       -
-      \dim_to_fp:n {\tl_item:Nn \l_@@_shorten_last_tl {1}}
+      \dim_to_fp:n {\tl_item:Nn \l_@@_tmpe_tl {1}}
     }
   
-    \fp_set:Nn \l_@@_shorten_y_fp
+    \fp_set:Nn \l_@@_tmpb_fp
     {
-      \dim_to_fp:n {\tl_item:Nn \l_@@_shorten_last_tl {5}}
+      \dim_to_fp:n {\tl_item:Nn \l_@@_tmpe_tl {5}}
       -
-      \dim_to_fp:n {\tl_item:Nn \l_@@_shorten_last_tl {2}}
+      \dim_to_fp:n {\tl_item:Nn \l_@@_tmpe_tl {2}}
     }
 
-    \fp_set:Nn \l_@@_shorten_len_fp
+    \fp_set:Nn \l_@@_tmpc_fp
     {
-      sqrt( \l_@@_shorten_x_fp * \l_@@_shorten_x_fp +  \l_@@_shorten_y_fp *  \l_@@_shorten_y_fp )
+      sqrt( \l_@@_tmpa_fp * \l_@@_tmpa_fp +  \l_@@_tmpb_fp *  \l_@@_tmpb_fp )
     }
 
     \fp_compare:nTF
     {
-      \l_@@_shorten_len_fp > #2
+      \l_@@_tmpc_fp > #2
     }
     {
   
-      \fp_set:Nn \l_@@_shorten_len_fp
+      \fp_set:Nn \l_@@_tmpc_fp
       {
-        (\l_@@_shorten_len_fp - #2)/ \l_@@_shorten_len_fp
+        (\l_@@_tmpc_fp - #2)/ \l_@@_tmpc_fp
       }
 
-      \tl_reverse:N \l_@@_shorten_last_tl
+      \tl_reverse:N \l_@@_tmpe_tl
 
-      \tl_if_eq:NNTF \l_@@_shorten_fa_tl \c_spath_curveto_tl
+      \tl_if_eq:NNTF \l_@@_tmpb_tl \c_spath_curveto_tl
       {
-        \fp_set:Nn \l_@@_shorten_len_fp
+        \fp_set:Nn \l_@@_tmpc_fp
         {
-          1 - (1 -\l_@@_shorten_len_fp)/3
+          1 - (1 -\l_@@_tmpc_fp)/3
         }
         \spath_split_curve:NNVV
-        \l_@@_shorten_lasta_tl
-        \l_@@_shorten_lastb_tl
-        \l_@@_shorten_last_tl
-        \l_@@_shorten_len_fp
+        \l_@@_tmpc_tl
+        \l_@@_tmpd_tl
+        \l_@@_tmpe_tl
+        \l_@@_tmpc_fp
       }
       {
         \spath_split_line:NNVV
-        \l_@@_shorten_lasta_tl
-        \l_@@_shorten_lastb_tl
-        \l_@@_shorten_last_tl
-        \l_@@_shorten_len_fp
+        \l_@@_tmpc_tl
+        \l_@@_tmpd_tl
+        \l_@@_tmpe_tl
+        \l_@@_tmpc_fp
       }
 
       \prg_replicate:nn {3}
       {
-        \tl_set:Nx \l_@@_shorten_lasta_tl {\tl_tail:N \l_@@_shorten_lasta_tl}
+        \tl_set:Nx \l_@@_tmpc_tl {\tl_tail:N \l_@@_tmpc_tl}
       }
 
-      \tl_put_right:NV \l_@@_shorten_path_tl \l_@@_shorten_lasta_tl
+      \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpc_tl
 
     }
     {
 
       \int_compare:nT
       {
-        \tl_count:N \l_@@_shorten_path_tl > 3
+        \tl_count:N \l_@@_tmpa_tl > 3
       }
       {
-        \dim_set:Nn \l_@@_tmpa_dim {\fp_to_dim:n {#2 - \l_@@_shorten_len_fp } }
-        \spath_shorten_at_end:NV \l_@@_shorten_path_tl \l_@@_tmpa_dim
+        \dim_set:Nn \l_@@_tmpa_dim {\fp_to_dim:n {#2 - \l_@@_tmpc_fp } }
+        \spath_shorten_at_end:NV \l_@@_tmpa_tl \l_@@_tmpa_dim
       }
     }
 
-    \tl_gset_eq:NN \g_@@_output_tl \l_@@_shorten_path_tl
+    \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
     \group_end:
   }
   {
@@ -2809,110 +2813,110 @@ manipulating PGF soft paths}
   }
   {
   \group_begin:
-  \tl_set:Nn \l_@@_shorten_path_tl {#1}
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
 
-  \tl_set:Nx \l_@@_shorten_fa_tl {\tl_item:Nn \l_@@_shorten_path_tl {4}}
+  \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {4}}
 
-    \tl_clear:N \l_@@_shorten_last_tl
+    \tl_clear:N \l_@@_tmpe_tl
 
-  \tl_if_eq:NNTF \l_@@_shorten_fa_tl \c_spath_curvetoa_tl
+  \tl_if_eq:NNTF \l_@@_tmpb_tl \c_spath_curvetoa_tl
   {
-    \int_set:Nn \l_@@_shorten_int {3}
+    \int_set:Nn \l_@@_tmpa_int {3}
   }
   {
-    \int_set:Nn \l_@@_shorten_int {1}
+    \int_set:Nn \l_@@_tmpa_int {1}
   }
 
-  \tl_set_eq:NN \l_@@_shorten_last_tl \c_spath_moveto_tl
-  \tl_set:Nx \l_@@_shorten_path_tl {\tl_tail:N \l_@@_shorten_path_tl }
+  \tl_set_eq:NN \l_@@_tmpe_tl \c_spath_moveto_tl
+  \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl }
 
-  \prg_replicate:nn { \l_@@_shorten_int }
+  \prg_replicate:nn { \l_@@_tmpa_int }
   {
-    \@@_tl_put_right_braced:Nx \l_@@_shorten_last_tl {\tl_item:Nn \l_@@_shorten_path_tl {1}}
-    \@@_tl_put_right_braced:Nx \l_@@_shorten_last_tl {\tl_item:Nn \l_@@_shorten_path_tl {2}}
-    \tl_put_right:Nx \l_@@_shorten_last_tl {\tl_item:Nn \l_@@_shorten_path_tl {3}}
+    \@@_tl_put_right_braced:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {1}}
+    \@@_tl_put_right_braced:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {2}}
+    \tl_put_right:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {3}}
 
     \prg_replicate:nn {3}
     {
-      \tl_set:Nx \l_@@_shorten_path_tl {\tl_tail:N \l_@@_shorten_path_tl }
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl }
     }
   }
-  \@@_tl_put_right_braced:Nx \l_@@_shorten_last_tl {\tl_item:Nn \l_@@_shorten_path_tl {1}}
-  \@@_tl_put_right_braced:Nx \l_@@_shorten_last_tl {\tl_item:Nn \l_@@_shorten_path_tl {2}}
+  \@@_tl_put_right_braced:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {1}}
+  \@@_tl_put_right_braced:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {2}}
 
-  \fp_set:Nn \l_@@_shorten_x_fp
+  \fp_set:Nn \l_@@_tmpa_fp
   {
-    \dim_to_fp:n {\tl_item:Nn \l_@@_shorten_last_tl {5}}
+    \dim_to_fp:n {\tl_item:Nn \l_@@_tmpe_tl {5}}
     -
-    \dim_to_fp:n {\tl_item:Nn \l_@@_shorten_last_tl {2}}
+    \dim_to_fp:n {\tl_item:Nn \l_@@_tmpe_tl {2}}
   }
   
-  \fp_set:Nn \l_@@_shorten_y_fp
+  \fp_set:Nn \l_@@_tmpb_fp
   {
-    \dim_to_fp:n {\tl_item:Nn \l_@@_shorten_last_tl {6}}
+    \dim_to_fp:n {\tl_item:Nn \l_@@_tmpe_tl {6}}
     -
-    \dim_to_fp:n {\tl_item:Nn \l_@@_shorten_last_tl {3}}
+    \dim_to_fp:n {\tl_item:Nn \l_@@_tmpe_tl {3}}
   }
 
-  \fp_set:Nn \l_@@_shorten_len_fp
+  \fp_set:Nn \l_@@_tmpc_fp
   {
-    sqrt( \l_@@_shorten_x_fp * \l_@@_shorten_x_fp +  \l_@@_shorten_y_fp *  \l_@@_shorten_y_fp )
+    sqrt( \l_@@_tmpa_fp * \l_@@_tmpa_fp +  \l_@@_tmpb_fp *  \l_@@_tmpb_fp )
   }
 
   \fp_compare:nTF
   {
-    \l_@@_shorten_len_fp > #2
+    \l_@@_tmpc_fp > #2
   }
   {
   
-    \fp_set:Nn \l_@@_shorten_len_fp
+    \fp_set:Nn \l_@@_tmpc_fp
     {
-      #2/ \l_@@_shorten_len_fp
+      #2/ \l_@@_tmpc_fp
     }
 
-    \tl_if_eq:NNTF \l_@@_shorten_fa_tl \c_spath_curvetoa_tl
+    \tl_if_eq:NNTF \l_@@_tmpb_tl \c_spath_curvetoa_tl
     {
-      \fp_set:Nn \l_@@_shorten_len_fp
+      \fp_set:Nn \l_@@_tmpc_fp
       {
-        \l_@@_shorten_len_fp/3
+        \l_@@_tmpc_fp/3
       }
       \spath_split_curve:NNVV
-      \l_@@_shorten_lasta_tl
-      \l_@@_shorten_lastb_tl
-      \l_@@_shorten_last_tl
-      \l_@@_shorten_len_fp
+      \l_@@_tmpc_tl
+      \l_@@_tmpd_tl
+      \l_@@_tmpe_tl
+      \l_@@_tmpc_fp
     }
     {
       \spath_split_line:NNVV
-      \l_@@_shorten_lasta_tl
-      \l_@@_shorten_lastb_tl
-      \l_@@_shorten_last_tl
-      \l_@@_shorten_len_fp
+      \l_@@_tmpc_tl
+      \l_@@_tmpd_tl
+      \l_@@_tmpe_tl
+      \l_@@_tmpc_fp
     }
 
     \prg_replicate:nn {2}
     {
-      \tl_set:Nx \l_@@_shorten_path_tl {\tl_tail:N \l_@@_shorten_path_tl}
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     }
 
-    \tl_put_left:NV \l_@@_shorten_path_tl \l_@@_shorten_lastb_tl
+    \tl_put_left:NV \l_@@_tmpa_tl \l_@@_tmpd_tl
 
   }
   {
 
-    \tl_put_left:NV \l_@@_shorten_path_tl \c_spath_moveto_tl
+    \tl_put_left:NV \l_@@_tmpa_tl \c_spath_moveto_tl
     
     \int_compare:nT
     {
-      \tl_count:N \l_@@_shorten_path_tl > 3
+      \tl_count:N \l_@@_tmpa_tl > 3
     }
     {
-      \dim_set:Nn \l_@@_tmpa_dim {\fp_to_dim:n {#2 - \l_@@_shorten_len_fp } }
-      \spath_shorten_at_start:NV \l_@@_shorten_path_tl \l_@@_tmpa_dim
+      \dim_set:Nn \l_@@_tmpa_dim {\fp_to_dim:n {#2 - \l_@@_tmpc_fp } }
+      \spath_shorten_at_start:NV \l_@@_tmpa_tl \l_@@_tmpa_dim
     }
   }
 
-  \tl_gset_eq:NN \g_@@_output_tl \l_@@_shorten_path_tl
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
   \group_end:
   }
   {
@@ -3299,25 +3303,6 @@ manipulating PGF soft paths}
 % The intersection library is 0-based, but the user interface is 1-based (since if we ``count'' in a \Verb+\foreach+ then it starts at 1).
 % This should be more consistent.
 %
-%    \begin{macrocode}
-\tl_new:N \l_@@_split_path_a_tl
-\tl_new:N \l_@@_split_path_b_tl
-\tl_new:N \l_@@_split_path_a_start_tl
-\tl_new:N \l_@@_split_path_b_start_tl
-\tl_new:N \l_@@_split_path_a_end_tl
-\tl_new:N \l_@@_split_path_b_end_tl
-\tl_new:N \l_@@_split_path_a_final_tl
-\tl_new:N \l_@@_split_path_b_final_tl
-
-\tl_new:N \l_@@_split_prev_first_tl
-\tl_new:N \l_@@_split_prev_second_tl
-
-\seq_new:N \l_@@_split_first_seq
-\seq_new:N \l_@@_split_second_seq
-
-\int_new:N \l_@@_split_segment_int
-%    \end{macrocode}
-%
 % \begin{macro}{
 % \spath_intersect:NN,
 % \spath_intersect:nn,
@@ -3333,8 +3318,6 @@ manipulating PGF soft paths}
     \pgfsetpath #2
   }
 }
-\tl_new:N \l_@@_intersecta_tl
-\tl_new:N \l_@@_intersectb_tl
 \cs_new_protected_nopar:Npn \spath_intersect:nn #1#2
 {
   \tl_set:Nn \l_@@_intersecta_tl {#1}
@@ -3354,27 +3337,29 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_split_component_at_intersections:nn #1#2
 {
   \group_begin:
-  \tl_clear:N \l_@@_split_path_a_final_tl
-  \seq_clear:N \l_@@_split_first_seq
+  \tl_clear:N \l_@@_tmpe_tl
+  \seq_clear:N \l_@@_tmpb_seq
   
   % Find the intersections of these segments
-  \tl_set:Nn \l_@@_split_path_a_tl {#1}
-  \tl_set:Nn \l_@@_split_path_b_tl {#2}
+  \tl_set:Nn \l_@@_tmpb_tl {#1}
+  \tl_set:Nn \l_@@_tmpc_tl {#2}
 
+  \spath_reallength:Nn \l_@@_tmpa_int {#1}
+  
   % Remember if the component is closed
-  \spath_finalaction:NV \l_@@_tmpa_tl \l_@@_split_path_a_tl
-
+  \spath_finalaction:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
+  
   \bool_set:Nn \l_@@_closed_bool
   {
     \tl_if_eq_p:NN \l_@@_tmpa_tl \c_spath_closepath_tl
   }
 
   % Open it
-  \spath_open:N \l_@@_split_path_a_tl
+  \spath_open:N \l_@@_tmpb_tl
 
   % Sort intersections along the component
   \pgfintersectionsortbyfirstpath
-  \spath_intersect:NN \l_@@_split_path_a_tl \l_@@_split_path_b_tl
+  \spath_intersect:NN \l_@@_tmpb_tl \l_@@_tmpc_tl
   
   % If we get intersections
   \int_compare:nT {\pgfintersectionsolutions > 0}
@@ -3382,19 +3367,19 @@ manipulating PGF soft paths}
     % Find the times of the intersections on the component
     \int_step_inline:nnnn {1} {1} {\pgfintersectionsolutions}
     {
-    \pgfintersectiongetsolutiontimes{##1}{\l_@@_split_first_tl}{\l_@@_split_second_tl}
-      \seq_put_left:NV \l_@@_split_first_seq \l_@@_split_first_tl
+      \pgfintersectiongetsolutiontimes{##1}{\l_@@_tmph_tl}{\l_@@_tmpi_tl}
+      \seq_put_left:NV \l_@@_tmpb_seq \l_@@_tmph_tl
     }
 
-    \seq_get_left:NN \l_@@_split_first_seq \l_@@_tmpa_tl
+    \seq_get_left:NN \l_@@_tmpb_seq \l_@@_tmpa_tl
     \fp_compare:nT
     {
-      \l_@@_tmpa_tl > \seq_count:N \l_@@_tmpa_seq - .01
+      \l_@@_tmpa_tl > \l_@@_tmpa_int - .01
     }
     {
       \bool_set_false:N \l_@@_closed_bool
     }
-    \seq_get_right:NN \l_@@_split_first_seq \l_@@_tmpa_tl
+    \seq_get_right:NN \l_@@_tmpb_seq \l_@@_tmpa_tl
     \fp_compare:nT
     {
       \l_@@_tmpa_tl < .01
@@ -3404,55 +3389,55 @@ manipulating PGF soft paths}
     }
 
     
-    \tl_set:Nn \l_@@_split_prev_first_tl {-1}
+    \tl_set:Nn \l_@@_tmpg_tl {-1}
 
-    \seq_map_inline:Nn \l_@@_split_first_seq
+    \seq_map_inline:Nn \l_@@_tmpb_seq
     {
-      \tl_set:Nn \l_@@_split_first_tl {##1}
+      \tl_set:Nn \l_@@_tmph_tl {##1}
     
-      \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_split_first_tl
+      \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_tmph_tl
       \int_compare:nT
       {
-        \fp_to_int:n {floor( \l_@@_split_first_tl) }
+        \fp_to_int:n {floor( \l_@@_tmph_tl) }
         =
-        \fp_to_int:n {floor( \l_@@_split_prev_first_tl) }
+        \fp_to_int:n {floor( \l_@@_tmpg_tl) }
       }
       {
-        \tl_set:Nx \l_@@_split_first_tl
+        \tl_set:Nx \l_@@_tmph_tl
         {
           \fp_eval:n {
-            floor( \l_@@_split_first_tl )
+            floor( \l_@@_tmph_tl )
             +
-            ( \l_@@_split_first_tl - floor( \l_@@_split_first_tl) )
+            ( \l_@@_tmph_tl - floor( \l_@@_tmph_tl) )
             /
-            ( \l_@@_split_prev_first_tl - floor( \l_@@_split_prev_first_tl) )
+            ( \l_@@_tmpg_tl - floor( \l_@@_tmpg_tl) )
           }
         }
       }
-      \tl_set_eq:NN \l_@@_split_prev_first_tl \l_@@_tmpa_tl
+      \tl_set_eq:NN \l_@@_tmpg_tl \l_@@_tmpa_tl
     
-      \spath_split_at:NNVV \l_@@_split_path_a_start_tl \l_@@_split_path_a_end_tl  \l_@@_split_path_a_tl \l_@@_split_first_tl
+      \spath_split_at:NNVV \l_@@_tmpd_tl \l_@@_tmpf_tl  \l_@@_tmpb_tl \l_@@_tmph_tl
     
-      \tl_put_left:NV \l_@@_split_path_a_final_tl \l_@@_split_path_a_end_tl
-      \tl_set_eq:NN \l_@@_split_path_a_tl \l_@@_split_path_a_start_tl
+      \tl_put_left:NV \l_@@_tmpe_tl \l_@@_tmpf_tl
+      \tl_set_eq:NN \l_@@_tmpb_tl \l_@@_tmpd_tl
     
     }
 
 
-    \tl_put_left:NV \l_@@_split_path_a_final_tl \l_@@_split_path_a_tl
+    \tl_put_left:NV \l_@@_tmpe_tl \l_@@_tmpb_tl
   
-    \spath_remove_empty_components:N \l_@@_split_path_a_final_tl
+    \spath_remove_empty_components:N \l_@@_tmpe_tl
 
-    \tl_set_eq:NN \l_@@_split_path_a_tl \l_@@_split_path_a_final_tl
+    \tl_set_eq:NN \l_@@_tmpb_tl \l_@@_tmpe_tl
   }
 
   \bool_if:NT \l_@@_closed_bool
   {
-    \spath_join_component:Nn \l_@@_split_path_a_tl {1}
+    \spath_join_component:Nn \l_@@_tmpb_tl {1}
   }
 
   \tl_gclear:N \g_@@_output_tl
-  \tl_gset_eq:NN \g_@@_output_tl \l_@@_split_path_a_tl
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpb_tl
   
   \group_end:
 }
@@ -3502,18 +3487,18 @@ manipulating PGF soft paths}
 {
   \group_begin:
 
-  \seq_clear:N \l_@@_split_first_seq
-  \seq_clear:N \l_@@_split_second_seq
+  \seq_clear:N \l_@@_tmpa_seq
+  \seq_clear:N \l_@@_tmpb_seq
   
-  \spath_components_to_seq:Nn \l_@@_split_first_seq {#1}
-  \seq_map_inline:Nn \l_@@_split_first_seq
+  \spath_components_to_seq:Nn \l_@@_tmpa_seq {#1}
+  \seq_map_inline:Nn \l_@@_tmpa_seq
   {
     \spath_split_component_at_intersections:Nnn \l_@@_tmpa_tl {##1} {#2}
-    \seq_put_right:NV \l_@@_split_second_seq \l_@@_tmpa_tl
+    \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpa_tl
   }
 
   \tl_gclear:N \g_@@_output_tl
-  \tl_gset:Nx \g_@@_output_tl {\seq_use:Nn \l_@@_split_second_seq {} }
+  \tl_gset:Nx \g_@@_output_tl {\seq_use:Nn \l_@@_tmpb_seq {} }
   \group_end:
 }
 \cs_new_protected_nopar:Npn \spath_split_path_at_intersections:Nnn #1#2#3
@@ -3583,10 +3568,10 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_split_component_at_self_intersections:n #1
 {
   \group_begin:
-  \tl_set:Nn \l_@@_split_path_b_tl {#1}
+  \tl_set:Nn \l_@@_tmpe_tl {#1}
 
   % Remember if the component is closed
-  \spath_finalaction:NV \l_@@_tmpa_tl \l_@@_split_path_b_tl
+  \spath_finalaction:NV \l_@@_tmpa_tl \l_@@_tmpe_tl
 
   \bool_set:Nn \l_@@_closed_bool
   {
@@ -3594,25 +3579,25 @@ manipulating PGF soft paths}
   }
   
   % Copy the path
-  \tl_set:Nn \l_@@_split_path_b_tl {#1}
+  \tl_set:Nn \l_@@_tmpe_tl {#1}
 
   % Open the path
-  \spath_open:N \l_@@_split_path_b_tl
+  \spath_open:N \l_@@_tmpe_tl
   % Ensure beziers don't self-intersect
-  \spath_split_curves:N \l_@@_split_path_b_tl
+  \spath_split_curves:N \l_@@_tmpe_tl
 
   % Make a copy for later
-  \tl_set_eq:NN \l_@@_split_path_b_final_tl \l_@@_split_path_b_tl
+  \tl_set_eq:NN \l_@@_tmpg_tl \l_@@_tmpe_tl
   
   % Clear some token lists and sequences
-  \tl_clear:N \l_@@_split_path_a_tl
-  \seq_clear:N \l_@@_split_first_seq
-  \int_zero:N \l_@@_split_segment_int
+  \tl_clear:N \l_@@_tmpd_tl
+  \seq_clear:N \l_@@_tmpb_seq
+  \int_zero:N \l_@@_tmpa_int
 
   \pgfintersectionsortbyfirstpath
 
   % Split the path into a sequence of segments
-  \spath_segments_to_seq:NV \l_@@_tmpa_seq \l_@@_split_path_b_tl
+  \spath_segments_to_seq:NV \l_@@_tmpa_seq \l_@@_tmpe_tl
 
   \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
   {
@@ -3632,18 +3617,18 @@ manipulating PGF soft paths}
           \int_step_inline:nnnn {1} {1} {\pgfintersectionsolutions}
           {
             \pgfintersectiongetsolutiontimes
-            {########1}{\l_@@_split_first_tl}{\l_@@_split_second_tl}
+            {########1}{\l_@@_tmpb_tl}{\l_@@_tmpc_tl}
             
             \bool_if:nT
             {
               !(
-              \fp_compare_p:n { \l_@@_split_first_tl > .99 }
+              \fp_compare_p:n { \l_@@_tmpb_tl > .99 }
               &&
               \int_compare_p:n {##1 + 1 == ####1}
               )
               &&
               !(
-              \fp_compare_p:n { \l_@@_split_first_tl < .01 }
+              \fp_compare_p:n { \l_@@_tmpb_tl < .01 }
               &&
               \int_compare_p:n {##1 - 1 == ####1}
               )
@@ -3651,7 +3636,7 @@ manipulating PGF soft paths}
               !(
               \l_@@_closed_bool
               &&
-              \fp_compare_p:n { \l_@@_split_first_tl < .01 }
+              \fp_compare_p:n { \l_@@_tmpb_tl < .01 }
               &&
               \int_compare_p:n {##1 == 1}
               &&
@@ -3661,7 +3646,7 @@ manipulating PGF soft paths}
               !(
               \l_@@_closed_bool
               &&
-              \fp_compare_p:n { \l_@@_split_first_tl > .99 }
+              \fp_compare_p:n { \l_@@_tmpb_tl > .99 }
               &&
               \int_compare_p:n {####1 == 1}
               &&
@@ -3669,8 +3654,8 @@ manipulating PGF soft paths}
               )
             }
             {
-              \tl_set:Nx \l_@@_tmpa_tl {\fp_to_decimal:n {\l_@@_split_first_tl +  ##1 - 1}}
-              \seq_put_right:NV \l_@@_split_first_seq \l_@@_tmpa_tl
+              \tl_set:Nx \l_@@_tmpa_tl {\fp_to_decimal:n {\l_@@_tmpb_tl +  ##1 - 1}}
+              \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpa_tl
             }
           }
         }
@@ -3679,14 +3664,14 @@ manipulating PGF soft paths}
   }
 
   % Sort the sequence by reverse order along the path
-  \seq_sort:Nn \l_@@_split_first_seq
+  \seq_sort:Nn \l_@@_tmpb_seq
   {
     \fp_compare:nNnTF { ##1 } < { ##2 }
     { \sort_return_swapped: }
     { \sort_return_same: }
   }
 
-  \seq_get_left:NN \l_@@_split_first_seq \l_@@_tmpa_tl
+  \seq_get_left:NN \l_@@_tmpb_seq \l_@@_tmpa_tl
   \fp_compare:nT
   {
     \l_@@_tmpa_tl > \seq_count:N \l_@@_tmpa_seq - .01
@@ -3694,7 +3679,7 @@ manipulating PGF soft paths}
   {
     \bool_set_false:N \l_@@_closed_bool
   }
-  \seq_get_right:NN \l_@@_split_first_seq \l_@@_tmpa_tl
+  \seq_get_right:NN \l_@@_tmpb_seq \l_@@_tmpa_tl
   \fp_compare:nT
   {
     \l_@@_tmpa_tl < .01
@@ -3704,63 +3689,63 @@ manipulating PGF soft paths}
   }
   
   % Restore the original copy of the path
-  \tl_set_eq:NN \l_@@_split_path_b_tl \l_@@_split_path_b_final_tl
+  \tl_set_eq:NN \l_@@_tmpe_tl \l_@@_tmpg_tl
 
   % Clear the token lists
-  \tl_clear:N \l_@@_split_path_b_start_tl
-  \tl_clear:N \l_@@_split_path_b_end_tl
-  \tl_clear:N \l_@@_split_path_b_final_tl
+  \tl_clear:N \l_@@_tmpf_tl
+  \tl_clear:N \l_@@_tmph_tl
+  \tl_clear:N \l_@@_tmpg_tl
 
-  \tl_set:Nn \l_@@_split_prev_first_tl {-1}
+  \tl_set:Nn \l_@@_tmpi_tl {-1}
 
-  \seq_map_inline:Nn \l_@@_split_first_seq
+  \seq_map_inline:Nn \l_@@_tmpb_seq
   {
-    \tl_set:Nn \l_@@_split_first_tl {##1}
-    \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_split_first_tl
+    \tl_set:Nn \l_@@_tmpb_tl {##1}
+    \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_tmpb_tl
     \int_compare:nT
     {
-      \fp_to_int:n {floor( \l_@@_split_first_tl ) }
+      \fp_to_int:n {floor( \l_@@_tmpb_tl ) }
       =
-      \fp_to_int:n {floor( \l_@@_split_prev_first_tl) }
+      \fp_to_int:n {floor( \l_@@_tmpi_tl) }
     }
     {
-      \tl_set:Nx \l_@@_split_first_tl
+      \tl_set:Nx \l_@@_tmpb_tl
       {
         \fp_eval:n {
-          floor( \l_@@_split_first_tl )
+          floor( \l_@@_tmpb_tl )
           +
-          ( \l_@@_split_first_tl - floor( \l_@@_split_first_tl) )
+          ( \l_@@_tmpb_tl - floor( \l_@@_tmpb_tl) )
           /
-          ( \l_@@_split_prev_first_tl - floor( \l_@@_split_prev_first_tl) )
+          ( \l_@@_tmpi_tl - floor( \l_@@_tmpi_tl) )
         }
       }
     }
-    \tl_set_eq:NN \l_@@_split_prev_first_tl \l_@@_tmpa_tl
+    \tl_set_eq:NN \l_@@_tmpi_tl \l_@@_tmpa_tl
 
-    \spath_split_at:NNVV \l_@@_split_path_b_start_tl \l_@@_split_path_b_end_tl  \l_@@_split_path_b_tl \l_@@_split_first_tl
+    \spath_split_at:NNVV \l_@@_tmpf_tl \l_@@_tmph_tl  \l_@@_tmpe_tl \l_@@_tmpb_tl
       
-    \tl_put_left:NV \l_@@_split_path_b_final_tl \l_@@_split_path_b_end_tl
-    \tl_set_eq:NN \l_@@_split_path_b_tl \l_@@_split_path_b_start_tl
+    \tl_put_left:NV \l_@@_tmpg_tl \l_@@_tmph_tl
+    \tl_set_eq:NN \l_@@_tmpe_tl \l_@@_tmpf_tl
 
   }
 
-  \tl_put_left:NV \l_@@_split_path_b_final_tl \l_@@_split_path_b_tl
+  \tl_put_left:NV \l_@@_tmpg_tl \l_@@_tmpe_tl
 
-  \tl_if_empty:NT \l_@@_split_path_b_final_tl
+  \tl_if_empty:NT \l_@@_tmpg_tl
   {
-    \tl_set_eq:NN \l_@@_split_path_b_final_tl \l_@@_split_path_b_tl
+    \tl_set_eq:NN \l_@@_tmpg_tl \l_@@_tmpe_tl
   }
 
-  \spath_remove_empty_components:N \l_@@_split_path_b_final_tl
+  \spath_remove_empty_components:N \l_@@_tmpg_tl
 
   % Do something with closed
   \bool_if:NT \l_@@_closed_bool
   {
-    \spath_join_component:Nn \l_@@_split_path_b_final_tl {1}
+    \spath_join_component:Nn \l_@@_tmpg_tl {1}
   }
   
   \tl_gclear:N \g_@@_output_tl
-  \tl_gset_eq:NN \g_@@_output_tl \l_@@_split_path_b_final_tl
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpg_tl
   \group_end:
 }
 \cs_new_protected_nopar:Npn \spath_split_component_at_self_intersections:Nn #1#2
@@ -3881,7 +3866,6 @@ manipulating PGF soft paths}
 % }
 % Join the specified component of the spath to its predecessor.
 %    \begin{macrocode}
-\tl_new:N \l_@@_tmpj_tl
 \cs_new_protected_nopar:Npn \@@_join_component:nn #1#2
 {
   \group_begin:
@@ -4234,13 +4218,15 @@ manipulating PGF soft paths}
 \iow_new:N \g_@@_stream
 \cs_new_protected_nopar:Npn \spath_export_to_svg:nn #1#2
 {
-  \spath_convert_to_svg:Nn \l_@@_iterp_tl {#2}
+  \group_begin:
+  \spath_convert_to_svg:Nn \l_@@_tmpa_tl {#2}
   \iow_open:Nn \g_@@_stream {#1 .svg}
   \iow_now:Nx \g_@@_stream
   {
-    \tl_use:N \l_@@_iterp_tl
+    \tl_use:N \l_@@_tmpa_tl
   }
   \iow_close:N \g_@@_stream
+  \group_end:
 }
 \cs_generate_variant:Nn \spath_export_to_svg:nn {nv, nV}
 %    \end{macrocode}
