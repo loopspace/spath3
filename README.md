@@ -20,9 +20,9 @@ It also provides two sub-packages which make use of this facility:
 These libraries are on [CTAN](https://ctan.org/pkg/spath3?lang=en) and are
 included in TeXLive and MikTeX.  You should obtain them from one of those
 sources.  If you know that you need the most up to date version from here,
-then download the file `spath3.dtx` and run `tex spath3.dtx` to generate the
+then download the file `spath3_code.dtx` and run `tex spath3_code.dtx` to generate the
 files.
 
 # Documentation
 
-The simplest way to get the documentation is via `texdoc` or from [CTAN](https://ctan.org/pkg/spath3?lang=en).  To generate it from source, run `pdflatex` on one of the `_doc.tex` files or on `spath3.dtx` itself.
+The simplest way to get the documentation is via `texdoc` or from [CTAN](https://ctan.org/pkg/spath3?lang=en).  To generate it from source, run `pdflatex` on one of the `_doc.tex` files or on `spath3.tex`.
