@@ -89,6 +89,71 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \begin{document}
 
 \begin{tikzpicture}
+\fill[red]  (0.01869pt, 54.94537pt) circle[radius=8pt];
+
+
+\draw[ultra thick,spath/save=short]
+(-0.05162pt, 16.03508pt)
+.. controls (5.78798pt, 19.31158pt)
+and (11.75685pt, 22.57562pt)
+.. (14.22594pt, 28.45274pt)
+.. controls (17.33452pt, 35.85257pt)
+and (15.03658pt, 43.39893pt)
+.. (9.5325pt, 48.87686pt)
+.. controls (6.97835pt, 51.41888pt)
+and (3.73378pt, 53.5155pt)
+.. (0.01869pt, 54.94537pt)
+;
+
+\draw[spath/transform to={short}{.3333}] (0,0) +(0,.3) -- +(0,-.3);
+\draw[spath/transform to={short}{.6666}] (0,0) +(0,.3) -- +(0,-.3);
+
+\draw[white,
+  spath/shorten at end={short}{8pt},
+  spath/show=short,
+  spath/restore=short];
+
+\draw[cyan] (0.01869pt, 54.94537pt) --
+ (3.73378pt, 53.5155pt)
+(9.5325pt, 48.87686pt)
+-- (6.97835pt, 51.41888pt)
+  ;
+
+\end{tikzpicture}
+
+
+\begin{tikzpicture}[
+  every spath component/.style={ultra thick, draw, red},
+  use Hobby shortcut,
+]
+\path[spath/save=figure8] ([closed]0,0) .. (1.5,1) .. (.5,2) .. (-.5,1) .. (.5,0) .. (0,-.5) .. (-.5,0) .. (.5,1) .. (-.5,2) .. (-1.5,1) .. (0,0);
+\fill (0,0) circle[radius=2pt]
+ (1.5,1) circle[radius=2pt]
+ (.5,2) circle[radius=2pt]
+ (-.5,1) circle[radius=2pt]
+ (.5,0) circle[radius=2pt]
+ (0,-.5) circle[radius=2pt]
+ (-.5,0) circle[radius=2pt]
+ (.5,1) circle[radius=2pt]
+ (-.5,2) circle[radius=2pt]
+ (-1.5,1) circle[radius=2pt]
+;
+\tikzset{
+  spath/draft mode=true,
+  spath/knot={figure8}{8pt}{},%2,4,6,8},
+  spath/get components of={figure8}\cpts,
+  spath/show=\getComponentOf\cpts{6},
+  spath/insert gaps after components={figure8}{8pt}{6},
+  spath/get components of={figure8}\ncpts,
+  spath/show=\getComponentOf\ncpts{6},
+}
+\draw[ultra thick,spath/restore=\getComponentOf\cpts{6}];
+\draw[white,spath/restore=\getComponentOf\ncpts{6}];
+\path (0,-.7);
+\end{tikzpicture}
+
+
+\begin{tikzpicture}
 \path[spath/save=g,draw]
 (0,0) -- ++(1,0)
 ++(0,0) -- ++(1,0)
