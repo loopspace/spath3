@@ -89,6 +89,43 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \begin{document}
 
 \begin{tikzpicture}
+\path[draw=orange,ultra thick,spath/save=a] (3,2) -- ++(1,1) to[out=90,in=-90] ++(3,0);
+\tikzset{
+  spath/show=a,
+  spath/normalise=a,
+  spath/show=a,
+}
+
+\draw[spath/transform={a}{scale=28},spath/restore=a];
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\path[
+  draw=orange,
+  ultra thick,
+  spath/save=arc] (0,0) arc[radius=1,start angle=180, end angle=0];
+
+\path[
+  draw=cyan,
+  ultra thick,
+  spath/save=start]
+(0,1) -- ++(1,1)
+++(1,0) -- ++(1,-1)
+++(0,-1) -- ++(-1,-1)
+++(-1,0) -- ++(-1,1)
+;
+
+\tikzset{
+  spath/join components with={start}{arc},
+  spath/close with={start}{arc},
+}
+
+\draw[spath/restore=start];
+\end{tikzpicture}
+
+\end{document}
+
+\begin{tikzpicture}
 \fill[red]  (0.01869pt, 54.94537pt) circle[radius=8pt];
 
 

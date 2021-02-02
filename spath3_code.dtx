@@ -1534,6 +1534,292 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 % \begin{macro}[internal]{
+%  \spath_span:Nnnn,
+%  \spath_span:Nnn,
+%  \spath_gspan:Nnnn,
+%  \spath_gspan:Nnn,
+%  \spath_normalise:Nn,
+%  \spath_normalise:N,
+%  \spath_gnormalise:Nn,
+%  \spath_gnormalise:N
+% }
+% The \Verb+span+ functions transform a path to start and end at specified points.
+% The \Verb+normalise+ functions transform it to start at the origin and end at \((1\mathrm{pt},0\mathrm{pt})\).
+%
+% If the path starts and ends at the same point then it is translated to the specified point (or origin) but not otherwise changed.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_span:nnn #1#2#3
+{
+  \group_begin:
+  \spath_initialpoint:Nn \l_@@_tmpa_tl {#1}
+  \spath_finalpoint:Nn \l_@@_tmpb_tl {#1}
+  
+  \fp_set:Nn \l_@@_tmpa_fp
+  {
+    (\tl_item:Nn \l_@@_tmpb_tl {1}) -
+    (\tl_item:Nn \l_@@_tmpa_tl {1})
+  }
+  \fp_set:Nn \l_@@_tmpb_fp
+  {
+    (\tl_item:Nn \l_@@_tmpb_tl {2}) -
+    (\tl_item:Nn \l_@@_tmpa_tl {2})
+  }
+  \fp_set:Nn \l_@@_tmpc_fp
+  {
+    (\l_@@_tmpa_fp) * (\l_@@_tmpa_fp) + (\l_@@_tmpb_fp * \l_@@_tmpb_fp)
+  }
+
+  \fp_compare:nTF
+  {
+    \l_@@_tmpc_fp < 0.001
+  }
+  {
+    \spath_translate_to:Nnnn \l_@@_tmpd_tl {#1} #2
+  }
+  {
+    \fp_set:Nn \l_@@_tmpa_fp
+    {
+      (
+      ((\tl_item:nn {#3} {1})
+      -
+      (\tl_item:nn {#2} {1}))
+      *
+      ((\tl_item:Nn \l_@@_tmpb_tl {1})
+      -
+      (\tl_item:Nn \l_@@_tmpa_tl {1}))
+      +
+      ((\tl_item:nn {#3} {2})
+      -
+      (\tl_item:nn {#2} {2}))
+      *
+      ((\tl_item:Nn \l_@@_tmpb_tl {2})
+      -
+      (\tl_item:Nn \l_@@_tmpa_tl {2}))
+      )
+      /
+      \l_@@_tmpc_fp
+    }
+    \fp_set:Nn \l_@@_tmpb_fp
+    {
+      (
+      ((\tl_item:nn {#3} {2})
+      -
+      (\tl_item:nn {#2} {2}))
+      *
+      ((\tl_item:Nn \l_@@_tmpb_tl {1})
+      -
+      (\tl_item:Nn \l_@@_tmpa_tl {1}))
+      -
+      ((\tl_item:nn {#3} {1})
+      -
+      (\tl_item:nn {#2} {1}))
+      *
+      ((\tl_item:Nn \l_@@_tmpb_tl {2})
+      -
+      (\tl_item:Nn \l_@@_tmpa_tl {2}))
+      )
+      /
+      \l_@@_tmpc_fp
+    }
+    
+    \tl_set:Nx \l_@@_tmpc_tl
+    {
+      {
+        \fp_to_decimal:N \l_@@_tmpa_fp
+      }
+      {
+        \fp_to_decimal:N \l_@@_tmpb_fp
+      }
+      {
+        \fp_eval:n { - \l_@@_tmpb_fp }
+      }
+      {
+        \fp_to_decimal:N \l_@@_tmpa_fp
+      }
+      {
+        \fp_to_dim:n
+        {
+          \tl_item:nn {#2} {1}
+          -
+          \l_@@_tmpa_fp * (\tl_item:Nn \l_@@_tmpa_tl {1})
+          +
+          \l_@@_tmpb_fp * (\tl_item:Nn \l_@@_tmpa_tl {2})
+        }
+      }
+      {
+        \fp_to_dim:n
+        {
+          \tl_item:nn {#2} {2}
+          -
+          \l_@@_tmpb_fp * (\tl_item:Nn \l_@@_tmpa_tl {1})
+          -
+          \l_@@_tmpa_fp * (\tl_item:Nn \l_@@_tmpa_tl {2})
+        }
+      }
+    }
+    \spath_transform:NnV \l_@@_tmpd_tl {#1} \l_@@_tmpc_tl
+  }
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpd_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_span:Nnnn #1#2#3#4
+{
+  \@@_span:nnn {#2}{#3}{#4}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_span:Nnnn {NVnn, NVVV, NnVV}
+\cs_new_protected_nopar:Npn \spath_span:Nnn #1#2#3
+{
+  \spath_span:NVnn #1#1{#2}{#3}
+}
+\cs_generate_variant:Nn \spath_span:Nnn {NVV, cnn, cvv, cVV}
+\cs_new_protected_nopar:Npn \spath_gspan:Nnnn #1#2#3#4
+{
+  \@@_span:nnn {#2}{#3}{#4}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gspan:Nnnn {NVnn, NVVV}
+\cs_new_protected_nopar:Npn \spath_gspan:Nnn #1#2#3
+{
+  \spath_gspan:NVnn #1#1{#2}{#3}
+}
+\cs_generate_variant:Nn \spath_gspan:Nnn {NVV, cnn, cvv, cVV}
+\cs_new_protected_nopar:Npn \@@_normalise:n #1
+{
+  \@@_span:nnn {#1}{{0pt}{0pt}}{{1pt}{0pt}}
+}
+\cs_new_protected_nopar:Npn \spath_normalise:Nn #1#2
+{
+  \@@_normalise:n {#2}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_normalise:Nn {cn,NV, cV, cv}
+\cs_new_protected_nopar:Npn \spath_normalise:N #1
+{
+  \spath_normalise:NV #1#1
+}
+\cs_generate_variant:Nn \spath_normalise:N {c}
+\cs_new_protected_nopar:Npn \spath_gnormalise:Nn #1#2
+{
+  \@@_normalise:n {#2}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gnormalise:Nn {cn,NV, cV, cv}
+\cs_new_protected_nopar:Npn \spath_gnormalise:N #1
+{
+  \spath_gnormalise:NV #1#1
+}
+\cs_generate_variant:Nn \spath_gnormalise:N {c}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}[internal]{
+% \spath_splice_between:Nnnn,
+% \spath_splice_between:Nnn,
+% \spath_gsplice_between:Nnnn,
+% \spath_gsplice_between:Nnn
+% }
+% This takes three paths and returns a single path in which the middle one is adjusted (and welded) so that it joins the first path to the third.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_splice_between:nnn #1#2#3
+{
+  \group_begin:
+  \spath_finalpoint:NV \l_@@_tmpd_tl {#1}
+  \spath_initialpoint:NV \l_@@_tmpe_tl {#3}
+  \spath_span:NnVV \l_@@_tmpb_tl {#2} \l_@@_tmpd_tl \l_@@_tmpe_tl
+  \spath_append_no_move:NnV \l_@@_tmpa_tl {#1} \l_@@_tmpb_tl
+  \spath_append_no_move:Nn \l_@@_tmpa_tl {#3}
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_splice_between:Nnnn #1#2#3#4
+{
+  \@@_splice_between:nnn {#2}{#3}{#4}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_splice_between:Nnnn {NVnn, NVVV}
+\cs_new_protected_nopar:Npn \spath_splice_between:Nnn #1#2#3
+{
+  \spath_splice_between:NVnn #1#1{#2}{#3}
+}
+\cs_generate_variant:Nn \spath_splice_between:Nnn {NVV, cnn, cvv, Nvn}
+\cs_new_protected_nopar:Npn \spath_gsplice_between:Nnnn #1#2#3#4
+{
+  \@@_splice_between:nnn {#2}{#3}{#4}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gsplice_between:Nnnn {NVnn, NVVV}
+\cs_new_protected_nopar:Npn \spath_gsplice_between:Nnn #1#2#3
+{
+  \spath_gsplice_between:NVnn #1#1{#2}{#3}
+}
+\cs_generate_variant:Nn \spath_gsplice_between:Nnn {NVV, cnn, cvv}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{
+% \spath_close_with:Nn,
+% \spath_gclose_with:Nn
+% }
+% Closes the first path by splicing in the second.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_close_with:nn #1#2
+{
+  \group_begin:
+  \spath_finalmovepoint:Nn \l_@@_tmpa_tl {#1}
+  \spath_finalpoint:Nn \l_@@_tmpb_tl {#1}
+  \dim_compare:nTF
+  {
+    \dim_abs:n { \tl_item:Nn \l_@@_tmpa_tl {1} - \tl_item:Nn \l_@@_tmpb_tl {1} }
+    +
+    \dim_abs:n { \tl_item:Nn \l_@@_tmpa_tl {2} - \tl_item:Nn \l_@@_tmpb_tl {2} }
+    < 0.01pt
+  }
+  {
+    \@@_close:n {#1}
+  }
+  {
+    \spath_span:NnVV \l_@@_tmpc_tl {#2} \l_@@_tmpb_tl \l_@@_tmpa_tl
+    \spath_append_no_move:NnV \l_@@_tmpd_tl {#1} \l_@@_tmpc_tl
+    \@@_close:V \l_@@_tmpd_tl
+  }
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_close_with:Nnn #1#2#3
+{
+  \@@_close_with:nn {#2}{#3}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_close_with:Nnn {cnn, cVV, cvv, NVn}
+\cs_new_protected_nopar:Npn \spath_close_with:Nn #1#2
+{
+  \spath_close_with:NVn #1#1{#2}
+}
+\cs_generate_variant:Nn \spath_close_with:Nn {cn, cV, cv, NV}
+\cs_new_protected_nopar:Npn \spath_gclose_with:Nnn #1#2#3
+{
+  \@@_close_with:nn {#2}{#3}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gclose_with:Nnn {cnn, cVV, cvv, NVn}
+\cs_new_protected_nopar:Npn \spath_gclose_with:Nn #1#2
+{
+  \spath_gclose_with:NVn #1#1{#2}
+}
+\cs_generate_variant:Nn \spath_gclose_with:Nn {cn, cV, cv, NV}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{
 % \spath_weld:Nnn,
 % \spath_weld:Nn,
 % \spath_gweld:Nnn,
@@ -1610,7 +1896,7 @@ manipulating PGF soft paths}
   \tl_set_eq:NN #1 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_append_no_move:Nnn {NVV, NVn}
+\cs_generate_variant:Nn \spath_append_no_move:Nnn {NVV, NVn, NnV}
 \cs_new_protected_nopar:Npn \spath_append_no_move:Nn #1#2
 {
   \spath_append_no_move:NVn #1#1{#2}
@@ -1780,19 +2066,18 @@ manipulating PGF soft paths}
 % \spath_gclose:N
 % }
 % Appends a close path to the end of the path.
-% For now, the point is the initial or final point (respectively).
-% To be future proof, it ought to be the point of the adjacent move to.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \@@_close:n #1
 {
   \group_begin:
   \tl_set:Nn \l_@@_tmpa_tl {#1}
-  \spath_initialpoint:NV \l_@@_tmpb_tl \l_@@_tmpa_tl
+  \spath_finalmovepoint:NV \l_@@_tmpb_tl \l_@@_tmpa_tl
   \tl_put_right:NV \l_@@_tmpa_tl \c_spath_closepath_tl
   \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
   \group_end:
 }
+\cs_generate_variant:Nn \@@_close:n {V}
 \cs_new_protected_nopar:Npn \spath_close:Nn #1#2
 {
   \@@_close:n {#2}
@@ -4914,6 +5199,109 @@ manipulating PGF soft paths}
   },
 %    \end{macrocode}
 %
+% Splice three paths together, transforming the middle one so that it exactly fits between the first and third.
+%  
+%    \begin{macrocode}
+  splice/.code ~n~ args={3}{
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      {
+        \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #3 \tl_use:N \l_@@_suffix_tl}
+        {
+          \spath_splice_between:cvv
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+          {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+          {\tl_use:N \l_@@_prefix_tl #3 \tl_use:N \l_@@_suffix_tl}
+        }
+        {
+          \msg_warning:nnn { spath3 } { missing soft path } { #3 }
+        }
+      }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+      }
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%
+% Join the components of a path by splicing in the second path whenever the components are sufficiently far apart.
+%
+%    \begin{macrocode}
+  join~ components~ with/.code~2~args={
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+    {
+      \spath_spot_weld_components:c
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+
+      \spath_components_to_seq:Nv
+      \l_@@_tmpa_seq
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+
+      \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+      
+      \seq_map_inline:Nn \l_@@_tmpa_seq
+      {
+        \spath_splice_between:Nvn \l_@@_tmpa_tl
+        {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        {##1}
+      }
+      \tl_set_eq:cN
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \l_@@_tmpa_tl
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+    }
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%
+% Close a path.
+%
+%    \begin{macrocode}
+  close/.code={
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \spath_close:c
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%
+% Close a path with another path.
+%
+%    \begin{macrocode}
+  close~ with/.code~ 2~ args={
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+    {
+      \spath_close_with:cv
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+    }
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%
 % These keys shorten the path.
 %
 %    \begin{macrocode}
@@ -4959,6 +5347,31 @@ manipulating PGF soft paths}
     {
       \spath_translate:cnn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}{#2}{#3}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%
+% This normalises the named path.
+%
+%    \begin{macrocode}
+  normalise/.code={
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \spath_normalise:c
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+  normalise~ global/.code={
+    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \spath_gnormalise:c
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
