@@ -42,6 +42,11 @@
 \providecommand*{\url}{\texttt}
 \GetFileInfo{spath3.sty}
 
+\pdfstringdefDisableCommands{%
+  \def\\{}%
+  \def\url#1{<#1>}%
+}
+ 
 \title{The \textsf{knots} Package: Documentation}
 \author{Andrew Stacey \\ \url{loopspace@mathforge.org}}
 \date{\fileversion~from \filedate}
