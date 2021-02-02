@@ -143,7 +143,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{7501}
+% \CheckSum{7431}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -167,8 +167,14 @@ and the derived files            spath3.ins,
 % \changes{1.2}{2019/02/12}{More fixes due to changes in LaTeX3}
 % \changes{1.4}{2020/12/18}{A fair amount of code reimplementation and reorganisation, together with defining TikZ keys to make functions available for use.}
 % \changes{2.0}{2021/01/19}{Refactored the code to remove the OO approach and make it functional, introduced the spath3 TikZ library to provide a user interface.}
+% \changes{2.2}{2021/02/01}{Bugfixes and improvements, mainly with regard to the intersection and splitting routines.}
 %
 % \DoNotIndex{\newcommand,\newenvironment}
+%
+% \pdfstringdefDisableCommands{%
+%  \def\\{}%
+%  \def\url#1{<#1>}%
+% }
 %
 % \providecommand*{\url}{\texttt}
 % \GetFileInfo{spath3.sty}
@@ -372,7 +378,8 @@ manipulating PGF soft paths}
 %
 % And some error messages
 %    \begin{macrocode}
-\msg_new:nnn { spath3 } { unknown path construction } { The~ path~ construction~ element~ #1~ is~ not~ currently~ supported.}
+\msg_new:nnn { spath3 } { unknown path construction }
+{ The~ path~ construction~ element~ #1~ is~ not~ currently~ supported.}
 %    \end{macrocode}
 %
 %
@@ -383,7 +390,7 @@ manipulating PGF soft paths}
 % The macro to store it in is the first argument.
 % These functions occur in two versions, the one with the \texttt{g} makes the assignment global.
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_segments_to_seq:Nn,
 % \spath_segments_gto_seq:Nn
 %}
@@ -458,9 +465,9 @@ manipulating PGF soft paths}
         \prg_replicate:nn {2} {
           \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
           \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-          \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N               \l_@@_tmpa_tl}}
+          \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
           \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-          \tl_put_right:Nx \l_@@_tmpb_tl {\tl_head:N             \l_@@_tmpa_tl}
+          \tl_put_right:Nx \l_@@_tmpb_tl {\tl_head:N \l_@@_tmpa_tl}
           \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
         }
 
@@ -538,7 +545,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_components_to_seq:Nn,
 % \spath_components_gto_seq:Nn,
 % \spath_components_to_clist:Nn,
@@ -614,7 +621,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 %
-% \begin{macro}{\spath_length:n}
+% \begin{macro}[internal]{\spath_length:n}
 % Counts the number of triples in the path.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_length:n #1
@@ -625,7 +632,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_reallength:Nn,
 % \spath_greallength:Nn
 % }
@@ -668,7 +675,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_numberofcomponents:Nn,
 % \spath_gnumberofcomponents:Nn
 % }
@@ -710,7 +717,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_initialpoint:Nn,
 % \spath_ginitialpoint:Nn
 % }
@@ -745,7 +752,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_finalpoint:Nn,
 % \spath_gfinalpoint:Nn,
 % }
@@ -782,7 +789,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_finalmovepoint:Nn,
 % \spath_gfinalmovepoint:Nn
 % }
@@ -835,7 +842,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_reverse:Nn,
 % \spath_greverse:Nn
 % }
@@ -976,7 +983,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_initialaction:Nn,
 % \spath_ginitialaction:Nn,
 % }
@@ -1016,7 +1023,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_finalaction:Nn,
 % \spath_gfinalaction:Nn
 % }
@@ -1062,7 +1069,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_minbb:Nn,
 % \spath_gminbb:Nn
 % }
@@ -1082,9 +1089,11 @@ manipulating PGF soft paths}
   }
   {
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-    \dim_set:Nn \l_@@_tmpa_dim {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpa_dim}}
+    \dim_set:Nn \l_@@_tmpa_dim
+    {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpa_dim}}
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-    \dim_set:Nn \l_@@_tmpb_dim {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpb_dim}}
+    \dim_set:Nn \l_@@_tmpb_dim
+    {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpb_dim}}
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
   }
   \tl_clear:N \l_@@_tmpb_tl
@@ -1113,7 +1122,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_maxbb:Nn,
 % \spath_gmaxbb:Nn,
 % }
@@ -1133,9 +1142,11 @@ manipulating PGF soft paths}
   }
   {
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-    \dim_set:Nn \l_@@_tmpa_dim {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpa_dim}}
+    \dim_set:Nn \l_@@_tmpa_dim
+    {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpa_dim}}
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-    \dim_set:Nn \l_@@_tmpb_dim {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpb_dim}}
+    \dim_set:Nn \l_@@_tmpb_dim
+    {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpb_dim}}
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
   }
   \tl_clear:N \l_@@_tmpb_tl
@@ -1164,7 +1175,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_save_to_aux:Nn,
 % \spath_save_to_aux:N
 % }
@@ -1209,7 +1220,7 @@ manipulating PGF soft paths}
 % There is always a variant in which the path is specified by a macro and restored back in that same macro. 
 %
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_translate:Nnnn,
 % \spath_translate:Nnn,
 % \spath_gtranslate:Nnnn,
@@ -1288,7 +1299,7 @@ manipulating PGF soft paths}
 %
 % 
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_translate_to:Nnnn,
 % \spath_translate_to:Nnn,
 % \spath_gtranslate_to:Nnnn,
@@ -1359,7 +1370,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_scale:Nnnn,
 % \spath_scale:Nnn,
 % \spath_gscale:Nnnn,
@@ -1437,7 +1448,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_transform:Nnnnnnnn,
 % \spath_transform:Nnnnnnn,
 % \spath_gtransform:Nnnnnnnn,
@@ -1522,7 +1533,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_weld:Nnn,
 % \spath_weld:Nn,
 % \spath_gweld:Nnn,
@@ -1570,7 +1581,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_append_no_move:Nnn,
 % \spath_append_no_move:Nn,
 % \spath_gappend_no_move:Nnn,
@@ -1620,7 +1631,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_append:Nnn,
 % \spath_append:Nn,
 % \spath_gappend:Nnn,
@@ -1654,7 +1665,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_prepend_no_move:Nnn,
 % \spath_prepend_no_move:Nn,
 % \spath_gprepend_no_move:Nnn,
@@ -1686,7 +1697,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_prepend:Nnn,
 % \spath_prepend:Nn,
 % \spath_gprepend:Nnn,
@@ -1717,7 +1728,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_bake_round:Nn,
 % \spath_bake_round:N,
 % \spath_gbake_round:Nn,
@@ -1762,7 +1773,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_close:Nn,
 % \spath_close:N,
 % \spath_gclose:Nn,
@@ -1810,7 +1821,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_open:Nn,
 % \spath_open:N,
 % \spath_gopen:Nn,
@@ -1920,7 +1931,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_remove_empty_components:Nn,
 % \spath_remove_empty_components:N,
 % \spath_gremove_empty_components:Nn,
@@ -1973,7 +1984,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\spath_if_eq:nn}
+% \begin{macro}[internal]{\spath_if_eq:nn}
 % Test if two soft paths are equal, we allow a little tolerance on the calculations.
 %    \begin{macrocode}
 \prg_new_protected_conditional:Npnn \spath_if_eq:nn #1#2 { T, F, TF }
@@ -2024,7 +2035,7 @@ manipulating PGF soft paths}
 %
 % \subsection{Splitting Commands}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_split_curve:NNnn,
 % \spath_gsplit_curve:NNnn
 % }
@@ -2056,11 +2067,15 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
     {
-      (1 - #2)^2 * \tl_item:nn {#1} {2} + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {5} + (#2)^2 * \tl_item:nn {#1} {8}
+      (1 - #2)^2 * \tl_item:nn {#1} {2}
+      + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {5}
+      + (#2)^2 * \tl_item:nn {#1} {8}
     }}
     {\fp_to_dim:n
     {
-      (1 - #2)^2 * \tl_item:nn {#1} {3} + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {6} + (#2)^2 * \tl_item:nn {#1} {9}
+      (1 - #2)^2 * \tl_item:nn {#1} {3}
+      + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {6}
+      + (#2)^2 * \tl_item:nn {#1} {9}
     }}
   }
 
@@ -2069,11 +2084,17 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
       {
-      (1 - #2)^3 * \tl_item:nn {#1} {2} + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {5} + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {8} + (#2)^3 * \tl_item:nn {#1} {11}
+        (1 - #2)^3 * \tl_item:nn {#1} {2}
+        + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {5}
+        + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {8}
+        + (#2)^3 * \tl_item:nn {#1} {11}
     }}
     {\fp_to_dim:n
     {
-      (1 - #2)^3 * \tl_item:nn {#1} {3} + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {6} + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {9} + (#2)^3 * \tl_item:nn {#1} {12}
+      (1 - #2)^3 * \tl_item:nn {#1} {3}
+      + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {6}
+      + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {9}
+      + (#2)^3 * \tl_item:nn {#1} {12}
     }}
   }
 
@@ -2086,11 +2107,17 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
       {
-      (1 - #2)^3 * \tl_item:nn {#1} {2} + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {5} + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {8} + (#2)^3 * \tl_item:nn {#1} {11}
+        (1 - #2)^3 * \tl_item:nn {#1} {2}
+        + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {5}
+        + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {8}
+        + (#2)^3 * \tl_item:nn {#1} {11}
     }}
     {\fp_to_dim:n
     {
-      (1 - #2)^3 * \tl_item:nn {#1} {3} + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {6} + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {9} + (#2)^3 * \tl_item:nn {#1} {12}
+      (1 - #2)^3 * \tl_item:nn {#1} {3}
+      + 3 * (1 - #2)^2 * (#2) * \tl_item:nn {#1} {6}
+      + 3 * (1 - #2) * (#2)^2 * \tl_item:nn {#1} {9}
+      + (#2)^3 * \tl_item:nn {#1} {12}
     }}
   }
 
@@ -2099,11 +2126,15 @@ manipulating PGF soft paths}
   {
     {\fp_to_dim:n
     {
-      (1 - #2)^2 * \tl_item:nn {#1} {5} + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {8} + (#2)^2 * \tl_item:nn {#1} {11}
+      (1 - #2)^2 * \tl_item:nn {#1} {5}
+      + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {8}
+      + (#2)^2 * \tl_item:nn {#1} {11}
     }}
     {\fp_to_dim:n
     {
-      (1 - #2)^2 * \tl_item:nn {#1} {6} + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {9} + (#2)^2 * \tl_item:nn {#1} {12}
+      (1 - #2)^2 * \tl_item:nn {#1} {6}
+      + 2 * (1 - #2) * (#2) * \tl_item:nn {#1} {9}
+      + (#2)^2 * \tl_item:nn {#1} {12}
     }}
   }
   \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curvetob_tl
@@ -2162,23 +2193,51 @@ manipulating PGF soft paths}
   \group_begin:
   \fp_set:Nn \l_@@_tmpa_fp
   {
-    (\tl_item:nn {#1} {3} - 3 * \tl_item:nn {#1} {6} + 3 * \tl_item:nn {#1} {9} - \tl_item:nn {#1} {12})
+    (
+    \tl_item:nn {#1} {3}
+    - 3 * \tl_item:nn {#1} {6}
+    + 3 * \tl_item:nn {#1} {9}
+    - \tl_item:nn {#1} {12}
+    )
     *
     (3 * \tl_item:nn {#1} {8} - 3 * \tl_item:nn {#1} {11})
     -
-    (\tl_item:nn {#1} {2} - 3 * \tl_item:nn {#1} {5} + 3 * \tl_item:nn {#1} {8} - \tl_item:nn {#1} {11})
+    (
+    \tl_item:nn {#1} {2}
+    - 3 * \tl_item:nn {#1} {5}
+    + 3 * \tl_item:nn {#1} {8}
+    - \tl_item:nn {#1} {11}
+    )
     *
     (3 * \tl_item:nn {#1} {9} - 3 * \tl_item:nn {#1} {12})
   }
   \fp_set:Nn \l_@@_tmpb_fp
   {
-    (\tl_item:nn {#1} {2} - 3 * \tl_item:nn {#1} {5} + 3 * \tl_item:nn {#1} {8} - \tl_item:nn {#1} {11})
+    (
+    \tl_item:nn {#1} {2}
+    - 3 * \tl_item:nn {#1} {5}
+    + 3 * \tl_item:nn {#1} {8}
+    - \tl_item:nn {#1} {11}
+    )
     *
-    (3 * \tl_item:nn {#1} {6} - 6 * \tl_item:nn {#1} {9} + 3 * \tl_item:nn {#1} {12})
+    (
+    3 * \tl_item:nn {#1} {6}
+    - 6 * \tl_item:nn {#1} {9}
+    + 3 * \tl_item:nn {#1} {12}
+    )
     -
-    (\tl_item:nn {#1} {3} - 3 * \tl_item:nn {#1} {6} + 3 * \tl_item:nn {#1} {9} - \tl_item:nn {#1} {12})
+    (
+    \tl_item:nn {#1} {3}
+    - 3 * \tl_item:nn {#1} {6}
+    + 3 * \tl_item:nn {#1} {9}
+    - \tl_item:nn {#1} {12}
+    )
     *
-    (3 * \tl_item:nn {#1} {5} - 6 * \tl_item:nn {#1} {8} + 3 * \tl_item:nn {#1} {11})
+    (
+    3 * \tl_item:nn {#1} {5}
+    - 6 * \tl_item:nn {#1} {8}
+    + 3 * \tl_item:nn {#1} {11}
+    )
   }
   \fp_compare:nTF
   {
@@ -2221,7 +2280,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_split_curves:Nn,
 % \spath_gsplit_curves:Nn,
 % }
@@ -2333,7 +2392,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_split_line:NNnn,
 % \spath_gsplit_line:NNnn
 % }
@@ -2403,7 +2462,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_split_at:NNnn,
 % \spath_split_at:Nnn,
 % \spath_split_at:Nn,
@@ -2633,7 +2692,7 @@ manipulating PGF soft paths}
 % As in the previous section, there are various versions.
 % In particular, there are versions where the path can be specified by a macro and is saved back into that macro.
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_shorten_at_end:Nnn
 % }
 % This macro shortens a path from the end by a dimension.
@@ -2705,7 +2764,11 @@ manipulating PGF soft paths}
 
     \fp_set:Nn \l_@@_tmpc_fp
     {
-      sqrt( \l_@@_tmpa_fp * \l_@@_tmpa_fp +  \l_@@_tmpb_fp *  \l_@@_tmpb_fp )
+      sqrt(
+      \l_@@_tmpa_fp * \l_@@_tmpa_fp
+      +
+      \l_@@_tmpb_fp *  \l_@@_tmpb_fp
+      ) * \l_@@_tmpa_int
     }
 
     \fp_compare:nTF
@@ -2723,10 +2786,6 @@ manipulating PGF soft paths}
 
       \tl_if_eq:NNTF \l_@@_tmpb_tl \c_spath_curveto_tl
       {
-        \fp_set:Nn \l_@@_tmpc_fp
-        {
-          1 - (1 -\l_@@_tmpc_fp)/3
-        }
         \spath_split_curve:NNVV
         \l_@@_tmpc_tl
         \l_@@_tmpd_tl
@@ -2795,7 +2854,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_shorten_at_start:Nnn,
 % \spath_shorten_at_start:Nn,
 % \spath_gshorten_at_start:Nnn,
@@ -2860,7 +2919,13 @@ manipulating PGF soft paths}
 
   \fp_set:Nn \l_@@_tmpc_fp
   {
-    sqrt( \l_@@_tmpa_fp * \l_@@_tmpa_fp +  \l_@@_tmpb_fp *  \l_@@_tmpb_fp )
+    sqrt(
+    \l_@@_tmpa_fp * \l_@@_tmpa_fp
+    +
+    \l_@@_tmpb_fp *  \l_@@_tmpb_fp
+    )
+    *
+    \l_@@_tmpa_int
   }
 
   \fp_compare:nTF
@@ -2876,10 +2941,6 @@ manipulating PGF soft paths}
 
     \tl_if_eq:NNTF \l_@@_tmpb_tl \c_spath_curvetoa_tl
     {
-      \fp_set:Nn \l_@@_tmpc_fp
-      {
-        \l_@@_tmpc_fp/3
-      }
       \spath_split_curve:NNVV
       \l_@@_tmpc_tl
       \l_@@_tmpd_tl
@@ -2953,7 +3014,7 @@ manipulating PGF soft paths}
 %
 % \subsection{Points on a Path}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_point_at:Nnn,
 % \spath_gpoint_at:Nnn,
 % }
@@ -3063,11 +3124,17 @@ manipulating PGF soft paths}
           {
             {\fp_to_dim:n
               {
-                (1 - \l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {2} + 3 * (1 - \l_@@_tmpa_fp)^2 * (\l_@@_tmpa_fp) * \tl_item:Nn \l_@@_tmpa_tl {5} + 3 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp)^2 * \tl_item:Nn \l_@@_tmpa_tl {8} + (\l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {11}
+                (1 - \l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {2}
+                + 3 * (1 - \l_@@_tmpa_fp)^2 * (\l_@@_tmpa_fp) * \tl_item:Nn \l_@@_tmpa_tl {5}
+                + 3 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp)^2 * \tl_item:Nn \l_@@_tmpa_tl {8}
+                + (\l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {11}
             }}
             {\fp_to_dim:n
               {
-                (1 - \l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {3} + 3 * (1 - \l_@@_tmpa_fp)^2 * (\l_@@_tmpa_fp) * \tl_item:Nn \l_@@_tmpa_tl {6} + 3 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp)^2 * \tl_item:Nn \l_@@_tmpa_tl {9} + (\l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {12}
+                (1 - \l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {3}
+                + 3 * (1 - \l_@@_tmpa_fp)^2 * (\l_@@_tmpa_fp) * \tl_item:Nn \l_@@_tmpa_tl {6}
+                + 3 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp)^2 * \tl_item:Nn \l_@@_tmpa_tl {9}
+                + (\l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {12}
             }}
           }
         }
@@ -3097,7 +3164,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_tangent_at:Nnn,
 % \spath_gtangent_at:Nnn,
 % }
@@ -3246,7 +3313,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_transformation_at:Nnn,
 % \spath_gtransformation_at:Nnn
 % }
@@ -3303,7 +3370,7 @@ manipulating PGF soft paths}
 % The intersection library is 0-based, but the user interface is 1-based (since if we ``count'' in a \Verb+\foreach+ then it starts at 1).
 % This should be more consistent.
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_intersect:NN,
 % \spath_intersect:nn,
 % }
@@ -3327,7 +3394,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_split_component_at_intersections:Nnn
 % }
 % Split a component where it intersects a path.
@@ -3469,7 +3536,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_split_path_at_intersections:Nnn,
 % \spath_split_path_at_intersections:Nn,
 % \spath_gsplit_path_at_intersections:Nnn,
@@ -3557,7 +3624,7 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_split_component_at_self_intersections:Nn,
 % \spath_split_component_at_self_intersections:N,
 % \spath_gsplit_component_at_self_intersections:Nn,
@@ -3775,7 +3842,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_split_at_self_intersections:Nn,
 % \spath_split_at_self_intersections:N,
 % \spath_gsplit_at_self_intersections:Nn,
@@ -3858,7 +3925,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_join_component:Nnn,
 % \spath_join_component:Nn,
 % \spath_gjoin_component:Nnn,
@@ -3965,7 +4032,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_spot_weld_components:Nn,
 % \spath_spot_weld_components:N,
 % \spath_spot_gweld_components:Nn,
@@ -4091,7 +4158,7 @@ manipulating PGF soft paths}
 %
 % \subsection{Exporting Commands}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_convert_to_svg:Nn,
 % \spath_gconvert_to_svg:Nn,
 % }
@@ -4210,7 +4277,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_export_to_svg:nn
 % }
 % Save a soft path to an SVG file.
@@ -4232,7 +4299,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\spath_show:n}
+% \begin{macro}[internal]{\spath_show:n}
 % Displays the soft path on the terminal.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_show:n #1
@@ -4254,7 +4321,7 @@ manipulating PGF soft paths}
 %
 % Spaths come from PGF so we need some functions that get and set spaths from the pgf system.
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_get_current_path:N,
 % \spath_gget_current_path:N
 % }
@@ -4275,7 +4342,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\spath_protocol_path:n}
+% \begin{macro}[internal]{\spath_protocol_path:n}
 % This feeds the bounding box of the soft path to PGF to ensure that its current bounding box contains the soft path.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_protocol_path:n #1
@@ -4290,7 +4357,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_set_current_path:n,
 % \spath_set_current_path:N
 % }
@@ -4311,7 +4378,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{
+% \begin{macro}[internal]{
 % \spath_use_path:nn
 % }
 % Uses the given soft path at the PGF level.
@@ -4324,7 +4391,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\spath_tikz_path:nn}
+% \begin{macro}[internal]{\spath_tikz_path:nn}
 % Uses the given soft path at the TikZ level.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_tikz_path:nn #1#2
@@ -4338,7 +4405,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\spath_set_tikz_data:n}
+% \begin{macro}[internal]{\spath_set_tikz_data:n}
 % Sets the \Verb+\tikz@lastx+ and other coordinates from the soft path.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_set_tikz_data:n #1
@@ -6032,7 +6099,7 @@ manipulating PGF soft paths}
 \seq_gset_eq:NN \g_@@_pen_copperplate_seq \l_@@_tmpa_seq
 %    \end{macrocode}
 %
-% \begin{macro}{\CopperplatePath}
+% \begin{macro}[internal]{\CopperplatePath}
 % This is used in the decorations section to convert a path to a copperplate path.
 %    \begin{macrocode}
 \DeclareDocumentCommand \CopperplatePath { m }
