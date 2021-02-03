@@ -87,9 +87,10 @@ These are all defined in the \texttt{spath} family, so all the following keys sh
 
 \subsection{Saving and Using Soft Paths}
 
-\begin{function}{save}
+\begin{function}{save, save global}
 \begin{syntax}
 |save=|\meta{name}
+|save global=|\meta{name}
 \end{syntax}
 
 Saves the current path with name \texttt{<name>}.
@@ -101,15 +102,9 @@ The soft path is actually stored in a macro constructed from the name.
 There are a couple of reasons for using a \emph{name} rather than a macro directly.
 One is so that it is compatible with the \texttt{intersections} library -- by default both this package and that save their paths in the same underlying macro.
 The other is to provide a way to link a soft path with a set of TikZ styles (this is particularly useful when splitting the path into components).
-\end{function}
 
-\begin{function}{save global}
-\begin{syntax}
-|save global=|\meta{name}
-\end{syntax}
-
-Saves the current soft path globally.
-Useful when the original path is inside a scope or even another tikzpicture.
+The |global| version saves the path globally.
+This is useful when the original path is inside a scope or even another tikzpicture.
 \end{function}
 
 \begin{function}{clone, clone globally}
@@ -143,7 +138,12 @@ Using the \Verb+pos=D+ key on a node positions that node at a particular point o
 Exactly how the parameter is interpreted is the same as for the \Verb+spath+ coordinate system described in Section~\ref{sec:coordinates}.
 \end{function}
 
-\begin{function}{append}
+\begin{function}{
+  append,
+  append reverse,
+  append no move,
+  append reverse no move
+}
 \begin{syntax}
 |append=|\meta{name}
 |append reverse=|\meta{name}
@@ -162,16 +162,6 @@ As with restoring a path, the last point and node positioning machinery is estab
 The positioning is relative to the appended part of the path.
 \end{function}
 
-\begin{function}{reverse}
-\begin{syntax}
-|reverse=|\meta{name}
-\end{syntax}
-
-Reverses the path in the named spath object.
-This doesn't do any actually drawing.
-The effect is local, but if you want to work with both the original path and its reversal in the same path then use the \texttt{clone} key to copy it first.
-\end{function}
-
 \begin{function}{insert, insert reverse}
 \begin{syntax}
 |insert=|\meta{name}
@@ -182,38 +172,119 @@ Like \Verb+append+ except that it doesn't move the inserted path.
 The \Verb+reverse+ version reverses the path first.
 \end{function}
 
-\begin{function}{translate}
+\begin{function}{to}
+\begin{syntax}
+|to=|\marg{name}
+\end{syntax}
+
+This defines a \Verb+to+ path from a soft path, so it inserts the soft path into the current path to span the gap between the start and end.
+\end{function}
+
+
+\subsection{Transformation Routines}
+
+The following keys all apply some sort of transformation to the soft path.
+They do not render the path, but simply adjust it.
+The global versions apply their transformation globally, otherwise it is local to the current group (or scope).
+
+\begin{function}{reverse, reverse global}
+\begin{syntax}
+|reverse=|\meta{name}
+|reverse globally=|\meta{name}
+\end{syntax}
+
+Reverses the path in the named spath object.
+This doesn't do any actually drawing.
+The effect is local, but if you want to work with both the original path and its reversal in the same path then use the \texttt{clone} key to copy it first.
+\end{function}
+
+
+\begin{function}{translate, translate global}
 \begin{syntax}
 |translate=|\marg{name}\marg{x-dimen}\marg{y-dimen}
+|translate globally=|\marg{name}\marg{x-dimen}\marg{y-dimen}
 \end{syntax}
 
 Translates the soft path by the given dimensions.
 \end{function}
 
-\begin{function}{transform}
+\begin{function}{transform, transform global}
 \begin{syntax}
 |transform=|\marg{name}\marg{transformations}
+|transform globally=|\marg{name}\marg{transformations}
 \end{syntax}
 
 This applies the transformation to the soft path.
 The transformation is processed by TikZ so should consist of TikZ-level transformations such as |shift={(2,2)}|.
 \end{function}
 
+\begin{function}{span, span global}
+\begin{syntax}
+|span=|\marg{name}\marg{start point}\marg{end point}
+|span globally=|\marg{name}\marg{start point}\marg{end point}
+\end{syntax}
+
+This transforms the named path so that it goes from the start point to the end point.
+\end{function}
+
+\begin{function}{splice, splice global}
+\begin{syntax}
+|splice=|\marg{initial path}\marg{splice path}\marg{final path}
+|splice globally=|\marg{initial path}\marg{splice path}\marg{final path}
+\end{syntax}
+
+This splices the middle path into the gap between the initial and final paths.
+The middle path is transformed to fit (don't try this with a path whose starting and ending points are close together) and the paths are joined so that the last component of the initial path and the first component of the splice path become a single component, and similarly at the other end.
+\end{function}
+
+\begin{function}{join components with, join components globally with}
+\begin{syntax}
+|join components with=|\marg{path}\marg{splice path}
+|join components globally with=|\marg{path}\marg{splice path}
+\end{syntax}
+
+This inserts the |splice path| in the gaps between components of |path|.
+A \emph{spot weld} is performed first to join any components where the end of one is the start of the next.
+The result is a single component path.
+This does \emph{not} close the resulting path, for that see the key |close with|.
+\end{function}
+
+\begin{function}{close, close globally, close with, close globally with}
+\begin{syntax}
+|close=|\marg{path}
+|close globally=|\marg{path}
+|close with=|\marg{path}\marg{splice path}
+|close globally with=|\marg{path}\marg{splice path}
+\end{syntax}
+
+These all close the last component of the given path.
+The first two will insert a line segment if the initial and final points of the component are not sufficiently close.
+The latter two allow you to specify another path to insert.
+\end{function}
+
 \subsection{Intersection Routines}
 
 To use these features you need to use the \texttt{intersections} library.
 
-\begin{function}{split at self intersections}
+\begin{function}{
+  split at self intersections,
+  split globally at self intersections
+}
 \begin{syntax}
 |split at self intersections=|\meta{path}
+|split globally at self intersections=|\meta{path}
 \end{syntax}
 
 This inserts breaks into the named soft path at the points where it intersects itself.
 \end{function}
 
-\begin{function}{split at intersections}
+\begin{function}{
+  split at intersections,
+  split globally at intersections
+}
 \begin{syntax}
 |split at intersections=|\marg{first}\marg{second}
+|split globally at intersections=|\marg{first}\marg{second}
 \end{syntax}
 
 This inserts breaks into a pair of paths at their mutual intersections.
@@ -221,9 +292,14 @@ This inserts breaks into a pair of paths at their mutual intersections.
 
 \subsection{Working with Components}
 
-\begin{function}{get components of}
+\begin{function}{
+  get components of,
+  get components of globally
+}
 \begin{syntax}
 |get components of=|\marg{path}\marg{macro}
+|\getComponentOf|\marg{macro}\marg{number}
+|get components of globally=|\marg{path}\marg{macro}
 |\getComponentOf|\marg{macro}\marg{number}
 \end{syntax}
   
@@ -253,18 +329,26 @@ It applies the following styles (in this order):
 \end{enumerate}
 \end{function}
 
-\begin{function}{insert gaps after components}
+\begin{function}{
+  insert gaps after components,
+  insert gaps globally after components
+}
 \begin{syntax}
 |insert gaps after components=|\marg{path}\marg{gap}\marg{components}
+|insert gaps globally after components=|\marg{path}\marg{gap}\marg{components}
 \end{syntax}
 
 This inserts a gap between components of a path by shortening the end of the specified component and start of the next one.
 The list of components is passed through a |\foreach| loop so that syntax like |2,4,...,16| can be used.
 \end{function}
 
-\begin{function}{join components}
+\begin{function}{
+  join components,
+  join components globally
+}
 \begin{syntax}
 |join components=|\marg{path}\marg{components}
+|join components globally=|\marg{path}\marg{components}
 \end{syntax}
 
 This removes the |move| between each of the given components and the previous one.
@@ -272,17 +356,25 @@ The list of components is processed by |\foreach|.
 If the component is the first one then it is joined to the last component.
 \end{function}
 
-\begin{function}{spot weld}
+\begin{function}{
+  spot weld,
+  spot weld globally
+}
 \begin{syntax}
 |spot weld=|\meta{path}
+|spot weld globally=|\meta{path}
 \end{syntax}
 
 This removes the \texttt{move} between any two components of the path where the end point of one component is the same as the initial point of the next (the tolerance on error here is \(0.01\)pt).
 \end{function}
 
-\begin{function}{remove empty components}
+\begin{function}{
+  remove empty components,
+  remove empty components globally
+}
 \begin{syntax}
 |remove empty components=|\meta{path}
+|remove empty components globally=|\meta{path}
 \end{syntax}
 
 This removes empty components of the path (which consist of simply a move).
@@ -293,12 +385,18 @@ This removes empty components of the path (which consist of simply a move).
 \begin{function}{
 shorten at end,
 shorten at start,
-shorten at both ends
+shorten at both ends,
+shorten globally at end,
+shorten globally at start,
+shorten globally at both ends,
 }
 \begin{syntax}
 |shorten at start=|\marg{path}\marg{length}
 |shorten at end=|\marg{path}\marg{length}
 |shorten at both ends=|\marg{path}\marg{length}
+|shorten globally at start=|\marg{path}\marg{length}
+|shorten globally at end=|\marg{path}\marg{length}
+|shorten globally at both ends=|\marg{path}\marg{length}
 \end{syntax}
 
 This shortens a path by the given amount from the specified end.
@@ -331,9 +429,13 @@ Saves the path to the file \texttt{path.svg} as an SVG document.
 
 \subsection{Knots}
 
-\begin{function}{knot}
+\begin{function}{
+  global knot,
+  knot,
+}
 \begin{syntax}
 |knot=|\meta{path}\meta{gap}\meta{components}
+|global knot=|\meta{path}\meta{gap}\meta{components}
 \end{syntax}
 
 This style combines various of the above to make it simpler to draw knots and links.
@@ -451,6 +553,34 @@ The intention with the second key is that it is similar to what happens with the
   \node[transform shape, spath/upright transform to={soval}{0.\k}] {k};
 }
 \end{scope}
+\end{tikzpicture}
+\end{example}
+
+\begin{example}
+\begin{tikzpicture}
+\path[draw=orange,ultra thick,spath/save=a] (3,2) -- ++(1,1) to[out=90,in=-90] ++(3,0);
+
+\tikzset{
+  spath/span={a}{(4,5)}{(7,1)}
+}
+
+\fill
+(4,5) circle[radius=3pt]
+(7,1) circle[radius=3pt]
+;
+
+\draw[spath/restore=a];
+\end{tikzpicture}
+\end{example}
+
+
+\item To paths.
+
+\begin{example}
+\begin{tikzpicture}
+\path[draw=orange,ultra thick,spath/save=a] (3,2) -- ++(1,1) to[out=90,in=-90] ++(3,0);
+
+\draw (0,0) -- +(1,1) to[spath/to={a}] node[pos=.6,auto] {node} ++(2,-1) -- +(3,1);
 \end{tikzpicture}
 \end{example}
 

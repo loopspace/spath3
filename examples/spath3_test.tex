@@ -90,6 +90,29 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 
 \begin{tikzpicture}
 \path[draw=orange,ultra thick,spath/save=a] (3,2) -- ++(1,1) to[out=90,in=-90] ++(3,0);
+
+\tikzset{
+  spath/span={a}{(4,5)}{(7,1)}
+}
+
+\fill
+(4,5) circle[radius=3pt]
+(7,1) circle[radius=3pt]
+;
+
+\draw[spath/restore=a];
+
+\draw (0,0) -- +(1,0) to[spath/to={a}] node[pos=.6,auto] {node} ++(2,-1) -- +(0,1);
+\fill
+(0,0) circle[radius=3pt]
++(1,0) circle[radius=3pt]
+++(2,-1) circle[radius=3pt]
++(0,1) circle[radius=3pt]
+;
+\end{tikzpicture}
+\end{document}
+\begin{tikzpicture}
+\path[draw=orange,ultra thick,spath/save=a] (3,2) -- ++(1,1) to[out=90,in=-90] ++(3,0);
 \tikzset{
   spath/show=a,
   spath/normalise=a,
