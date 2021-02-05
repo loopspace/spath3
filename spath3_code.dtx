@@ -143,7 +143,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{7431}
+% \CheckSum{8404}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -167,7 +167,7 @@ and the derived files            spath3.ins,
 % \changes{1.2}{2019/02/12}{More fixes due to changes in LaTeX3}
 % \changes{1.4}{2020/12/18}{A fair amount of code reimplementation and reorganisation, together with defining TikZ keys to make functions available for use.}
 % \changes{2.0}{2021/01/19}{Refactored the code to remove the OO approach and make it functional, introduced the spath3 TikZ library to provide a user interface.}
-% \changes{2.2}{2021/02/01}{Bugfixes and improvements, mainly with regard to the intersection and splitting routines.}
+% \changes{2.2}{2021/02/05}{Bugfixes and improvements, mainly with regard to the intersection and splitting routines.}
 %
 % \DoNotIndex{\newcommand,\newenvironment}
 %
@@ -256,7 +256,7 @@ and the derived files            spath3.ins,
 \NeedsTeXFormat{LaTeX2e}
 \RequirePackage{expl3}
 \RequirePackage{pgf}
-\ProvidesExplPackage {spath3} {2021/01/19} {2.0} {Functions for
+\ProvidesExplPackage {spath3} {2021/02/05} {2.2} {Functions for
 manipulating PGF soft paths}
 \RequirePackage{xparse}
 %    \end{macrocode}
@@ -928,7 +928,10 @@ manipulating PGF soft paths}
         \bool_set_true:N \l_@@_closed_bool
       }
       {
-        \msg_warning:nnx { spath3 } { unknown path construction } {\l_@@_tmpc_tl }
+        \msg_warning:nnx
+        { spath3 }
+        { unknown path construction }
+        {\l_@@_tmpc_tl }
       }
 
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
@@ -1473,8 +1476,10 @@ manipulating PGF soft paths}
     \tl_set:Nx \l_@@_tmpd_tl {\tl_head:N \l_@@_tmpa_tl}
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-    \fp_set:Nn \l_@@_tmpa_fp {\l_@@_tmpc_tl * #2 + \l_@@_tmpd_tl * #4 + #6}
-    \fp_set:Nn \l_@@_tmpb_fp {\l_@@_tmpc_tl * #3 + \l_@@_tmpd_tl * #5 + #7}
+    \fp_set:Nn \l_@@_tmpa_fp
+    {\l_@@_tmpc_tl * #2 + \l_@@_tmpd_tl * #4 + #6}
+    \fp_set:Nn \l_@@_tmpb_fp
+    {\l_@@_tmpc_tl * #3 + \l_@@_tmpd_tl * #5 + #7}
     \tl_put_right:Nx \l_@@_tmpb_tl
     {
       {\fp_to_dim:N \l_@@_tmpa_fp}
@@ -1491,7 +1496,8 @@ manipulating PGF soft paths}
   \tl_set_eq:NN #1 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_transform:Nnnnnnnn {NVnnnnnn, Nnxxxxxx, cnnnnnnn}
+\cs_generate_variant:Nn \spath_transform:Nnnnnnnn
+{NVnnnnnn, Nnxxxxxx, cnnnnnnn}
 \cs_new_protected_nopar:Npn \spath_transform:Nnnnnnn #1#2#3#4#5#6#7
 {
   \spath_transform:NVnnnnnn #1#1{#2}{#3}{#4}{#5}{#6}{#7}
@@ -1566,7 +1572,9 @@ manipulating PGF soft paths}
   }
   \fp_set:Nn \l_@@_tmpc_fp
   {
-    (\l_@@_tmpa_fp) * (\l_@@_tmpa_fp) + (\l_@@_tmpb_fp * \l_@@_tmpb_fp)
+    (\l_@@_tmpa_fp) * (\l_@@_tmpa_fp)
+    +
+    (\l_@@_tmpb_fp * \l_@@_tmpb_fp)
   }
 
   \fp_compare:nTF
@@ -1777,9 +1785,19 @@ manipulating PGF soft paths}
   \spath_finalpoint:Nn \l_@@_tmpb_tl {#1}
   \dim_compare:nTF
   {
-    \dim_abs:n { \tl_item:Nn \l_@@_tmpa_tl {1} - \tl_item:Nn \l_@@_tmpb_tl {1} }
+    \dim_abs:n
+    {
+      \tl_item:Nn \l_@@_tmpa_tl {1}
+      -
+      \tl_item:Nn \l_@@_tmpb_tl {1}
+    }
     +
-    \dim_abs:n { \tl_item:Nn \l_@@_tmpa_tl {2} - \tl_item:Nn \l_@@_tmpb_tl {2} }
+    \dim_abs:n
+    {
+      \tl_item:Nn \l_@@_tmpa_tl {2}
+      -
+      \tl_item:Nn \l_@@_tmpb_tl {2}
+    }
     < 0.01pt
   }
   {
@@ -2278,7 +2296,10 @@ manipulating PGF soft paths}
   \tl_set:Nn \l_@@_tmpa_tl {#1}
   \tl_set:Nn \l_@@_tmpb_tl {#2}
   \bool_gset_true:N \g_@@_tmpa_bool
-  \int_compare:nNnTF {\tl_count:N \l_@@_tmpa_tl} = {\tl_count:N \l_@@_tmpb_tl}
+  \int_compare:nNnTF
+  {\tl_count:N \l_@@_tmpa_tl}
+  =
+  {\tl_count:N \l_@@_tmpb_tl}
   {
     \int_step_inline:nnnn {1} {3} {\tl_count:N \l_@@_tmpa_tl}
     {
@@ -2290,13 +2311,27 @@ manipulating PGF soft paths}
       }
       \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpa_tl {##1+1}}
       \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpb_tl {##1+1}}
-      \dim_compare:nF { \dim_abs:n { \l_@@_tmpa_dim - \l_@@_tmpb_dim} < 0.001pt }
+      \dim_compare:nF
+      {
+        \dim_abs:n
+        {
+          \l_@@_tmpa_dim - \l_@@_tmpb_dim
+        }
+        < 0.001pt
+      }
       {
         \bool_gset_false:N \g_@@_tmpa_bool
       }
       \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpa_tl {##1+2}}
       \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpb_tl {##1+2}}
-      \dim_compare:nF { \dim_abs:n { \l_@@_tmpa_dim - \l_@@_tmpb_dim} < 0.001pt }
+      \dim_compare:nF
+      {
+        \dim_abs:n
+        {
+          \l_@@_tmpa_dim - \l_@@_tmpb_dim
+        }
+        < 0.001pt
+      }
       {
         \bool_gset_false:N \g_@@_tmpa_bool
       }
@@ -2616,7 +2651,10 @@ manipulating PGF soft paths}
           }
         }
 
-        \spath_maybe_split_curve:NNV \l_@@_tmpd_tl \l_@@_tmpe_tl \l_@@_tmpd_tl
+        \spath_maybe_split_curve:NNV
+        \l_@@_tmpd_tl
+        \l_@@_tmpe_tl
+        \l_@@_tmpd_tl
         \prg_replicate:nn {3}
         {
           \tl_set:Nx \l_@@_tmpd_tl {\tl_tail:N \l_@@_tmpd_tl}
@@ -2945,7 +2983,11 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \spath_split_at:Nnn #1#2#3
 {
   \@@_split_at:nn {#2}{#3}
-  \tl_set:Nx #1 {\tl_item:Nn \g_@@_output_tl {1} \tl_item:Nn \g_@@_output_tl {2}}
+  \tl_set:Nx #1
+  {
+    \tl_item:Nn \g_@@_output_tl {1}
+    \tl_item:Nn \g_@@_output_tl {2}
+  }
   \tl_gclear:N \g_@@_output_tl
 }
 \cs_generate_variant:Nn \spath_split_at:Nnn {NVn, NVV}
@@ -2956,7 +2998,11 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \spath_gsplit_at:Nnn #1#2#3
 {
   \@@_split_at:nn {#2}{#3}
-  \tl_gset:Nx #1 {\tl_item:Nn \g_@@_output_tl {1} \tl_item:Nn \g_@@_output_tl {2}}
+  \tl_gset:Nx #1
+  {
+    \tl_item:Nn \g_@@_output_tl {1}
+    \tl_item:Nn \g_@@_output_tl {2}
+  }
   \tl_gclear:N \g_@@_output_tl
 }
 \cs_generate_variant:Nn \spath_gsplit_at:Nnn {NVn, NVV}
@@ -3176,8 +3222,12 @@ manipulating PGF soft paths}
 
   \prg_replicate:nn { \l_@@_tmpa_int }
   {
-    \@@_tl_put_right_braced:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {1}}
-    \@@_tl_put_right_braced:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {2}}
+    \@@_tl_put_right_braced:Nx
+    \l_@@_tmpe_tl
+    {\tl_item:Nn \l_@@_tmpa_tl {1}}
+    \@@_tl_put_right_braced:Nx
+    \l_@@_tmpe_tl
+    {\tl_item:Nn \l_@@_tmpa_tl {2}}
     \tl_put_right:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {3}}
 
     \prg_replicate:nn {3}
@@ -3185,8 +3235,12 @@ manipulating PGF soft paths}
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl }
     }
   }
-  \@@_tl_put_right_braced:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {1}}
-  \@@_tl_put_right_braced:Nx \l_@@_tmpe_tl {\tl_item:Nn \l_@@_tmpa_tl {2}}
+  \@@_tl_put_right_braced:Nx
+  \l_@@_tmpe_tl
+  {\tl_item:Nn \l_@@_tmpa_tl {1}}
+  \@@_tl_put_right_braced:Nx
+  \l_@@_tmpe_tl
+  {\tl_item:Nn \l_@@_tmpa_tl {2}}
 
   \fp_set:Nn \l_@@_tmpa_fp
   {
@@ -3331,7 +3385,9 @@ manipulating PGF soft paths}
     }
     {
   
-      \tl_set:Nx \l_@@_tmpa_tl {\seq_item:Nn \l_@@_tmpa_seq { \l_@@_tmpa_int} }
+      \tl_set:Nx
+      \l_@@_tmpa_tl
+      {\seq_item:Nn \l_@@_tmpa_seq { \l_@@_tmpa_int} }
 
       \int_compare:nTF
       {
@@ -3410,15 +3466,19 @@ manipulating PGF soft paths}
             {\fp_to_dim:n
               {
                 (1 - \l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {2}
-                + 3 * (1 - \l_@@_tmpa_fp)^2 * (\l_@@_tmpa_fp) * \tl_item:Nn \l_@@_tmpa_tl {5}
-                + 3 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp)^2 * \tl_item:Nn \l_@@_tmpa_tl {8}
+                + 3 * (1 - \l_@@_tmpa_fp)^2 * (\l_@@_tmpa_fp)
+                * \tl_item:Nn \l_@@_tmpa_tl {5}
+                + 3 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp)^2
+                * \tl_item:Nn \l_@@_tmpa_tl {8}
                 + (\l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {11}
             }}
             {\fp_to_dim:n
               {
                 (1 - \l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {3}
-                + 3 * (1 - \l_@@_tmpa_fp)^2 * (\l_@@_tmpa_fp) * \tl_item:Nn \l_@@_tmpa_tl {6}
-                + 3 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp)^2 * \tl_item:Nn \l_@@_tmpa_tl {9}
+                + 3 * (1 - \l_@@_tmpa_fp)^2 * (\l_@@_tmpa_fp)
+                * \tl_item:Nn \l_@@_tmpa_tl {6}
+                + 3 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp)^2
+                * \tl_item:Nn \l_@@_tmpa_tl {9}
                 + (\l_@@_tmpa_fp)^3 * \tl_item:Nn \l_@@_tmpa_tl {12}
             }}
           }
@@ -3481,7 +3541,9 @@ manipulating PGF soft paths}
     }
     {
   
-      \tl_set:Nx \l_@@_tmpa_tl {\seq_item:Nn \l_@@_tmpa_seq { \l_@@_tmpa_int} }
+      \tl_set:Nx
+      \l_@@_tmpa_tl
+      {\seq_item:Nn \l_@@_tmpa_seq { \l_@@_tmpa_int} }
 
       \int_compare:nTF
       {
@@ -3559,16 +3621,24 @@ manipulating PGF soft paths}
           {
             {\fp_to_dim:n
               {
-                3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {5} - \tl_item:Nn \l_@@_tmpa_tl {2})
-                + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *  (\tl_item:Nn \l_@@_tmpa_tl {8} - \tl_item:Nn \l_@@_tmpa_tl {5})
-                + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {11} - \tl_item:Nn \l_@@_tmpa_tl {8})
+                3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {5}
+                - \tl_item:Nn \l_@@_tmpa_tl {2})
+                + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *
+                (\tl_item:Nn \l_@@_tmpa_tl {8}
+                - \tl_item:Nn \l_@@_tmpa_tl {5})
+                + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {11}
+                - \tl_item:Nn \l_@@_tmpa_tl {8})
               }
             }
             {\fp_to_dim:n
               {
-                3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {6} - \tl_item:Nn \l_@@_tmpa_tl {3})
-                + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *  (\tl_item:Nn \l_@@_tmpa_tl {9} - \tl_item:Nn \l_@@_tmpa_tl {6})
-                + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {12} - \tl_item:Nn \l_@@_tmpa_tl {9})
+                3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {6}
+                - \tl_item:Nn \l_@@_tmpa_tl {3})
+                + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *
+                (\tl_item:Nn \l_@@_tmpa_tl {9}
+                - \tl_item:Nn \l_@@_tmpa_tl {6})
+                + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {12}
+                - \tl_item:Nn \l_@@_tmpa_tl {9})
             }}
           }
         }
@@ -3610,15 +3680,24 @@ manipulating PGF soft paths}
   \tl_clear:N \l_@@_tmpa_tl
   \@@_tangent_at:nn {#1}{#2}
   \tl_set_eq:NN \l_@@_tmpb_tl \g_@@_output_tl
-  \fp_set:Nn \l_@@_tmpa_fp { sqrt( (\tl_item:Nn \l_@@_tmpb_tl {1})^2 +  (\tl_item:Nn \l_@@_tmpb_tl {2})^2 ) }
+  \fp_set:Nn \l_@@_tmpa_fp
+  {
+    sqrt(
+    (\tl_item:Nn \l_@@_tmpb_tl {1})^2
+    +
+    (\tl_item:Nn \l_@@_tmpb_tl {2})^2
+    )
+  }
   \fp_compare:nTF {\l_@@_tmpa_fp = 0}
   {
     \fp_set:Nn \l_@@_tmpa_fp {1}
     \fp_set:Nn \l_@@_tmpb_fp {0}
   }
   {
-    \fp_set:Nn \l_@@_tmpb_fp { (\tl_item:Nn \l_@@_tmpb_tl {2}) / \l_@@_tmpa_fp }
-    \fp_set:Nn \l_@@_tmpa_fp { (\tl_item:Nn \l_@@_tmpb_tl {1}) / \l_@@_tmpa_fp }
+    \fp_set:Nn \l_@@_tmpb_fp
+    { (\tl_item:Nn \l_@@_tmpb_tl {2}) / \l_@@_tmpa_fp }
+    \fp_set:Nn \l_@@_tmpa_fp
+    { (\tl_item:Nn \l_@@_tmpb_tl {1}) / \l_@@_tmpa_fp }
   }
   \tl_set:Nx \l_@@_tmpa_tl
   {
@@ -3768,7 +3847,11 @@ manipulating PGF soft paths}
       }
       \tl_set_eq:NN \l_@@_tmpg_tl \l_@@_tmpa_tl
     
-      \spath_split_at:NNVV \l_@@_tmpd_tl \l_@@_tmpf_tl  \l_@@_tmpb_tl \l_@@_tmph_tl
+      \spath_split_at:NNVV
+      \l_@@_tmpd_tl
+      \l_@@_tmpf_tl
+      \l_@@_tmpb_tl
+      \l_@@_tmph_tl
     
       \tl_put_left:NV \l_@@_tmpe_tl \l_@@_tmpf_tl
       \tl_set_eq:NN \l_@@_tmpb_tl \l_@@_tmpd_tl
@@ -3859,7 +3942,8 @@ manipulating PGF soft paths}
   \tl_set_eq:NN #1 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_split_path_at_intersections:Nnn {NVn, NVV, cVn, cVV, cvn, cvv}
+\cs_generate_variant:Nn \spath_split_path_at_intersections:Nnn
+{NVn, NVV, cVn, cVV, cvn, cvv}
 \cs_new_protected_nopar:Npn \spath_split_path_at_intersections:Nn #1#2
 {
   \spath_split_path_at_intersections:NVn #1#1{#2}
@@ -3871,7 +3955,8 @@ manipulating PGF soft paths}
   \tl_gset_eq:NN #1 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_gsplit_path_at_intersections:Nnn {NVn, NVV, cVn, cVV, cvn, cvv}
+\cs_generate_variant:Nn \spath_gsplit_path_at_intersections:Nnn
+{NVn, NVV, cVn, cVV, cvn, cvv}
 \cs_new_protected_nopar:Npn \spath_gsplit_path_at_intersections:Nn #1#2
 {
   \spath_gsplit_path_at_intersections:NVn #1#1{#2}
@@ -3885,7 +3970,8 @@ manipulating PGF soft paths}
   \tl_set_eq:NN #2 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_split_at_intersections:NNnn {NNVn, NNVV, ccVn, ccVV, ccvn, ccvv}
+\cs_generate_variant:Nn \spath_split_at_intersections:NNnn
+{NNVn, NNVV, ccVn, ccVV, ccvn, ccvv}
 \cs_new_protected_nopar:Npn \spath_split_at_intersections:NN #1#2
 {
   \spath_split_at_intersections:NNVV #1#2#1#2
@@ -3899,7 +3985,8 @@ manipulating PGF soft paths}
   \tl_gset_eq:NN #2 \g_@@_output_tl
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_gsplit_at_intersections:NNnn {NNVn, NNVV, ccVn, ccVV, ccvn, ccvv}
+\cs_generate_variant:Nn \spath_gsplit_at_intersections:NNnn
+{NNVn, NNVV, ccVn, ccVV, ccvn, ccvv}
 \cs_new_protected_nopar:Npn \spath_gsplit_at_intersections:NN #1#2
 {
   \spath_gsplit_at_intersections:NNVV #1#2#1#2
@@ -4006,7 +4093,8 @@ manipulating PGF soft paths}
               )
             }
             {
-              \tl_set:Nx \l_@@_tmpa_tl {\fp_to_decimal:n {\l_@@_tmpb_tl +  ##1 - 1}}
+              \tl_set:Nx \l_@@_tmpa_tl
+              {\fp_to_decimal:n {\l_@@_tmpb_tl +  ##1 - 1}}
               \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpa_tl
             }
           }
@@ -4074,7 +4162,11 @@ manipulating PGF soft paths}
     }
     \tl_set_eq:NN \l_@@_tmpi_tl \l_@@_tmpa_tl
 
-    \spath_split_at:NNVV \l_@@_tmpf_tl \l_@@_tmph_tl  \l_@@_tmpe_tl \l_@@_tmpb_tl
+    \spath_split_at:NNVV
+    \l_@@_tmpf_tl
+    \l_@@_tmph_tl
+    \l_@@_tmpe_tl
+    \l_@@_tmpb_tl
       
     \tl_put_left:NV \l_@@_tmpg_tl \l_@@_tmph_tl
     \tl_set_eq:NN \l_@@_tmpe_tl \l_@@_tmpf_tl
@@ -4345,12 +4437,16 @@ manipulating PGF soft paths}
     {
       \dim_compare_p:n
       {
-        \dim_abs:n {\l_@@_move_x_dim - \tl_item:Nn \l_@@_tmpa_tl {2} } < 0.01pt
+        \dim_abs:n
+        {\l_@@_move_x_dim - \tl_item:Nn \l_@@_tmpa_tl {2} }
+        < 0.01pt
       }
       &&
       \dim_compare_p:n
       {
-        \dim_abs:n {\l_@@_move_y_dim - \tl_item:Nn \l_@@_tmpa_tl {3} } < 0.01pt
+        \dim_abs:n
+        {\l_@@_move_y_dim - \tl_item:Nn \l_@@_tmpa_tl {3} }
+        < 0.01pt
       }
     }
     {
@@ -4378,12 +4474,22 @@ manipulating PGF soft paths}
   {
     \dim_compare_p:n
     {
-      \dim_abs:n {\tl_item:Nn \l_@@_tmpa_tl {1} - \tl_item:Nn \l_@@_tmpb_tl {1} } < 0.01pt
+      \dim_abs:n
+      {
+        \tl_item:Nn \l_@@_tmpa_tl {1} - \tl_item:Nn \l_@@_tmpb_tl {1}
+      }
+      <
+      0.01pt
     }
     &&
     \dim_compare_p:n
     {
-      \dim_abs:n {\tl_item:Nn \l_@@_tmpa_tl {2} - \tl_item:Nn \l_@@_tmpb_tl {2} } < 0.01pt
+      \dim_abs:n
+      {
+        \tl_item:Nn \l_@@_tmpa_tl {2} - \tl_item:Nn \l_@@_tmpb_tl {2}
+      }
+      <
+      0.01pt
     }
   }
   {
@@ -4534,7 +4640,9 @@ manipulating PGF soft paths}
       }
     }
     {
-      \tl_put_right:Nx \l_@@_tmpa_tl {\use:c { \l_@@_tmpc_tl } {\dim_to_decimal:n {##1}} ~}
+      \tl_put_right:Nx
+      \l_@@_tmpa_tl
+      {\use:c { \l_@@_tmpc_tl } {\dim_to_decimal:n {##1}} ~}
     }
   }
   \tl_put_right:Nn \l_@@_tmpa_tl
@@ -4819,6 +4927,7 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
 \msg_new:nnn { spath3 } { missing soft path } { Soft~ path~ #1~ doesn't~ exist }
+\msg_new:nnn { spath3 } { empty soft path } { Soft~ path~ #1~ is~ empty }
 %    \end{macrocode}
 %
 % When saving a soft path, by default we use a naming convention that is compatible with the intersections library so that paths saved here and paths saved by the \texttt{name path} facility of the intersections library are mutually exchangeable.
@@ -4928,11 +5037,14 @@ manipulating PGF soft paths}
     \tikz@addmode{
       \spath_get_current_path:N \l_@@_tmpa_tl
       \spath_bake_round:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
-      \spath_save_path:cV {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} \l_@@_tmpa_tl
+      \spath_save_path:cV
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \l_@@_tmpa_tl
     }
   },
   clone/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
     {
       \tl_clear_new:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -4945,7 +5057,8 @@ manipulating PGF soft paths}
     }
   },
   clone~ global/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
     {
       \tl_gclear_new:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -4972,7 +5085,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   save~ to~ aux/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_save_to_aux:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -4987,14 +5101,32 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   restore/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \spath_set_current_path:c
+      \tl_if_empty:cTF
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \spath_set_tikz_data:v
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      {
+        \tl_clear:N \l_@@_tmpa_tl
+        \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
+        \tl_put_right:Nn \l_@@_tmpa_tl {{0pt}{0pt}}
+        \spath_set_current_path:V \l_@@_tmpa_tl
+        \spath_set_tikz_data:V \l_@@_tmpa_tl
+        \msg_warning:nnn { spath3 } { empty soft path } { #1 }
+      }
+      {
+        \spath_set_current_path:c
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \spath_set_tikz_data:v
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      }
     }
     {
+      \tl_clear:N \l_@@_tmpa_tl
+      \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
+      \tl_put_right:Nn \l_@@_tmpa_tl {{0pt}{0pt}}
+      \spath_set_current_path:V \l_@@_tmpa_tl
+      \spath_set_tikz_data:V \l_@@_tmpa_tl
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
@@ -5004,15 +5136,33 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   restore~ reverse/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \spath_reverse:Nv
-      \l_@@_reverse_tl
+      \tl_if_empty:cTF
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \spath_set_current_path:N \l_@@_reverse_tl
-      \spath_set_tikz_data:V \l_@@_reverse_tl
+      {
+        \tl_clear:N \l_@@_tmpa_tl
+        \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
+        \tl_put_right:Nn \l_@@_tmpa_tl {{0pt}{0pt}}
+        \spath_set_current_path:V \l_@@_tmpa_tl
+        \spath_set_tikz_data:V \l_@@_tmpa_tl
+        \msg_warning:nnn { spath3 } { empty soft path } { #1 }
+      }
+      {
+        \spath_reverse:Nv
+        \l_@@_reverse_tl
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \spath_set_current_path:N \l_@@_reverse_tl
+        \spath_set_tikz_data:V \l_@@_reverse_tl
+      }
     }
     {
+      \tl_clear:N \l_@@_tmpa_tl
+      \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
+      \tl_put_right:Nn \l_@@_tmpa_tl {{0pt}{0pt}}
+      \spath_set_current_path:V \l_@@_tmpa_tl
+      \spath_set_tikz_data:V \l_@@_tmpa_tl
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
@@ -5034,10 +5184,19 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   show/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \iow_term:n {---~ soft~ path~ #1~ ---}
-      \spath_show:v {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_empty:cTF
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      {
+        \msg_warning:nnn { spath3 } { empty soft path } { #1 }
+      }
+      {
+        \iow_term:n {---~ soft~ path~ #1~ ---}
+        \spath_show:v
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      }
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -5049,11 +5208,14 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   append/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_get_current_path:N \l_@@_current_tl
       \spath_finalpoint:NV \l_@@_tmpa_tl \l_@@_current_tl
-      \tl_set_eq:Nc \l_@@_tmpb_tl {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \tl_set_eq:Nc
+      \l_@@_tmpb_tl
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_translate_to:NV \l_@@_tmpb_tl \l_@@_tmpa_tl
       \spath_append_no_move:NV \l_@@_current_tl \l_@@_tmpb_tl
       \spath_set_current_path:N \l_@@_current_tl
@@ -5069,9 +5231,11 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   join~ with/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_append:cv
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5091,7 +5255,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   spot~ weld/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_spot_weld_components:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5101,7 +5266,8 @@ manipulating PGF soft paths}
     }
   },
   spot~ weld~ globally/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_spot_gweld_components:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5116,7 +5282,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   reverse/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5126,7 +5293,8 @@ manipulating PGF soft paths}
     }
   },
   reverse~ globally/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5141,7 +5309,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   append~ reverse/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:Nv
       \l_@@_reverse_tl
@@ -5163,15 +5332,16 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   insert/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_get_current_path:N \l_@@_current_tl
       \spath_append:Nv
       \l_@@_current_tl
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:v {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-
+      \spath_set_tikz_data:v
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -5183,7 +5353,8 @@ manipulating PGF soft paths}
 % 
 %    \begin{macrocode}
   insert~ reverse/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:Nv
       \l_@@_reverse_tl
@@ -5192,7 +5363,6 @@ manipulating PGF soft paths}
       \spath_append:NV \l_@@_current_tl \l_@@_reverse_tl
       \spath_set_current_path:N \l_@@_current_tl
       \spath_set_tikz_data:V \l_@@_reverse_tl
-
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -5204,7 +5374,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   append~ no~ move/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_get_current_path:N \l_@@_current_tl
       \spath_append_no_move:Nv
@@ -5224,7 +5395,8 @@ manipulating PGF soft paths}
 % 
 %    \begin{macrocode}
   append~ reverse~ no~ move/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_reverse:Nv
       \l_@@_reverse_tl
@@ -5244,7 +5416,8 @@ manipulating PGF soft paths}
 %  
 %    \begin{macrocode}
   span/.code ~n~ args={3}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \@@_process_tikz_point:Nn \l_@@_tmpa_tl {#2}
       \@@_process_tikz_point:Nn \l_@@_tmpb_tl {#3}
@@ -5257,7 +5430,8 @@ manipulating PGF soft paths}
     }
   },
   span~ global/.code ~n~ args={3}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \@@_process_tikz_point:Nn \l_@@_tmpa_tl {#2}
       \@@_process_tikz_point:Nn \l_@@_tmpb_tl {#3}
@@ -5289,11 +5463,14 @@ manipulating PGF soft paths}
 %  
 %    \begin{macrocode}
   splice/.code ~n~ args={3}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
-        \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #3 \tl_use:N \l_@@_suffix_tl}
+        \tl_if_exist:cTF
+        {\tl_use:N \l_@@_prefix_tl #3 \tl_use:N \l_@@_suffix_tl}
         {
           \spath_splice_between:cvv
           {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5313,11 +5490,14 @@ manipulating PGF soft paths}
     }
   },
   splice~ global/.code ~n~ args={3}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
-        \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #3 \tl_use:N \l_@@_suffix_tl}
+        \tl_if_exist:cTF
+        {\tl_use:N \l_@@_prefix_tl #3 \tl_use:N \l_@@_suffix_tl}
         {
           \spath_gsplice_between:cvv
           {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5342,64 +5522,68 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   join~ components~ with/.code~2~args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_spot_weld_components:c
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-
-      \spath_components_to_seq:Nv
-      \l_@@_tmpa_seq
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-
-      \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
-      
-      \seq_map_inline:Nn \l_@@_tmpa_seq
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
-        \spath_splice_between:Nvn \l_@@_tmpa_tl
-        {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-        {##1}
+        \spath_spot_weld_components:c
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+
+        \spath_components_to_seq:Nv
+        \l_@@_tmpa_seq
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+
+        \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+      
+        \seq_map_inline:Nn \l_@@_tmpa_seq
+        {
+          \spath_splice_between:Nvn \l_@@_tmpa_tl
+          {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+          {##1}
+        }
+        \tl_set_eq:cN
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \l_@@_tmpa_tl
       }
-      \tl_set_eq:cN
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \l_@@_tmpa_tl
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #2 }
-    }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+      }
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
   join~ components~ globally~ with/.code~2~args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_spot_gweld_components:c
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-
-      \spath_components_to_seq:Nv
-      \l_@@_tmpa_seq
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-
-      \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
-      
-      \seq_map_inline:Nn \l_@@_tmpa_seq
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
-        \spath_gsplice_between:Nvn \l_@@_tmpa_tl
-        {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-        {##1}
+        \spath_spot_gweld_components:c
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        
+        \spath_components_to_seq:Nv
+        \l_@@_tmpa_seq
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+
+        \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+      
+        \seq_map_inline:Nn \l_@@_tmpa_seq
+        {
+          \spath_gsplice_between:Nvn \l_@@_tmpa_tl
+          {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+          {##1}
+        }
+        \tl_set_eq:cN
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \l_@@_tmpa_tl
       }
-      \tl_set_eq:cN
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \l_@@_tmpa_tl
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #2 }
-    }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+      }
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -5411,7 +5595,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   close/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_close:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5421,7 +5606,8 @@ manipulating PGF soft paths}
     }
   },
   close~ globally/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_gclose:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5436,34 +5622,38 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   close~ with/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_close_with:cv
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
       {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #2 }
-    }
+      {
+        \spath_close_with:cv
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+      }
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
   close~ globally~ with/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_gclose_with:cv
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
       {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #2 }
-    }
+      {
+        \spath_gclose_with:cv
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+      }
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -5475,7 +5665,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   shorten~ at~ end/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_end:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
@@ -5485,7 +5676,8 @@ manipulating PGF soft paths}
     }
   },
   shorten~ at~ start/.code~ 2~ args ={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_start:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
@@ -5495,7 +5687,8 @@ manipulating PGF soft paths}
     }
   },
   shorten~ at~ both~ ends/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_end:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
@@ -5507,7 +5700,8 @@ manipulating PGF soft paths}
     }
   },
   shorten~ globally~ at~ end/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_gshorten_at_end:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
@@ -5517,7 +5711,8 @@ manipulating PGF soft paths}
     }
   },
   shorten~ globally~ at~ start/.code~ 2~ args ={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_gshorten_at_start:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
@@ -5527,7 +5722,8 @@ manipulating PGF soft paths}
     }
   },
   shorten~ globally~ at~ both~ ends/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_shorten_at_end:cn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl} {#2}
@@ -5544,7 +5740,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   translate/.code~ n~ args={3}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_translate:cnn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}{#2}{#3}
@@ -5554,7 +5751,8 @@ manipulating PGF soft paths}
     }
   },
   translate~ globally/.code~ n~ args={3}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_gtranslate:cnn
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}{#2}{#3}
@@ -5569,7 +5767,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   normalise/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_normalise:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5579,7 +5778,8 @@ manipulating PGF soft paths}
     }
   },
   normalise~ globally/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_gnormalise:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5594,7 +5794,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   export~ to~ svg/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_export_to_svg:nv {#1}
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5609,7 +5810,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   transform/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
       \pgftransformreset
@@ -5629,7 +5831,8 @@ manipulating PGF soft paths}
     }
   },
   transform~globally/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
       \pgftransformreset
@@ -5654,9 +5857,11 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   split~ at~ intersections~ with/.code~ n~ args={2}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_split_path_at_intersections:cv
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5671,9 +5876,11 @@ manipulating PGF soft paths}
     }
   },
   split~ globally~ at~ intersections~ with/.code~ n~ args={2}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_gsplit_path_at_intersections:cv
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5693,9 +5900,11 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   split~ at~ intersections/.code~ n~ args={2}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_split_at_intersections:cc
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5710,9 +5919,11 @@ manipulating PGF soft paths}
     }
   },
   split~ globally~ at~ intersections/.code~ n~ args={2}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_gsplit_at_intersections:cc
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5732,7 +5943,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   split~ at~ self~ intersections/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_split_at_self_intersections:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5742,7 +5954,8 @@ manipulating PGF soft paths}
     }
   },
   split~ globally~ at~ self~ intersections/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_gsplit_at_self_intersections:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5757,7 +5970,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   get~ components~ of/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \clist_clear_new:N #2
       \spath_components_to_seq:Nv
@@ -5766,9 +5980,17 @@ manipulating PGF soft paths}
       \seq_map_inline:Nn \l_@@_tmpa_seq
       {
         \tl_new:c
-        {\tl_use:N \l_@@_prefix_tl anonymous_\int_use:N \g_@@_anon_int \tl_use:N \l_@@_suffix_tl}
+        {
+          \tl_use:N \l_@@_prefix_tl
+          anonymous_\int_use:N \g_@@_anon_int
+          \tl_use:N \l_@@_suffix_tl
+        }
         \tl_set:cn
-        {\tl_use:N \l_@@_prefix_tl anonymous_\int_use:N \g_@@_anon_int \tl_use:N \l_@@_suffix_tl} {##1}
+        {
+          \tl_use:N \l_@@_prefix_tl
+          anonymous_\int_use:N \g_@@_anon_int
+          \tl_use:N \l_@@_suffix_tl
+        } {##1}
         \clist_put_right:Nx #2 {anonymous_\int_use:N \g_@@_anon_int}
         \int_gincr:N \g_@@_anon_int
       }
@@ -5778,7 +6000,8 @@ manipulating PGF soft paths}
     }
   },
   get~ components~ of~ globally/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \clist_gclear_new:N #2
       \spath_components_to_seq:Nv
@@ -5787,9 +6010,17 @@ manipulating PGF soft paths}
       \seq_map_inline:Nn \l_@@_tmpa_seq
       {
         \tl_new:c
-        {\tl_use:N \l_@@_prefix_tl anonymous_\int_use:N \g_@@_anon_int \tl_use:N \l_@@_suffix_tl}
+        {
+          \tl_use:N \l_@@_prefix_tl
+          anonymous_\int_use:N \g_@@_anon_int
+          \tl_use:N \l_@@_suffix_tl
+        }
         \tl_gset:cn
-        {\tl_use:N \l_@@_prefix_tl anonymous_\int_use:N \g_@@_anon_int \tl_use:N \l_@@_suffix_tl} {##1}
+        {
+          \tl_use:N \l_@@_prefix_tl
+          anonymous_\int_use:N \g_@@_anon_int
+          \tl_use:N \l_@@_suffix_tl
+        } {##1}
         \clist_gput_right:Nx #2 {anonymous_\int_use:N \g_@@_anon_int}
         \int_gincr:N \g_@@_anon_int
       }
@@ -5804,7 +6035,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   render~ components/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
       \spath_components_to_seq:Nv
@@ -5838,7 +6070,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   insert~ gaps~ after~ components/.code~ n~ args={3}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
       \seq_gclear:N \g_@@_tmpa_seq
@@ -5848,7 +6081,13 @@ manipulating PGF soft paths}
       \foreach \l_@@_tmpa_tl in {#3}
       {
         \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
-        \seq_gput_right:Nx \g_@@_tmpb_seq {\int_eval:n { \int_mod:nn { \l_@@_tmpa_tl }{ \l_@@_tmpa_int } + 1 }}
+        \seq_gput_right:Nx
+        \g_@@_tmpb_seq
+        {\int_eval:n
+          {
+            \int_mod:nn { \l_@@_tmpa_tl }{ \l_@@_tmpa_int } + 1
+          }
+        }
       }
       \spath_components_to_seq:Nv
       \l_@@_tmpa_seq
@@ -5879,7 +6118,8 @@ manipulating PGF soft paths}
     }
   },
   insert~ gaps~ globally~ after~ components/.code~ n~ args={3}{
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
       \seq_gclear:N \g_@@_tmpa_seq
@@ -5889,7 +6129,14 @@ manipulating PGF soft paths}
       \foreach \l_@@_tmpa_tl in {#3}
       {
         \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
-        \seq_gput_right:Nx \g_@@_tmpb_seq {\int_eval:n { \int_mod:nn { \l_@@_tmpa_tl }{ \l_@@_tmpa_int } + 1 }}
+        \seq_gput_right:Nx
+        \g_@@_tmpb_seq
+        {
+          \int_eval:n
+          {
+            \int_mod:nn { \l_@@_tmpa_tl }{ \l_@@_tmpa_int } + 1
+          }
+        }
       }
       \spath_components_to_seq:Nv
       \l_@@_tmpa_seq
@@ -5925,7 +6172,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   join~ components/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \seq_gclear:N \g_@@_tmpa_seq
       \foreach \l_@@_tmpa_tl in {#2}
@@ -5949,7 +6197,8 @@ manipulating PGF soft paths}
     }
   },
   join~ components~ globally/.code~ 2~ args={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \seq_gclear:N \g_@@_tmpa_seq
       \foreach \l_@@_tmpa_tl in {#2}
@@ -5978,7 +6227,8 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
   remove~ empty~ components/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_remove_empty_components:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5988,7 +6238,8 @@ manipulating PGF soft paths}
     }
   },
   remove~ empty~ components~ globally/.code={
-    \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_gremove_empty_components:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -5999,6 +6250,100 @@ manipulating PGF soft paths}
   },
 %    \end{macrocode}
 %
+%
+% Join the specified components together, joining each to its previous one.
+%
+%    \begin{macrocode}
+  remove~ components/.code~ 2~ args={
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \seq_gclear:N \g_@@_tmpa_seq
+      \foreach \l_@@_tmpa_tl in {#2}
+      {
+        \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
+      }
+      \seq_gsort:Nn \g_@@_tmpa_seq
+      {
+        \int_compare:nNnTF {##1} < {##2}
+        { \sort_return_same: }
+        { \sort_return_swapped: }
+      }
+      \spath_components_to_seq:Nv
+      \l_@@_tmpa_seq
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \seq_gpop_left:NNF \g_@@_tmpa_seq \l_@@_tmpa_tl
+      {
+        \tl_clear:N \l_@@_tmpa_tl
+      }
+      \seq_clear:N \l_@@_tmpb_seq
+      \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
+      {
+        \tl_set:Nn \l_@@_tmpb_tl {##1}
+        \tl_if_eq:NNTF \l_@@_tmpb_tl \l_@@_tmpa_tl
+        {
+          \seq_gpop_left:NNF \g_@@_tmpa_seq \l_@@_tmpa_tl
+          {
+            \tl_clear:N \l_@@_tmpa_tl
+          }
+        }
+        {
+          \seq_put_right:Nn \l_@@_tmpb_seq {##2}
+        }
+      }
+      \tl_set:cx {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      {\seq_use:Nn \l_@@_tmpb_seq {} }
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+  remove~ components~ globally/.code~ 2~ args={
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \seq_gclear:N \g_@@_tmpa_seq
+      \foreach \l_@@_tmpa_tl in {#2}
+      {
+        \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
+      }
+      \seq_gsort:Nn \g_@@_tmpa_seq
+      {
+        \int_compare:nNnTF {##1} < {##2}
+        { \sort_return_same: }
+        { \sort_return_swapped: }
+      }
+      \spath_components_to_seq:Nv
+      \l_@@_tmpa_seq
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \seq_gpop_left:NNF \g_@@_tmpa_seq \l_@@_tmpa_tl
+      {
+        \tl_clear:N \l_@@_tmpa_tl
+      }
+      \seq_clear:N \l_@@_tmpb_seq
+      \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
+      {
+        \tl_set:Nn \l_@@_tmpb_tl {##1}
+        \tl_if_eq:NNTF \l_@@_tmpb_tl \l_@@_tmpa_tl
+        {
+          \seq_gpop_left:NNF \g_@@_tmpa_seq \l_@@_tmpa_tl
+          {
+            \tl_clear:N \l_@@_tmpa_tl
+          }
+        }
+        {
+          \seq_put_right:Nn \l_@@_tmpb_seq {##2}
+        }
+      }
+      \tl_gset:cx {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      {\seq_use:Nn \l_@@_tmpb_seq {} }
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+%    \end{macrocode}
+%   
 % This puts a conditional around the \texttt{spot weld} key because when figuring out a knot drawing then we will initially want to render it without the spot weld to keep the number of components constant.
 %
 %    \begin{macrocode}
@@ -6012,7 +6357,8 @@ manipulating PGF soft paths}
   maybe~ spot~ weld/.code={
     \bool_if:NF \l_@@_draft_bool
     {
-      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_spot_weld_components:c
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -6025,7 +6371,8 @@ manipulating PGF soft paths}
   maybe~ spot~ weld~ globally/.code={
     \bool_if:NF \l_@@_draft_bool
     {
-      \tl_if_exist:cTF {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       {
         \spath_spot_gweld_components:c
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
@@ -6289,7 +6636,8 @@ manipulating PGF soft paths}
       \pgfsyssoftpath@getcurrentpath\l_@@_tmpa_tl
       \spath_components_to_seq:NV \l_@@_tmpa_seq \l_@@_tmpa_tl
       \seq_gclear_new:c {g_@@_pen_\pgfkeysvalueof{/tikz/pen~name}_seq}
-      \seq_gset_eq:cN {g_@@_pen_\pgfkeysvalueof{/tikz/pen~name}_seq} \l_@@_tmpa_seq
+      \seq_gset_eq:cN
+      {g_@@_pen_\pgfkeysvalueof{/tikz/pen~name}_seq} \l_@@_tmpa_seq
       \pgfusepath{discard}%
     }
   },
@@ -6303,10 +6651,12 @@ manipulating PGF soft paths}
       \spath_components_to_seq:NV \l_@@_tmpa_seq \l_@@_tmpa_tl
       \tl_if_exist:cTF {g_@@_pen_\pgfkeysvalueof{/tikz/pen~name}_seq}
       {
-        \cal_path_create:Nc \l_@@_tmpa_seq {g_@@_pen_\pgfkeysvalueof{/tikz/pen~name}_seq}
+        \cal_path_create:Nc \l_@@_tmpa_seq
+        {g_@@_pen_\pgfkeysvalueof{/tikz/pen~name}_seq}
       }
       {
-        \msg_warning:nnx { calligraphy } { undefined pen } { \pgfkeysvalueof{/tikz/pen~name} }
+        \msg_warning:nnx { calligraphy } { undefined pen }
+        { \pgfkeysvalueof{/tikz/pen~name} }
       }
     }
   },
@@ -6379,8 +6729,10 @@ manipulating PGF soft paths}
     \tl_set:cn {l_@@_stroke_style_#1} {#2}
   },
   this~stroke~style/.code={
-    \tl_clear_new:c {l_@@_stroke_inline_style_ \int_use:N \g_@@_path_component_int}
-    \tl_set:cn {l_@@_stroke_inline_style_ \int_use:N \g_@@_path_component_int} {#1}
+    \tl_clear_new:c
+    {l_@@_stroke_inline_style_ \int_use:N \g_@@_path_component_int}
+    \tl_set:cn
+    {l_@@_stroke_inline_style_ \int_use:N \g_@@_path_component_int} {#1}
   },
   annotate/.style={
     annotate~if,
@@ -6500,23 +6852,29 @@ manipulating PGF soft paths}
           \spath_weld:NV \l_@@_tmp_patha_tl \l_@@_tmp_rpathb_tl
 
           \tl_clear:N \l_@@_tmpa_tl
-          \tl_set:Nn \l_@@_tmpa_tl {fill=\pgfkeysvalueof{/tikz/pen~colour},draw=none}
+          \tl_set:Nn \l_@@_tmpa_tl
+          {
+            fill=\pgfkeysvalueof{/tikz/pen~colour},
+            draw=none
+          }
           \tl_if_exist:cT  {l_@@_stroke_style_ \int_use:N \l_@@_tmpa_int}
           {
-            \tl_put_right:Nv \l_@@_tmpa_tl {l_@@_stroke_style_ \int_use:N \l_@@_tmpa_int}
+            \tl_put_right:Nv \l_@@_tmpa_tl
+            {l_@@_stroke_style_ \int_use:N \l_@@_tmpa_int}
           }
           \tl_if_exist:cT  {l_@@_stroke_inline_style_ \int_use:N \l_@@_tmpa_int}
           {
             \tl_put_right:Nn \l_@@_tmpa_tl {,}
-            \tl_put_right:Nv \l_@@_tmpa_tl {l_@@_stroke_inline_style_ \int_use:N \l_@@_tmpa_int}
+            \tl_put_right:Nv \l_@@_tmpa_tl
+            {l_@@_stroke_inline_style_ \int_use:N \l_@@_tmpa_int}
           }
           \tl_if_exist:cT  {l_@@_nib_style_ \int_use:N \l_@@_tmpb_int}
           {
             \tl_put_right:Nn \l_@@_tmpa_tl {,}
-            \tl_put_right:Nv \l_@@_tmpa_tl {l_@@_nib_style_ \int_use:N \l_@@_tmpb_int}
+            \tl_put_right:Nv \l_@@_tmpa_tl
+            {l_@@_nib_style_ \int_use:N \l_@@_tmpb_int}
           }
           \spath_tikz_path:VV \l_@@_tmpa_tl \l_@@_tmp_patha_tl
-
         }
         \pgfsys@endscope
         \group_end:
@@ -6527,7 +6885,9 @@ manipulating PGF soft paths}
         \seq_get_right:NN #2 \l_@@_tmpa_tl
         \spath_finalpoint:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
         \spath_translate:NV \l_@@_tmp_path_tl \l_@@_tmpa_tl
-        \tikz@scan@one@point\pgfutil@firstofone\pgfkeysvalueof{/tikz/annotation~shift}
+        \tikz@scan@one@point
+        \pgfutil@firstofone
+        \pgfkeysvalueof{/tikz/annotation~shift}
 
         \spath_translate:Nnn \l_@@_tmp_path_tl {\pgf@x} {\pgf@y}
       
@@ -6538,7 +6898,10 @@ manipulating PGF soft paths}
 
         \exp_last_unbraced:NV \pgfqpoint \l_@@_tmpa_tl
         \begin{scope}[reset~ cm]
-        \node[every~annotation~node/.try,tl~use:c =  {l_@@_annotation_style_ \int_use:N \l_@@_tmpa_int _tl}] at (\pgf@x,\pgf@y) {\int_use:N \l_@@_tmpa_int};
+        \node[
+          every~annotation~node/.try,
+          tl~use:c = {l_@@_annotation_style_ \int_use:N \l_@@_tmpa_int _tl}
+        ] at (\pgf@x,\pgf@y) {\int_use:N \l_@@_tmpa_int};
         \end{scope}
       }
     }
@@ -6747,8 +7110,18 @@ manipulating PGF soft paths}
     (\l_@@_tmpa_fp^2 + \l_@@_tmpb_fp^2)^.5
   }
   
-  \fp_set:Nn \l_@@_tmpa_fp {.5*\l_@@_taper_width_dim *     \l_@@_tmpa_fp / \l_@@_tmpe_fp}
-  \fp_set:Nn \l_@@_tmpb_fp {.5*\l_@@_taper_width_dim *     \l_@@_tmpb_fp / \l_@@_tmpe_fp}
+  \fp_set:Nn \l_@@_tmpa_fp
+  {
+    .5*\l_@@_taper_width_dim
+    *
+    \l_@@_tmpa_fp / \l_@@_tmpe_fp
+  }
+  \fp_set:Nn \l_@@_tmpb_fp
+  {
+    .5*\l_@@_taper_width_dim
+    *
+    \l_@@_tmpb_fp / \l_@@_tmpe_fp
+  }
 
   \fp_set:Nn \l_@@_tmpc_fp
   {
@@ -6763,13 +7136,23 @@ manipulating PGF soft paths}
     (\l_@@_tmpc_fp^2 + \l_@@_tmpd_fp^2)^.5
   }
 
-  \fp_set:Nn \l_@@_tmpc_fp {.5*\l_@@_line_width_dim * \l_@@_tmpc_fp / \l_@@_tmpe_fp}
-  \fp_set:Nn \l_@@_tmpd_fp {.5*\l_@@_line_width_dim * \l_@@_tmpd_fp / \l_@@_tmpe_fp}
+  \fp_set:Nn \l_@@_tmpc_fp
+  {
+    .5*\l_@@_line_width_dim
+    *
+    \l_@@_tmpc_fp / \l_@@_tmpe_fp
+  }
+  \fp_set:Nn \l_@@_tmpd_fp
+  {
+    .5*\l_@@_line_width_dim
+    *
+    \l_@@_tmpd_fp / \l_@@_tmpe_fp
+  }
 
   \tl_put_right:Nx \l_@@_tmpb_tl
   {
     {\dim_eval:n { \fp_to_dim:N \l_@@_tmpa_fp + \l_@@_tmpa_dim}}
-    {\dim_eval:n { \fp_to_dim:N \l_@@_tmpb_fp +             \l_@@_tmpb_dim}}
+    {\dim_eval:n { \fp_to_dim:N \l_@@_tmpb_fp + \l_@@_tmpb_dim}}
   }
 
   \tl_put_right:NV \l_@@_tmpb_tl \c_spath_curvetoa_tl
@@ -6800,16 +7183,44 @@ manipulating PGF soft paths}
 
   \tl_put_right:Nx \l_@@_tmpb_tl
   {
-    {\dim_eval:n { \fp_to_dim:N \l_@@_tmpc_fp + \l_@@_tmpg_dim - \fp_to_dim:n{ 1.32 * \l_@@_tmpd_fp}}}
-    {\dim_eval:n { \fp_to_dim:N \l_@@_tmpd_fp + \l_@@_tmph_dim + \fp_to_dim:n {1.32* \l_@@_tmpc_fp}}}
+    {
+      \dim_eval:n
+      {
+        \fp_to_dim:N \l_@@_tmpc_fp + \l_@@_tmpg_dim
+        - \fp_to_dim:n{ 1.32 * \l_@@_tmpd_fp
+        }
+      }
+    }
+    {
+      \dim_eval:n
+      {
+        \fp_to_dim:N \l_@@_tmpd_fp + \l_@@_tmph_dim
+        + \fp_to_dim:n {1.32* \l_@@_tmpc_fp
+        }
+      }
+    }
   }
 
   \tl_put_right:NV \l_@@_tmpb_tl \c_spath_curvetob_tl
 
   \tl_put_right:Nx \l_@@_tmpb_tl
   {
-    {\dim_eval:n { -\fp_to_dim:N \l_@@_tmpc_fp + \l_@@_tmpg_dim - \fp_to_dim:n {1.32 * \l_@@_tmpd_fp}}}
-    {\dim_eval:n { -\fp_to_dim:N \l_@@_tmpd_fp + \l_@@_tmph_dim + \fp_to_dim:n {1.32 * \l_@@_tmpc_fp}}}
+    {
+      \dim_eval:n
+      {
+        -\fp_to_dim:N \l_@@_tmpc_fp + \l_@@_tmpg_dim
+        - \fp_to_dim:n {1.32 * \l_@@_tmpd_fp
+        }
+      }
+    }
+    {
+      \dim_eval:n
+      {
+        -\fp_to_dim:N \l_@@_tmpd_fp + \l_@@_tmph_dim
+        + \fp_to_dim:n {1.32 * \l_@@_tmpc_fp
+        }
+      }
+    }
   }
 
   \tl_put_right:NV \l_@@_tmpb_tl \c_spath_curveto_tl
@@ -6848,16 +7259,40 @@ manipulating PGF soft paths}
 
   \tl_put_right:Nx \l_@@_tmpb_tl
   {
-    {\dim_eval:n { -\fp_to_dim:N \l_@@_tmpa_fp + \l_@@_tmpa_dim + \fp_to_dim:n{ 1.32 * \l_@@_tmpb_fp}}}
-    {\dim_eval:n { -\fp_to_dim:N \l_@@_tmpb_fp + \l_@@_tmpb_dim - \fp_to_dim:n {1.32* \l_@@_tmpa_fp}}}
+    {
+      \dim_eval:n
+      {
+        -\fp_to_dim:N \l_@@_tmpa_fp + \l_@@_tmpa_dim
+        + \fp_to_dim:n{ 1.32 * \l_@@_tmpb_fp}
+      }
+    }
+    {
+      \dim_eval:n
+      {
+        -\fp_to_dim:N \l_@@_tmpb_fp + \l_@@_tmpb_dim
+        - \fp_to_dim:n {1.32* \l_@@_tmpa_fp}
+      }
+    }
   }
 
   \tl_put_right:NV \l_@@_tmpb_tl \c_spath_curvetob_tl
 
   \tl_put_right:Nx \l_@@_tmpb_tl
   {
-    {\dim_eval:n { \fp_to_dim:N \l_@@_tmpa_fp + \l_@@_tmpa_dim + \fp_to_dim:n {1.32 * \l_@@_tmpb_fp}}}
-    {\dim_eval:n { \fp_to_dim:N \l_@@_tmpb_fp + \l_@@_tmpb_dim - \fp_to_dim:n {1.32 * \l_@@_tmpa_fp}}}
+    {
+      \dim_eval:n
+      {
+        \fp_to_dim:N \l_@@_tmpa_fp + \l_@@_tmpa_dim
+        + \fp_to_dim:n {1.32 * \l_@@_tmpb_fp}
+      }
+    }
+    {
+      \dim_eval:n
+      {
+        \fp_to_dim:N \l_@@_tmpb_fp + \l_@@_tmpb_dim
+        - \fp_to_dim:n {1.32 * \l_@@_tmpa_fp}
+      }
+    }
   }
 
   \tl_put_right:NV \l_@@_tmpb_tl \c_spath_curveto_tl
@@ -6865,7 +7300,7 @@ manipulating PGF soft paths}
   \tl_put_right:Nx \l_@@_tmpb_tl
   {
     {\dim_eval:n { \fp_to_dim:N \l_@@_tmpa_fp + \l_@@_tmpa_dim}}
-    {\dim_eval:n { \fp_to_dim:N \l_@@_tmpb_fp +             \l_@@_tmpb_dim}}
+    {\dim_eval:n { \fp_to_dim:N \l_@@_tmpb_fp + \l_@@_tmpb_dim}}
   }
 
   \pgfsyssoftpath@setcurrentpath\l_@@_tmpb_tl
@@ -6906,75 +7341,160 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \expandafter\ifx\csname pgfdeclaredecoration\endcsname\relax
 \else
-\pgfdeclaredecoration{calligraphic brace}{brace}
-{
-  \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]
-  {
-    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}
-    \pgfpathmoveto{\pgfpointorigin}
-    \pgfpathcurveto
-    {\pgfqpoint{.15\pgfdecorationsegmentamplitude}{.3\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-    {
-      \pgftransformxshift{+\pgfdecorationsegmentaspect\pgfdecoratedremainingdistance}
-      \pgfpathlineto{\pgfqpoint{-\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-      \pgfpathcurveto
-      {\pgfqpoint{-.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-      {\pgfqpoint{-.15\pgfdecorationsegmentamplitude}{.7\pgfdecorationsegmentamplitude}}
-      {\pgfqpoint{0\pgfdecorationsegmentamplitude}{1\pgfdecorationsegmentamplitude}}
-      \pgfpathmoveto{\pgfqpoint{0\pgfdecorationsegmentamplitude}{1\pgfdecorationsegmentamplitude}}
-      \pgfpathcurveto
-      {\pgfqpoint{.15\pgfdecorationsegmentamplitude}{.7\pgfdecorationsegmentamplitude}}
-      {\pgfqpoint{.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-      {\pgfqpoint{\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-    }
-    {
-      \pgftransformxshift{+\pgfdecoratedremainingdistance}
-      \pgfpathlineto{\pgfqpoint{-\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-      \pgfpathcurveto
-      {\pgfqpoint{-.5\pgfdecorationsegmentamplitude}{.5\pgfdecorationsegmentamplitude}}
-      {\pgfqpoint{-.15\pgfdecorationsegmentamplitude}{.3\pgfdecorationsegmentamplitude}}
-      {\pgfqpoint{0pt}{0pt}}
-    }
-    \tikzset{
-      taper width=.5\pgflinewidth,
-      taper
+\pgfdeclaredecoration{calligraphic brace}{brace}%
+{%
+  \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]%
+  {%
+    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}%
+    \pgfpathmoveto{\pgfpointorigin}%
+    \pgfpathcurveto%
+    {%
+      \pgfqpoint%
+      {.15\pgfdecorationsegmentamplitude}%
+      {.3\pgfdecorationsegmentamplitude}%
     }%
-    \pgfsyssoftpath@getcurrentpath\cal@tmp@path
-    \CopperplatePath{\cal@tmp@path}
-  }
-  \state{final}{}
-}
+    {%
+      \pgfqpoint%
+      {.5\pgfdecorationsegmentamplitude}%
+      {.5\pgfdecorationsegmentamplitude}%
+    }%
+    {%
+      \pgfqpoint%
+      {\pgfdecorationsegmentamplitude}%
+      {.5\pgfdecorationsegmentamplitude}%
+    }%
+    {%
+      \pgftransformxshift%
+      {+\pgfdecorationsegmentaspect\pgfdecoratedremainingdistance}%
+      \pgfpathlineto%
+      {%
+        \pgfqpoint%
+        {-\pgfdecorationsegmentamplitude}%
+        {.5\pgfdecorationsegmentamplitude}%
+      }%
+      \pgfpathcurveto
+      {%
+        \pgfqpoint%
+        {-.5\pgfdecorationsegmentamplitude}%
+        {.5\pgfdecorationsegmentamplitude}%
+      }%
+      {%
+        \pgfqpoint%
+        {-.15\pgfdecorationsegmentamplitude}%
+        {.7\pgfdecorationsegmentamplitude}%
+      }%
+      {%
+        \pgfqpoint%
+        {0\pgfdecorationsegmentamplitude}%
+        {1\pgfdecorationsegmentamplitude}%
+      }%
+      \pgfpathmoveto%
+      {%
+        \pgfqpoint%
+        {0\pgfdecorationsegmentamplitude}%
+        {1\pgfdecorationsegmentamplitude}%
+      }%
+      \pgfpathcurveto%
+      {%
+        \pgfqpoint%
+        {.15\pgfdecorationsegmentamplitude}%
+        {.7\pgfdecorationsegmentamplitude}%
+      }%
+      {%
+        \pgfqpoint%
+        {.5\pgfdecorationsegmentamplitude}%
+        {.5\pgfdecorationsegmentamplitude}%
+      }%
+      {%
+        \pgfqpoint%
+        {\pgfdecorationsegmentamplitude}%
+        {.5\pgfdecorationsegmentamplitude}%
+      }%
+    }%
+    {%
+      \pgftransformxshift{+\pgfdecoratedremainingdistance}%
+      \pgfpathlineto%
+      {%
+        \pgfqpoint%
+        {-\pgfdecorationsegmentamplitude}%
+        {.5\pgfdecorationsegmentamplitude}%
+      }%
+      \pgfpathcurveto%
+      {%
+        \pgfqpoint%
+        {-.5\pgfdecorationsegmentamplitude}%
+        {.5\pgfdecorationsegmentamplitude}%
+      }%
+      {%
+        \pgfqpoint%
+        {-.15\pgfdecorationsegmentamplitude}%
+        {.3\pgfdecorationsegmentamplitude}%
+      }%
+      {\pgfqpoint{0pt}{0pt}}%
+    }%
+    \tikzset{%
+      taper width=.5\pgflinewidth,%
+      taper%
+    }%%
+    \pgfsyssoftpath@getcurrentpath\cal@tmp@path%
+    \CopperplatePath{\cal@tmp@path}%
+  }%
+  \state{final}{}%
+}%
 %    \end{macrocode}
 %
 % The second is a straightened parenthesis (so that when very large it doesn't bow out too far).
 %    \begin{macrocode}
 \pgfdeclaredecoration{calligraphic straight parenthesis}{brace}
 {
-  \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]
-  {
-    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}
-    \pgfpathmoveto{\pgfpointorigin}
-    \pgfpathcurveto
-    {\pgfqpoint{.76604\pgfdecorationsegmentamplitude}{.64279\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{2.3333\pgfdecorationsegmentamplitude}{\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{3.3333\pgfdecorationsegmentamplitude}{\pgfdecorationsegmentamplitude}}
-    {
-      \pgftransformxshift{+\pgfdecoratedremainingdistance}
-      \pgfpathlineto{\pgfqpoint{-3.3333\pgfdecorationsegmentamplitude}{\pgfdecorationsegmentamplitude}}
-      \pgfpathcurveto
-      {\pgfqpoint{-2.3333\pgfdecorationsegmentamplitude}{\pgfdecorationsegmentamplitude}}
-      {\pgfqpoint{-.76604\pgfdecorationsegmentamplitude}{.64279\pgfdecorationsegmentamplitude}}
-      {\pgfqpoint{0pt}{0pt}}
-    }
-    \tikzset{
-      taper width=.5\pgflinewidth,
-      taper
+  \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]%
+  {%
+    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}%
+    \pgfpathmoveto{\pgfpointorigin}%
+    \pgfpathcurveto%
+    {%
+      \pgfqpoint%
+      {.76604\pgfdecorationsegmentamplitude}%
+      {.64279\pgfdecorationsegmentamplitude}%
     }%
-    \pgfsyssoftpath@getcurrentpath\cal@tmp@path
-    \CopperplatePath{\cal@tmp@path}
-  }
+    {%
+      \pgfqpoint%
+      {2.3333\pgfdecorationsegmentamplitude}%
+      {\pgfdecorationsegmentamplitude}%
+    }%
+    {%
+      \pgfqpoint%
+      {3.3333\pgfdecorationsegmentamplitude}%
+      {\pgfdecorationsegmentamplitude}%
+    }%
+    {%
+      \pgftransformxshift{+\pgfdecoratedremainingdistance}%
+      \pgfpathlineto%
+      {%
+        \pgfqpoint%
+        {-3.3333\pgfdecorationsegmentamplitude}%
+        {\pgfdecorationsegmentamplitude}%
+      }%
+      \pgfpathcurveto%
+      {%
+        \pgfqpoint%
+        {-2.3333\pgfdecorationsegmentamplitude}%
+        {\pgfdecorationsegmentamplitude}%
+      }%
+      {%
+        \pgfqpoint%
+        {-.76604\pgfdecorationsegmentamplitude}%
+        {.64279\pgfdecorationsegmentamplitude}%
+      }%
+      {\pgfqpoint{0pt}{0pt}}%
+    }%
+    \tikzset{%
+      taper width=.5\pgflinewidth,%
+      taper%
+    }%
+    \pgfsyssoftpath@getcurrentpath\cal@tmp@path%
+    \CopperplatePath{\cal@tmp@path}%
+  }%
   \state{final}{}%
 }
 %    \end{macrocode}
@@ -6983,24 +7503,28 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \pgfdeclaredecoration{calligraphic curved parenthesis}{brace}
 {
-  \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]
-  {
-    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}
-    \pgfpathmoveto{\pgfpointorigin}
-    \pgf@xa=\pgfdecoratedremainingdistance\relax
-    \advance\pgf@xa by -1.5890\pgfdecorationsegmentamplitude\relax
-    \edef\cgrphy@xa{\the\pgf@xa}
-    \pgfpathcurveto
-    {\pgfqpoint{1.5890\pgfdecorationsegmentamplitude}{1.3333\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{\cgrphy@xa}{1.3333\pgfdecorationsegmentamplitude}}
-    {\pgfqpoint{\pgfdecoratedremainingdistance}{0pt}}
-    \tikzset{
-      taper width=.5\pgflinewidth,
-      taper
+  \state{brace}[width=+\pgfdecoratedremainingdistance,next state=final]%
+  {%
+    \pgfsyssoftpath@setcurrentpath{\pgfutil@empty}%
+    \pgfpathmoveto{\pgfpointorigin}%
+    \pgf@xa=\pgfdecoratedremainingdistance\relax%
+    \advance\pgf@xa by -1.5890\pgfdecorationsegmentamplitude\relax%
+    \edef\cgrphy@xa{\the\pgf@xa}%
+    \pgfpathcurveto%
+    {%
+      \pgfqpoint%
+      {1.5890\pgfdecorationsegmentamplitude}%
+      {1.3333\pgfdecorationsegmentamplitude}%
     }%
-    \pgfsyssoftpath@getcurrentpath\cal@tmp@path
-    \CopperplatePath{\cal@tmp@path}
-  }
+    {\pgfqpoint{\cgrphy@xa}{1.3333\pgfdecorationsegmentamplitude}}%
+    {\pgfqpoint{\pgfdecoratedremainingdistance}{0pt}}%
+    \tikzset{%
+      taper width=.5\pgflinewidth,%
+      taper%
+    }%
+    \pgfsyssoftpath@getcurrentpath\cal@tmp@path%
+    \CopperplatePath{\cal@tmp@path}%
+  }%
   \state{final}{}%
 }
 %    \end{macrocode}
@@ -7349,7 +7873,12 @@ manipulating PGF soft paths}
     {
       \tl_set:Nn \l_@@_node_tl {
         \exp_not:N \node[coordinate,
-          pin={[node~ contents={\int_use:N \g_@@_intersections_int},knot~ diagram/draft/crossing~ label, knot~ diagram/draft/crossing~ \int_use:N \g_@@_intersections_int \c_space_tl label/.try]
+          pin={[
+              node~ contents={\int_use:N \g_@@_intersections_int},
+              knot~ diagram/draft/crossing~ label,
+              knot~ diagram/draft/crossing~
+              \int_use:N \g_@@_intersections_int \c_space_tl label/.try
+            ]
             }]
       }
     }
@@ -7358,7 +7887,10 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
     \int_step_variable:nnnNn {1} {1} {\l_@@_tmpa_int - 1} \l_@@_tmpa_tl
     {
-      \int_step_variable:nnnNn {\tl_use:N \l_@@_tmpa_tl + 1} {1}     {\l_@@_tmpa_int} \l_@@_tmpb_tl
+      \int_step_variable:nnnNn
+      {\tl_use:N \l_@@_tmpa_tl + 1}
+      {1}
+      {\l_@@_tmpa_int} \l_@@_tmpb_tl
       {
         \knot_intersections:VV \l_@@_tmpa_tl \l_@@_tmpb_tl
       }
@@ -7390,7 +7922,12 @@ manipulating PGF soft paths}
   \spath_bake_round:c {knot strand #1}
   \tl_set:Nn \l_@@_tmpa_tl {knot~ diagram/every~ strand/.try,}
   \tl_put_right:Nv \l_@@_tmpa_tl {l_@@_options_strand #1}
-  \tl_put_right:Nn \l_@@_tmpa_tl {,knot~ diagram/only~ when~ rendering/.try,only~ when~ rendering/.try}
+  \tl_put_right:Nn \l_@@_tmpa_tl
+  {
+    ,
+    knot~ diagram/only~ when~ rendering/.try,
+    only~ when~ rendering/.try
+  }
   \spath_tikz_path:Vv \l_@@_tmpa_tl {knot strand #1}
   \group_end:
   \endpgfscope
@@ -7410,11 +7947,15 @@ manipulating PGF soft paths}
     \spath_finalpoint:Nv \l_@@_tmpb_tl {knot strand #1}
     \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpb_tl {1}}
     \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpb_tl {2}}
-    \node[knot~ diagram/draft/strand~label] at (\l_@@_tmpa_dim,\l_@@_tmpb_dim) {#1};
+    \node[
+      knot~ diagram/draft/strand~label
+    ] at (\l_@@_tmpa_dim,\l_@@_tmpb_dim) {#1};
     \spath_initialpoint:Nv \l_@@_tmpb_tl {knot strand #1}
     \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpb_tl {1}}
     \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpb_tl {2}}
-    \node[knot~ diagram/draft/strand~label] at (\l_@@_tmpa_dim,\l_@@_tmpb_dim) {#1};
+    \node[
+      knot~ diagram/draft/strand~label
+    ] at (\l_@@_tmpa_dim,\l_@@_tmpb_dim) {#1};
   }
   \bool_if:nT {
     \l_@@_self_intersections_bool
@@ -7448,23 +7989,29 @@ manipulating PGF soft paths}
     {
       \fp_set:Nn \l_@@_tmpa_fp
       {
-        (\tl_item:nn {#1} {3} - 3 * \tl_item:nn {#1} {6} + 3 * \tl_item:nn {#1} {9} - \tl_item:nn {#1} {12})
+        (\tl_item:nn {#1} {3} - 3 * \tl_item:nn {#1} {6}
+        + 3 * \tl_item:nn {#1} {9} - \tl_item:nn {#1} {12})
         *
         (3 * \tl_item:nn {#1} {8} - 3 * \tl_item:nn {#1} {11})
         -
-        (\tl_item:nn {#1} {2} - 3 * \tl_item:nn {#1} {5} + 3 * \tl_item:nn {#1} {8} - \tl_item:nn {#1} {11})
+        (\tl_item:nn {#1} {2} - 3 * \tl_item:nn {#1} {5}
+        + 3 * \tl_item:nn {#1} {8} - \tl_item:nn {#1} {11})
         *
         (3 * \tl_item:nn {#1} {9} - 3 * \tl_item:nn {#1} {12})
       }
       \fp_set:Nn \l_@@_tmpb_fp
       {
-        (\tl_item:nn {#1} {2} - 3 * \tl_item:nn {#1} {5} + 3 * \tl_item:nn {#1} {8} - \tl_item:nn {#1} {11})
+        (\tl_item:nn {#1} {2} - 3 * \tl_item:nn {#1} {5}
+        + 3 * \tl_item:nn {#1} {8} - \tl_item:nn {#1} {11})
         *
-        (3 * \tl_item:nn {#1} {6} - 6 * \tl_item:nn {#1} {9} + 3 * \tl_item:nn {#1} {12})
+        (3 * \tl_item:nn {#1} {6} - 6 * \tl_item:nn {#1} {9}
+        + 3 * \tl_item:nn {#1} {12})
         -
-        (\tl_item:nn {#1} {3} - 3 * \tl_item:nn {#1} {6} + 3 * \tl_item:nn {#1} {9} - \tl_item:nn {#1} {12})
+        (\tl_item:nn {#1} {3} - 3 * \tl_item:nn {#1} {6}
+        + 3 * \tl_item:nn {#1} {9} - \tl_item:nn {#1} {12})
         *
-        (3 * \tl_item:nn {#1} {5} - 6 * \tl_item:nn {#1} {8} + 3 * \tl_item:nn {#1} {11})
+        (3 * \tl_item:nn {#1} {5} - 6 * \tl_item:nn {#1} {8}
+        + 3 * \tl_item:nn {#1} {11})
       }
       \fp_compare:nTF
       {
@@ -7477,7 +8024,11 @@ manipulating PGF soft paths}
           0 < \l_@@_tmpa_fp && \l_@@_tmpa_fp < 1
         }
         {
-          \spath_split_curve:NNnV \l_@@_tmpc_tl \l_@@_tmpd_tl {#1} \l_@@_tmpa_fp
+          \spath_split_curve:NNnV
+          \l_@@_tmpc_tl
+          \l_@@_tmpd_tl
+          {#1}
+          \l_@@_tmpa_fp
           \tl_set:Nx \l_@@_tmpc_tl {\tl_tail:N \l_@@_tmpc_tl}
           \tl_set:Nx \l_@@_tmpc_tl {\tl_tail:N \l_@@_tmpc_tl}
           \tl_set:Nx \l_@@_tmpc_tl {\tl_tail:N \l_@@_tmpc_tl}
@@ -7535,19 +8086,33 @@ manipulating PGF soft paths}
   \bool_if:nTF {
     \l_@@_save_bool
     &&
-    \tl_if_exist_p:c {knot~ intersections~ \tl_use:N \l_@@_name_tl - \tl_use:N \l_@@_tmpa_tl -  \tl_use:N \l_@@_tmpb_tl}
+    \tl_if_exist_p:c {
+      knot~ intersections~
+      \tl_use:N \l_@@_name_tl -
+      \tl_use:N \l_@@_tmpa_tl -
+      \tl_use:N \l_@@_tmpb_tl
+    }
   }
   {
-    \tl_use:c {knot~ intersections~ \tl_use:N \l_@@_name_tl - \tl_use:N \l_@@_tmpa_tl -  \tl_use:N \l_@@_tmpb_tl}
+    \tl_use:c
+    {
+      knot~ intersections~ \tl_use:N \l_@@_name_tl -
+      \tl_use:N \l_@@_tmpa_tl -
+      \tl_use:N \l_@@_tmpb_tl
+    }
   }
   {
-\pgfintersectionofpaths{\pgfsetpath\l_@@_tmpc_tl}{\pgfsetpath\l_@@_tmpd_tl}
+    \pgfintersectionofpaths{\pgfsetpath\l_@@_tmpc_tl}{\pgfsetpath\l_@@_tmpd_tl}
 
   }
 
   \int_compare:nT {\pgfintersectionsolutions > 0}
   {
-    \int_step_function:nnnN {1} {1} {\pgfintersectionsolutions} \knot_do_intersection:n
+    \int_step_function:nnnN
+    {1}
+    {1}
+    {\pgfintersectionsolutions}
+    \knot_do_intersection:n
   }
 
   \knot_save_intersections:VV \l_@@_tmpa_tl \l_@@_tmpb_tl
@@ -7584,7 +8149,16 @@ manipulating PGF soft paths}
         }
         \tl_put_right:Nx \l_@@_aux_tl
         {
-          {\exp_not:N \pgf@x=\dim_use:N \l_@@_tmpa_dim\exp_not:N\relax\exp_not:N \pgf@y =\dim_use:N \l_@@_tmpb_dim\relax}
+          {
+            \exp_not:N \pgf@x
+            =
+            \dim_use:N \l_@@_tmpa_dim
+            \exp_not:N \relax
+            \exp_not:N \pgf@y
+            =
+            \dim_use:N \l_@@_tmpb_dim
+            \exp_not:N \relax
+          }
         }
       }
       \tl_set:Nn \l_@@_auxa_tl {\expandafter \gdef \csname knot~ intersections~}
@@ -7707,14 +8281,16 @@ manipulating PGF soft paths}
 %    \begin{macrocode} 
       \bool_if:NT \l_@@_self_intersections_bool
       {
-        \knot_test_endpoint:NVnT \l_@@_redraw_tolerance_dim \l_@@_tmpg_tl {initial point}
+        \knot_test_endpoint:NVnT
+        \l_@@_redraw_tolerance_dim \l_@@_tmpg_tl {initial point}
         {
           \bool_set_true:N \l_@@_prepend_prev_bool
         }
         {
           \bool_set_false:N \l_@@_prepend_prev_bool
         }
-        \knot_test_endpoint:NVnT \l_@@_redraw_tolerance_dim \l_@@_tmpg_tl {final point}
+        \knot_test_endpoint:NVnT
+        \l_@@_redraw_tolerance_dim \l_@@_tmpg_tl {final point}
         {
           \bool_set_true:N \l_@@_append_next_bool
         }
@@ -7730,10 +8306,14 @@ manipulating PGF soft paths}
         }
         {
           \tl_clear_new:c {knot \tl_use:N \l_@@_prefix_tl -1}
-          \tl_set_eq:cc {knot \tl_use:N \l_@@_prefix_tl -1} {knot \tl_use:N \l_@@_tmpg_tl}
+          \tl_set_eq:cc
+          {knot \tl_use:N \l_@@_prefix_tl -1}
+          {knot \tl_use:N \l_@@_tmpg_tl}
 
           \tl_clear_new:c {l_@@_options_ \tl_use:N \l_@@_prefix_tl -1}
-          \tl_set_eq:cc {l_@@_options_ \tl_use:N \l_@@_prefix_tl -1} {l_@@_options_ \tl_use:N \l_@@_tmpg_tl}
+          \tl_set_eq:cc
+          {l_@@_options_ \tl_use:N \l_@@_prefix_tl -1}
+          {l_@@_options_ \tl_use:N \l_@@_tmpg_tl}
 
           \bool_if:nT
           {
@@ -7744,7 +8324,9 @@ manipulating PGF soft paths}
             !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
           }
           {
-            \spath_prepend_no_move:cv {knot \tl_use:N \l_@@_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
+            \spath_prepend_no_move:cv
+            {knot \tl_use:N \l_@@_prefix_tl -1}
+            {knot \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
 %    \end{macrocode}
 % If we split potentially self intersecting curves, we test to see if we should prepend yet another segment.
 %    \begin{macrocode}
@@ -7757,10 +8339,18 @@ manipulating PGF soft paths}
               !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
             }
             {
-              \knot_test_endpoint:NvnT \l_@@_redraw_tolerance_dim {knot previous \tl_use:N \l_@@_tmpg_tl} {initial point}
+              \knot_test_endpoint:NvnT
+              \l_@@_redraw_tolerance_dim
+              {knot previous \tl_use:N \l_@@_tmpg_tl}
+              {initial point}
               {
-                
-                \spath_prepend_no_move:cv {knot \tl_use:N \l_@@_prefix_tl -1} {knot \tl_use:c {knot previous \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}}
+                \spath_prepend_no_move:cv
+                {knot \tl_use:N \l_@@_prefix_tl -1}
+                {knot \tl_use:c
+                  {knot previous \tl_use:c
+                    {knot previous \tl_use:N \l_@@_tmpg_tl}
+                  }
+                }
                 \tl_set_eq:Nc \l_@@_tmpa_tl {knot \tl_use:N \l_@@_prefix_tl -1}
               }
             }
@@ -7777,7 +8367,9 @@ manipulating PGF soft paths}
             !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
           }
           {
-            \spath_append_no_move:cv {knot \tl_use:N \l_@@_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}
+            \spath_append_no_move:cv
+            {knot \tl_use:N \l_@@_prefix_tl -1}
+            {knot \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}
             \bool_if:nT
             {
               \l_@@_splits_bool
@@ -7788,14 +8380,21 @@ manipulating PGF soft paths}
               !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
             }
             {
-              \knot_test_endpoint:NvnT \l_@@_redraw_tolerance_dim {knot previous \tl_use:N \l_@@_tmpg_tl} {final point}
+              \knot_test_endpoint:NvnT
+              \l_@@_redraw_tolerance_dim
+              {knot previous \tl_use:N \l_@@_tmpg_tl}
+              {final point}
               {
-                \spath_append_no_move:cv {knot \tl_use:N \l_@@_prefix_tl -1} {knot \tl_use:c {knot next \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}}
-                
+                \spath_append_no_move:cv
+                {knot \tl_use:N \l_@@_prefix_tl -1}
+                {knot \tl_use:c
+                  {knot next \tl_use:c
+                    {knot next \tl_use:N \l_@@_tmpg_tl}
+                  }
+                }
               }
             }
           }
-
           \tl_set:Nn \l_@@_tmpg_tl {\tl_use:N \l_@@_prefix_tl -1}
         }
       }
@@ -7804,9 +8403,15 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
       \pgfscope
       \group_begin:
-      \tikzset{knot~ diagram/every~ intersection/.try, every~ intersection/.try, knot~ diagram/intersection~ \int_use:N \g_@@_intersections_int/.try}
+      \tikzset{
+        knot~ diagram/every~ intersection/.try,
+        every~ intersection/.try,
+        knot~ diagram/intersection~ \int_use:N \g_@@_intersections_int/.try
+      }
       \knot_draw_crossing:VVV \l_@@_tmpg_tl \l_@@_tmpa_dim \l_@@_tmpb_dim
-      \coordinate (\l_@@_name_tl \c_space_tl \int_use:N \g_@@_intersections_int) at (\dim_use:N \l_@@_tmpa_dim, \dim_use:N \l_@@_tmpb_dim);
+      \coordinate
+      (\l_@@_name_tl \c_space_tl \int_use:N \g_@@_intersections_int)
+      at (\dim_use:N \l_@@_tmpa_dim, \dim_use:N \l_@@_tmpb_dim);
       \group_end:
       \endpgfscope
 %    \end{macrocode}
@@ -7818,7 +8423,13 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
     \tl_if_empty:NF \l_@@_node_tl
     {
-      \seq_gpush:Nx \g_@@_nodes_seq { \l_@@_node_tl at (\dim_use:N \l_@@_tmpa_dim, \dim_use:N \l_@@_tmpb_dim) {};}
+      \seq_gpush:Nx
+      \g_@@_nodes_seq
+      {
+        \l_@@_node_tl
+        at
+        (\dim_use:N \l_@@_tmpa_dim, \dim_use:N \l_@@_tmpb_dim) {};
+      }
     }
   }
 }
@@ -7878,27 +8489,37 @@ manipulating PGF soft paths}
 {
   \group_begin:
   \pgfscope
-  \path[knot~ diagram/background~ clip] (#2, #3) circle[radius=\l_@@_clip_bg_radius_dim];
+  \path[knot~ diagram/background~ clip] (#2, #3)
+  circle[radius=\l_@@_clip_bg_radius_dim];
 
   \tl_set:Nn \l_@@_tmpa_tl {knot~ diagram/every~ strand/.try,}
   \tl_if_exist:cT {l_@@_options_ #1}
   {
   \tl_put_right:Nv \l_@@_tmpa_tl {l_@@_options_ #1}
   }
-  \tl_put_right:Nn \l_@@_tmpa_tl {,knotbg,line~ width= \tl_use:N \l_@@_clip_width_tl * \pgflinewidth}
+  \tl_put_right:Nn \l_@@_tmpa_tl
+  {
+    ,knotbg
+    ,line~ width= \tl_use:N \l_@@_clip_width_tl * \pgflinewidth
+  }
   \spath_tikz_path:Vv \l_@@_tmpa_tl {knot #1}
 
   \endpgfscope
 
   \pgfscope
-  \path[knot~ diagram/clip] (#2, #3) circle[radius=\l_@@_clip_draw_radius_dim];
+  \path[knot~ diagram/clip] (#2, #3)
+  circle[radius=\l_@@_clip_draw_radius_dim];
 
   \tl_set:Nn \l_@@_tmpa_tl {knot~ diagram/every~ strand/.try,}
   \tl_if_exist:cT {l_@@_options_ #1}
   {
   \tl_put_right:Nv \l_@@_tmpa_tl {l_@@_options_ #1}
   }
-  \tl_put_right:Nn \l_@@_tmpa_tl {,knot~ diagram/only~ when~ rendering/.try,only~ when~ rendering/.try}
+  \tl_put_right:Nn \l_@@_tmpa_tl
+  {
+    ,knot~ diagram/only~ when~ rendering/.try
+    ,only~ when~ rendering/.try
+  }
   \spath_tikz_path:Vv \l_@@_tmpa_tl {knot #1}
 
   \endpgfscope
@@ -7975,12 +8596,14 @@ manipulating PGF soft paths}
       \tl_set:cn {knot filament \int_use:N \g_@@_filaments_int} {#1}
       
       \tl_clear_new:c {l_@@_options_filament \int_use:N \g_@@_filaments_int}
-      \tl_set_eq:cN {l_@@_options_filament \int_use:N \g_@@_filaments_int} \l_@@_tmpa_tl
+      \tl_set_eq:cN {l_@@_options_filament \int_use:N \g_@@_filaments_int}
+      \l_@@_tmpa_tl
 
       \tl_clear_new:c {knot previous filament \int_use:N \g_@@_filaments_int}
       \int_compare:nF {\l_@@_component_start_int == \g_@@_filaments_int}
       {
-        \tl_set:cx {knot previous filament \int_use:N \g_@@_filaments_int} {filament \int_eval:n {\g_@@_filaments_int - 1}}
+        \tl_set:cx {knot previous filament \int_use:N \g_@@_filaments_int}
+        {filament \int_eval:n {\g_@@_filaments_int - 1}}
       }
     }
     \c_spath_curvetoa_tl
@@ -7989,12 +8612,15 @@ manipulating PGF soft paths}
       \tl_clear_new:c {knot filament \int_use:N \g_@@_filaments_int}
       \tl_set:cn {knot filament \int_use:N \g_@@_filaments_int} {#1}
       \tl_clear_new:c {l_@@_options_filament \int_use:N \g_@@_filaments_int}
-      \tl_set_eq:cN {l_@@_options_filament \int_use:N \g_@@_filaments_int} \l_@@_tmpa_tl
+      \tl_set_eq:cN {l_@@_options_filament \int_use:N \g_@@_filaments_int}
+      \l_@@_tmpa_tl
 
       \tl_clear_new:c {knot previous filament \int_use:N \g_@@_filaments_int}
       \int_compare:nF {\l_@@_component_start_int == \g_@@_filaments_int}
       {
-        \tl_set:cx {knot previous filament \int_use:N \g_@@_filaments_int} {filament \int_eval:n {\g_@@_filaments_int - 1}}
+        \tl_set:cx
+        {knot previous filament \int_use:N \g_@@_filaments_int}
+        {filament \int_eval:n {\g_@@_filaments_int - 1}}
       }
     }
     \c_spath_closepath_tl
@@ -8002,18 +8628,26 @@ manipulating PGF soft paths}
       \int_gincr:N \g_@@_filaments_int
       \tl_clear_new:c {knot filament \int_use:N \g_@@_filaments_int}
       \tl_clear:N \l_@@_tmpa_tl
-      \tl_put_right:Nx {\tl_item:nn {#1} {1}\tl_item:nn {#1} {2}\tl_item:nn {#1} {3}}
+      \tl_put_right:Nx
+      {
+        \tl_item:nn {#1} {1}\tl_item:nn {#1} {2}\tl_item:nn {#1} {3}
+      }
       \tl_put_right:NV \l_@@_tmpa_tl \c_spath_lineto_tl
       \tl_put_right:Nx {\tl_item:nn {#1} {5}\tl_item:nn {#1} {6}}
 
       \tl_set:cV {knot filament \int_use:N \g_@@_filaments_int} \l_@@_tmpa_tl
-      \tl_set_eq:cN {l_@@_options_filament \int_use:N \g_@@_filaments_int} \l_@@_tmpa_tl
+      \tl_set_eq:cN {l_@@_options_filament \int_use:N \g_@@_filaments_int}
+      \l_@@_tmpa_tl
       \tl_clear_new:c {knot previous filament \int_use:N \g_@@_filaments_int}
       \int_compare:nF {\l_@@_component_start_int == \g_@@_filaments_int}
       {
-        \tl_set:cx {knot previous filament \int_use:N \g_@@_filaments_int} {filament \int_eval:n {\g_@@_filaments_int - 1}}
+        \tl_set:cx
+        {knot previous filament \int_use:N \g_@@_filaments_int}
+        {filament \int_eval:n {\g_@@_filaments_int - 1}}
       }
-      \tl_set:cx {knot previous filament \int_use:N \l_@@_component_start_int} {filament \int_use:N \g_@@_filaments_int}
+      \tl_set:cx
+      {knot previous filament \int_use:N \l_@@_component_start_int}
+      {filament \int_use:N \g_@@_filaments_int}
     }
   }
   {
