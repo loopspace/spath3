@@ -1,5 +1,5 @@
-\RequirePackage{shellesc}
-\immediate\write18{tex spath3_code.dtx}
+%\RequirePackage{shellesc}
+%\immediate\write18{tex spath3_code.dtx}
 \documentclass{l3doc}
 \usepackage{tikz}
 \usetikzlibrary{
@@ -75,6 +75,10 @@ A \emph{component} is a minimal connected section of the path.
 So every component starts with a move command and continues until the next move command.
 For ease of implementation (and to enable a copperplate pen in the calligraphy package!), an isolated move is considered as a component.
 
+There are no doubt bugs in this package, and useful things that I haven't implemented.
+If you have found one of either of these, please let me know!
+The best way is to open an issue at the code repository on github, at \href{https://github.com/loopspace/spath3}{https://github.com/loopspace/spath3}.
+
   
   \section{TikZ Keys}
 
@@ -84,6 +88,11 @@ For ease of implementation (and to enable a copperplate pen in the calligraphy p
 
 The \texttt{spath3} TikZ library defines a set of keys that can be issued to muck about with soft paths.
 These are all defined in the \texttt{spath} family, so all the following keys should be prefixed by \texttt{spath/}, or the key \texttt{spath/.cd} needs to be used beforehand (but note that as yet I haven't implemented sending unknown keys back to the main \Verb+tikz+ directory).
+
+The keys try to gracefully fail if the path doesn't exist or is empty.
+The intention is that the document should still compile with a warning in the log file (and on the console output).
+If this doesn't happen, please report it.
+
 
 \subsection{Saving and Using Soft Paths}
 
@@ -97,14 +106,12 @@ Saves the current path with name \texttt{<name>}.
 This delays until the path is fully constructed so can be issued in the options to the main command.
 
 Soft paths constructed this way are local to the group in which the path command is issued.
+The |global| version saves the path globally which is useful when the original path is inside a scope or even another tikzpicture.
 
 The soft path is actually stored in a macro constructed from the name.
 There are a couple of reasons for using a \emph{name} rather than a macro directly.
 One is so that it is compatible with the \texttt{intersections} library -- by default both this package and that save their paths in the same underlying macro.
 The other is to provide a way to link a soft path with a set of TikZ styles (this is particularly useful when splitting the path into components).
-
-The |global| version saves the path globally.
-This is useful when the original path is inside a scope or even another tikzpicture.
 \end{function}
 
 \begin{function}{clone, clone globally}
@@ -131,7 +138,7 @@ Any keys that affect the soft path directly should be applied \emph{before} this
 One thing should be noted about transformations.
 By the time a soft path is built, all available transformations have been applied.
 This means that when re-inserting a soft path back into a high level command (such as |\draw|), the effect of existing transformations might produce some confusing effects.
-When restoring a path then the library tries to set the last point correctly, but depending on how this is used it can result in transformations being applied twice.
+When restoring a path then the library tries to set up various internals of TikZ correctly, but there may be some things I've overlooked or not accounted for particularly with regard to existing transformations; if you spot anything working oddly then please report it to me.
 
 Restoring a path also sets things right for positioning nodes along the path.
 Using the \Verb+pos=D+ key on a node positions that node at a particular point on the path.
@@ -156,10 +163,10 @@ In a sense, it is a little like a \texttt{pic} in that it enables the user to co
 
 The path is \emph{welded} on to the current path, meaning that the intervening \Verb+move+ is removed.
 This is particularly useful for creating filled regions.
-The first two versions translate the path so that it starts at the last point on the existing path, the second two versions don't do this translation.
+The first two versions translate the path so that it starts at the last point on the existing path, the second two versions don't do this translation (the intention being that in such a case the translation is omitted because it is \emph{unnecessary} rather than simply not wanted because the effect of removing the intervening move will adjust the initial segment of the appended path otherwise).
 
 As with restoring a path, the last point and node positioning machinery is established.
-The positioning is relative to the appended part of the path.
+The positioning is relative to the appended part of the path, not the full path.
 \end{function}
 
 \begin{function}{insert, insert reverse}
@@ -168,7 +175,7 @@ The positioning is relative to the appended part of the path.
 |insert reverse=|\meta{name}
 \end{syntax}
 
-Like \Verb+append+ except that it doesn't move the inserted path.
+Like \Verb+append+ except that it doesn't remove the intervening \Verb+move+ and doesn't translate the inserted path.
 The \Verb+reverse+ version reverses the path first.
 \end{function}
 
@@ -178,6 +185,8 @@ The \Verb+reverse+ version reverses the path first.
 \end{syntax}
 
 This defines a \Verb+to+ path from a soft path, so it inserts the soft path into the current path to span the gap between the start and end.
+The path is transformed by rotation, translation, and uniform scaling so that it exactly spans the gap required by the \Verb+to+ syntax.
+(If the start and end point of the soft path are very close together then it won't span the gap.)
 \end{function}
 
 
@@ -193,9 +202,8 @@ The global versions apply their transformation globally, otherwise it is local t
 |reverse globally=|\meta{name}
 \end{syntax}
 
-Reverses the path in the named spath object.
-This doesn't do any actually drawing.
-The effect is local, but if you want to work with both the original path and its reversal in the same path then use the \texttt{clone} key to copy it first.
+Reverses the soft path in place.
+If you want to use the original path and its reversal in the same path (for example, for constructing a region to fill) then use the \texttt{clone} key to copy it first.
 \end{function}
 
 
@@ -225,6 +233,7 @@ The transformation is processed by TikZ so should consist of TikZ-level transfor
 \end{syntax}
 
 This transforms the named path so that it goes from the start point to the end point.
+As with the \Verb+to+ path construction and the \Verb+splice+ method, this won't work if the path ends very close to where it starts.
 \end{function}
 
 \begin{function}{splice, splice global}
@@ -265,6 +274,9 @@ The latter two allow you to specify another path to insert.
 \subsection{Intersection Routines}
 
 To use these features you need to use the \texttt{intersections} library.
+Note that there is currently an issue with the intersections routine when trying to intersect two parallel (or near parallel) lines.
+One workaround is to replace one of the lines by a B\'ezier curve along the same path.
+The best such replacement is to put the control points at one third and two thirds between the start and end.
 
 \begin{function}{
   split at self intersections,
@@ -276,6 +288,21 @@ To use these features you need to use the \texttt{intersections} library.
 \end{syntax}
 
 This inserts breaks into the named soft path at the points where it intersects itself.
+The breaks are not gaps, to achieve that use the shortening routines after this, rather they are a change of component.
+Think of it as if you took the pen off the page at that point and then put it straight back down again.
+\end{function}
+
+\begin{function}{
+  split at intersections with,
+  split globally at intersections with
+}
+\begin{syntax}
+|split at intersections with=|\marg{first}\marg{second}
+|split globally at intersections with=|\marg{first}\marg{second}
+\end{syntax}
+
+This inserts breaks into the first path where it intersects with the second.
+The second path is not changed.
 \end{function}
 
 \begin{function}{
@@ -294,11 +321,11 @@ This inserts breaks into a pair of paths at their mutual intersections.
 
 \begin{function}{
   get components of,
-  get components of globally
+  get components of globally,
+  \getComponentOf
 }
 \begin{syntax}
 |get components of=|\marg{path}\marg{macro}
-|\getComponentOf|\marg{macro}\marg{number}
 |get components of globally=|\marg{path}\marg{macro}
 |\getComponentOf|\marg{macro}\marg{number}
 \end{syntax}
@@ -309,6 +336,9 @@ The macro can be used in a |\foreach|.
 The macro consists of a comma separated list of names of the components (the actual names used are of the form \Verb+anonymous_N+).
 To access an individual component, use the command \Verb+\getComponentOf+.
 This can be used directly in place of a path name in any other key, such as \Verb+restore+, (it is just the \LaTeX3 command \Verb+\clist_item:Nn+).
+
+Note that these are \emph{copies} of the components of the original path.
+Changing a component doesn't update the original path.
 \end{function}
 
 \begin{function}{render components}
@@ -380,6 +410,19 @@ This removes the \texttt{move} between any two components of the path where the 
 This removes empty components of the path (which consist of simply a move).
 \end{function}
 
+\begin{function}{
+  remove components,
+  remove components globally
+}
+\begin{syntax}
+|remove components=|\marg{path}\marg{list}
+|remove components globally=|\marg{path}\marg{list}
+\end{syntax}
+
+This removes the listed components of the path.
+As with other list routines, the list is parsed via |foreach| first.
+\end{function}
+
 \subsection{Shortening Paths}
 
 \begin{function}{
@@ -432,6 +475,7 @@ Saves the path to the file \texttt{path.svg} as an SVG document.
 \begin{function}{
   global knot,
   knot,
+  draft mode
 }
 \begin{syntax}
 |knot=|\meta{path}\meta{gap}\meta{components}
@@ -451,6 +495,8 @@ knot/.style n args={3}{
 }
 \end{lstlisting}
 
+(The \Verb+global+ version makes the path manipulating commands work globally.)
+
 This splits a path at the points where it self-intersects and then inserts gaps between specified components.
 The key |maybe spot weld| does a |spot weld| depending on whether or not the key |draft mode| is set to |true| or |false|.
 The point here is that when designing the knot it is useful to not weld together components since that changes the component count.
@@ -462,7 +508,7 @@ The components can be styled using the keys as described in |render components|.
 \subsection{Coordinates}
 \label{sec:coordinates}
 
-Soft paths are not natural TikZ objects and so when replaced back into a TikZ path construction then they don't fully interact with other TikZ things, like placing nodes at points on the path.
+Soft paths are not natural TikZ objects and so when replaced back into a TikZ path construction then they don't fully interact with other TikZ things, like placing nodes at points on the path (though I've done my best to make that work).
 To make things a little easier there is defined a coordinate system which identifies a point at a certain location along a soft path and keys which apply a transformation.
 
 \begin{function}{spath cs}
