@@ -4845,6 +4845,7 @@ manipulating PGF soft paths}
   \tl_clear_new:c {tikz@timer}
   \tl_set:cn {tikz@timer}
   {
+    \pgftransformreset
     \spath_reallength:Nn \l_@@_tmpa_int {#1}
     \tl_set_eq:Nc \l_@@_tmpb_tl {tikz@time}
     \tl_set:Nx \l_@@_tmpb_tl

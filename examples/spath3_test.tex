@@ -88,6 +88,13 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \ExplSyntaxOff
 \begin{document}
 
+\begin{tikzpicture}[scale=2]
+\path[spath/save=ab] (0,1) -- ++(2,0);
+\draw[spath/restore=ab] node[auto,pos=.5] {ab} node[auto,pos=.75] {bc};
+\draw[spath/transform={ab}{scale=3},spath/restore=ab] node[auto,pos=.5] {ab};
+\end{tikzpicture}
+\end{document}
+
 \begin{tikzpicture}
 \draw[orange, ultra thick, spath/save=sq]
 (0,0) -- ++(1,0)
