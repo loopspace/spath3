@@ -1,5 +1,5 @@
-%\RequirePackage{shellesc}
-%\immediate\write18{tex spath3_code.dtx}
+\RequirePackage{shellesc}
+\immediate\write18{tex spath3_code.dtx}
 \documentclass{l3doc}
 \usepackage{tikz}
 \usetikzlibrary{
@@ -55,6 +55,8 @@
   \begin{document}
 
   \maketitle
+
+\tableofcontents
 
   \section{Introduction}
 
@@ -124,59 +126,61 @@ Clones one soft path into another.
 In the second, the clone is global (the original need not be).
 \end{function}
 
-\begin{function}{restore, restore reverse}
+\begin{function}{use}
 \begin{syntax}
-|restore=|\meta{name}
-|restore reverse=|\meta{name}
+|use=|\meta{name}
+|use=|\marg{name, options}
 \end{syntax}
 
-Restores a previously saved soft path to the current path.
-The \Verb+reverse+ version reverses the soft path first.
-This happens immediately so can be issued in the options to the main command and then the path can be extended with normal drawing commands.
-Any keys that affect the soft path directly should be applied \emph{before} this one.
+This uses a previously saved soft path at the current juncture in the path declaration.
+If before the path has begun, it is the initial part of the new path.
+If during the path construction then it is stuck in at the current place.
+Note that any keys that affect the soft path directly should be applied \emph{before} this one.
+
+The path can be modified first by using the second form -- note that as far as the \Verb+use+ key is concerned, the whole thing is a single argument.
+The options is a comma separated list and can include:
+%
+\begin{itemize}
+\item |reverse| reverses the inserted path first.
+\item |weld|, |no weld| determines whether to weld the inserted path to the current path.
+Welding means that the |move to| at the start of the inserted path is removed.
+Note that this doesn't \emph{move} the inserted path so this will usually modify the first segment of the inserted path, possibly in unexpected ways.
+\item |move|, |no move| determines whether the inserted path is translated so that it starts where the current path ends.
+\item |transform=|\marg{transformations} applies the specified transformations to the inserted path.
+See the |transform| key in Section~\ref{sec:transform}
+\item Any other key is taken as the name of the path (so it doesn't have to be specified first) with the last one winning.
+\end{itemize}
 
 One thing should be noted about transformations.
 By the time a soft path is built, all available transformations have been applied.
 This means that when re-inserting a soft path back into a high level command (such as |\draw|), the effect of existing transformations might produce some confusing effects.
 When restoring a path then the library tries to set up various internals of TikZ correctly, but there may be some things I've overlooked or not accounted for particularly with regard to existing transformations; if you spot anything working oddly then please report it to me.
 
-Restoring a path also sets things right for positioning nodes along the path.
+In particular, restoring a path should sets things right for positioning nodes along the path.
 Using the \Verb+pos=D+ key on a node positions that node at a particular point on the path.
 Exactly how the parameter is interpreted is the same as for the \Verb+spath+ coordinate system described in Section~\ref{sec:coordinates}.
 \end{function}
 
 \begin{function}{
+  restore,
+  restore reverse
+  insert,
+  insert reverse,
   append,
   append reverse,
   append no move,
   append reverse no move
 }
-\begin{syntax}
-|append=|\meta{name}
-|append reverse=|\meta{name}
-|append no move=|\meta{name}
-|append reverse no move=|\meta{name}
-\end{syntax}
 
-This inserts a soft path, or its reverse, into the path at the current point, it is therefore more suited to being used part way through a path construction.
-In a sense, it is a little like a \texttt{pic} in that it enables the user to construct a path segment early to be reused at various places.
+These are all aliases to various versions of \Verb+use+.
+The equivalences are:
 
-The path is \emph{welded} on to the current path, meaning that the intervening \Verb+move+ is removed.
-This is particularly useful for creating filled regions.
-The first two versions translate the path so that it starts at the last point on the existing path, the second two versions don't do this translation (the intention being that in such a case the translation is omitted because it is \emph{unnecessary} rather than simply not wanted because the effect of removing the intervening move will adjust the initial segment of the appended path otherwise).
-
-As with restoring a path, the last point and node positioning machinery is established.
-The positioning is relative to the appended part of the path, not the full path.
-\end{function}
-
-\begin{function}{insert, insert reverse}
-\begin{syntax}
-|insert=|\meta{name}
-|insert reverse=|\meta{name}
-\end{syntax}
-
-Like \Verb+append+ except that it doesn't remove the intervening \Verb+move+ and doesn't translate the inserted path.
-The \Verb+reverse+ version reverses the path first.
+\begin{itemize}
+\item |restore| and |insert| are aliases for |use|.
+\item |append| sets the |move| and |weld| keys.
+\item |append no move| just sets the |weld| key.
+\item |reverse| sets the |reverse| key.
+\end{itemize}
 \end{function}
 
 \begin{function}{to}
@@ -191,6 +195,7 @@ The path is transformed by rotation, translation, and uniform scaling so that it
 
 
 \subsection{Transformation Routines}
+\label{sec:transform}
 
 The following keys all apply some sort of transformation to the soft path.
 They do not render the path, but simply adjust it.
@@ -249,13 +254,19 @@ The middle path is transformed to fit (don't try this with a path whose starting
 \begin{function}{join components with, join components globally with}
 \begin{syntax}
 |join components with=|\marg{path}\marg{splice path}
+|join components with=|\marg{path}\marg{splice path}\marg{list}
 |join components globally with=|\marg{path}\marg{splice path}
+|join components globally with=|\marg{path}\marg{splice path}\marg{list}
 \end{syntax}
 
-This inserts the |splice path| in the gaps between components of |path|.
-A \emph{spot weld} is performed first to join any components where the end of one is the start of the next.
-The result is a single component path.
-This does \emph{not} close the resulting path, for that see the key |close with|.
+This inserts the |splice path| in the gaps between components of |path| specified by a comma separated list.
+The splice is inserted between each specified component and the next one.
+If the \marg{list} is not given (or is empty) then the splice is inserted between every component except that a \emph{spot weld} is performed first to join any components where the end of one is the start of the next.
+The spot weld is only performed if the list of components is empty.
+
+This does \emph{not} close the resulting path, even if the last component is specified in the list, for that see the key |close with|.
+
+Note that because there is an optional third argument to this key, the second argument must always be enclosed in braces unless it is a single token.
 \end{function}
 
 \begin{function}{close, close globally, close with, close globally with}
@@ -335,7 +346,7 @@ The macro can be used in a |\foreach|.
 
 The macro consists of a comma separated list of names of the components (the actual names used are of the form \Verb+anonymous_N+).
 To access an individual component, use the command \Verb+\getComponentOf+.
-This can be used directly in place of a path name in any other key, such as \Verb+restore+, (it is just the \LaTeX3 command \Verb+\clist_item:Nn+).
+This can be used directly in place of a path name in any other key, such as \Verb+use+, (it is just the \LaTeX3 command \Verb+\clist_item:Nn+).
 
 Note that these are \emph{copies} of the components of the original path.
 Changing a component doesn't update the original path.
@@ -544,7 +555,7 @@ The intention with the second key is that it is similar to what happens with the
 \section{Examples}
 
 \begin{enumerate}
-\item Saving, restoring, inserting, and appending.
+\item Saving and re-using.
 
 \begin{example}
 \begin{tikzpicture}
@@ -554,10 +565,10 @@ The intention with the second key is that it is similar to what happens with the
   \node[above left] at (spath cs:rpath 0.\k) {\(0.\k\)};
 }
 \fill[green] (2,2) circle[radius=3pt];
-\draw[blue, spath/transform={rpath}{shift={(2,2)}}, spath/restore=rpath] node[right] {transform};
-\draw[orange] (3,0) [spath/insert=rpath] node[right] {insert};
+\draw[blue, spath/transform={rpath}{shift={(2,2)}}, spath/use=rpath] node[right] {transform};
+\draw[orange] (3,0) [spath/use={rpath, move}] node[right] {moving};
 \draw[red] (3,-1) -- +(0,2) [spath/append=rpath] node[above] {append};
-\draw[spath/restore=rpath] node[right] {restore};
+\draw[spath/use=rpath] node[right] {use};
 \end{tikzpicture}
 \end{example}
 
@@ -570,8 +581,8 @@ The intention with the second key is that it is similar to what happens with the
   green,
   draw=black,
   ultra thick,
-  spath/restore=apath
-] -- ++(0,-4) [spath/append reverse=apath] -- cycle;
+  spath/use=apath
+] -- ++(0,-4) [spath/use={apath, reverse, move, weld}] -- cycle;
 \end{tikzpicture}
 \end{example}
 
@@ -583,7 +594,7 @@ The intention with the second key is that it is similar to what happens with the
 \draw[rotate=45, xscale=2, yscale=3, ultra thick, red] (0,0) rectangle +(1,1);
 \draw[
   spath/transform={tpath}{rotate=45, xscale=2, yscale=3},
-  spath/restore={tpath}];
+  spath/use={tpath}];
 \end{tikzpicture}
 \end{example}
 
@@ -615,7 +626,7 @@ The intention with the second key is that it is similar to what happens with the
 (7,1) circle[radius=3pt]
 ;
 
-\draw[spath/restore=a];
+\draw[spath/use=a];
 \end{tikzpicture}
 \end{example}
 
@@ -653,9 +664,9 @@ The intention with the second key is that it is similar to what happens with the
   shorten at end={apath}{7pt},
   shorten at start={apath}{9pt},
   translate={apath}{0pt}{1pt},
-  restore=apath,
+  use=apath,
 ];
-\draw (0,0) circle[radius=9pt] [spath/insert=apath] circle[radius=7pt];
+\draw (0,0) circle[radius=9pt] [spath/use=apath] circle[radius=7pt];
 \end{tikzpicture}
 \end{example}
 
@@ -670,9 +681,9 @@ The intention with the second key is that it is similar to what happens with the
   shorten at end={apath}{7pt},
   shorten at start={apath}{9pt},
   translate={apath}{0pt}{1pt},
-  restore=apath,
+  use=apath,
 ];
-\draw (0,0) circle[radius=9pt] [spath/insert=apath] circle[radius=7pt];
+\draw (0,0) circle[radius=9pt] [spath/use=apath] circle[radius=7pt];
 \end{tikzpicture}
 \end{example}
 
@@ -699,7 +710,7 @@ The intention with the second key is that it is similar to what happens with the
     path \k/.try,
     spath/.cd,
     translate=\cpt{0pt}{\k pt},
-    restore=\cpt,
+    use=\cpt,
   ] +(0,3pt) -- +(0,-3pt);
   \node[text=red] at (spath cs:{\cpt} .5) {\(\k\)};
 }
@@ -734,12 +745,12 @@ One of the main motivations for implementing the intersection routines was to pr
 }
 
 \foreach[count=\k] \cpt in \pathAcomponents {
-  \draw[spath/restore=\cpt,-Circle];
+  \draw[spath/use=\cpt,-Circle];
   \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
 }
 
 \foreach[count=\k] \cpt in \pathBcomponents {
-  \draw[spath/restore=\cpt,-Circle];
+  \draw[spath/use=\cpt,-Circle];
   \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
 }
 \end{tikzpicture}
@@ -766,12 +777,12 @@ Although the paths were defined globally, the splitting in the previous example 
 \fill[pattern=bricks, pattern color=white] (-.5,-.5) rectangle (8.5,1.5);
 
 \foreach[count=\k] \cpt in \pathAcomponents {
-  \draw[blue, line width=2pt,spath/restore=\cpt];
+  \draw[blue, line width=2pt,spath/use=\cpt];
   \node[fill=cyan, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .3) {\(\k\)};
 }
 
 \foreach[count=\k] \cpt in \pathBcomponents {
-  \draw[green, line width=2pt,spath/restore=\cpt];
+  \draw[green, line width=2pt,spath/use=\cpt];
   \node[fill=green!50, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .3) {\(\k\)};
 }
 \end{tikzpicture}
@@ -807,7 +818,7 @@ arc[radius=.5cm,start angle=90, delta angle=-180]
 }
 
 \foreach[count=\k] \cpt in \pathcomponents {
-  \draw[spath/restore=\cpt,-|];
+  \draw[spath/use=\cpt,-|];
   \node[fill=white, fill opacity=.5, circle, text opacity=1] at (spath cs:{\cpt} .5) {\(\k\)};
 }
 \end{tikzpicture}
@@ -826,7 +837,7 @@ arc[radius=.5cm,start angle=90, delta angle=-180]
 }
 
 \foreach[count=\k] \cpt in \pathcomponents {
-  \draw[blue, line width=2pt,spath/restore=\cpt];
+  \draw[blue, line width=2pt,spath/use=\cpt];
 }
 \end{tikzpicture}
 \end{example}

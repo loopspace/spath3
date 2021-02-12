@@ -1919,7 +1919,7 @@ manipulating PGF soft paths}
 {
   \spath_append_no_move:NVn #1#1{#2}
 }
-\cs_generate_variant:Nn \spath_append_no_move:Nn {NV, cv, Nv}
+\cs_generate_variant:Nn \spath_append_no_move:Nn {NV, cv, Nv, cV}
 \cs_new_protected_nopar:Npn \spath_gappend_no_move:Nnn #1#2#3
 {
   \@@_append_no_move:nn {#2}{#3}
@@ -1931,7 +1931,7 @@ manipulating PGF soft paths}
 {
   \spath_gappend_no_move:NVn #1#1{#2}
 }
-\cs_generate_variant:Nn \spath_gappend_no_move:Nn {NV, cv, Nv}
+\cs_generate_variant:Nn \spath_gappend_no_move:Nn {NV, cv, Nv, cV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1953,7 +1953,7 @@ manipulating PGF soft paths}
 {
   \spath_append:NVn #1#1{#2}
 }
-\cs_generate_variant:Nn \spath_append:Nn {NV, Nv, cv}
+\cs_generate_variant:Nn \spath_append:Nn {NV, Nv, cv, cV}
 \cs_new_protected_nopar:Npn \spath_gappend:Nnn #1#2#3
 {
   \tl_gset:Nn #1 {#2}
@@ -1964,7 +1964,7 @@ manipulating PGF soft paths}
 {
   \spath_gappend:NVn #1#1{#2}
 }
-\cs_generate_variant:Nn \spath_gappend:Nn {NV, Nv, cv}
+\cs_generate_variant:Nn \spath_gappend:Nn {NV, Nv, cv, cV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4991,6 +4991,73 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}[internal]{
+% \@@_tikzset:n
+% }
+% Wrapper around \Verb+\tikzset+ for expansion.
+% \begin{macrocode}
+\cs_set_eq:NN \@@_tikzset:n \tikzset
+\cs_generate_variant:Nn \@@_tikzset:n {V, v}
+%    \end{macrocode}
+% \end{macro}
+%
+% When joining two paths we provide a set of options for how to process the second path.
+%
+%    \begin{macrocode}
+\bool_new:N \l_@@_reverse_bool
+\bool_new:N \l_@@_weld_bool
+\bool_new:N \l_@@_move_bool
+\bool_new:N \l_@@_global_bool
+\tl_new:N \l_@@_joinpath_tl
+\tl_new:N \l_@@_transformation_tl
+
+\cs_new_protected_nopar:Npn \@@_set_bool:Nn #1#2
+{
+  \tl_if_eq:nnTF {#2}{false}
+  {
+    \bool_set_false:N #1
+  }
+  {
+    \bool_set_true:N #1
+  }
+}
+\tikzset {
+  spath/join/.is~ family,
+  spath/join/.cd,
+  reverse/.code = {
+    \@@_set_bool:Nn \l_@@_reverse_bool {#1}
+  },
+  reverse/.default = true,
+  weld/.code = {
+    \@@_set_bool:Nn \l_@@_weld_bool {#1}
+  },
+  weld/.default = true,
+  no~ weld/.code = {
+    \@@_set_bool:Nn \l_@@_weld_bool {#1}
+    \bool_set:Nn \l_@@_weld_bool {! \l_@@_weld_bool}
+  },
+  no~ weld/.default = true,
+  move/.code = {
+    \@@_set_bool:Nn \l_@@_move_bool {#1}
+  },
+  move/.default = true,
+  no~ move/.code = {
+    \@@_set_bool:Nn \l_@@_move_bool {#1}
+    \bool_set:Nn \l_@@_move_bool {! \l_@@_move_bool}
+  },
+  no~ move/.default = true,
+  global/.code = {
+    \@@_set_bool:Nn \l_@@_global_bool {#1}
+  },
+  global/.default = true,
+  transform/.store~in=\l_@@_transformation_tl,
+  .unknown/.code = {
+    \tl_set_eq:NN \l_@@_joinpath_tl \pgfkeyscurrentname
+  }
+}
+%    \end{macrocode}
+%
+%
 % When we split a soft path into components, we make it a comma separated list so that it can be fed into a \Verb+\foreach+ loop.
 % This can also make it possible to extract a single component, but to do this we need a wrapper around \Verb+\clist_item:Nn+ (there doesn't appear to be a PGF way of getting an item of a CS list).
 %
@@ -5043,6 +5110,15 @@ manipulating PGF soft paths}
       \l_@@_tmpa_tl
     }
   },
+  save~ global/.code={
+    \tikz@addmode{
+      \spath_get_current_path:N \l_@@_tmpa_tl
+      \spath_bake_round:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
+      \spath_gsave_path:cV
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      \l_@@_tmpa_tl
+    }
+  },
   clone/.code~ 2~ args={
     \tl_if_exist:cTF
     {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
@@ -5071,15 +5147,6 @@ manipulating PGF soft paths}
       \msg_warning:nnn { spath3 } { missing soft path } { #2 }
     }
   },
-  save~ global/.code={
-    \tikz@addmode{
-      \spath_get_current_path:N \l_@@_tmpa_tl
-      \spath_bake_round:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
-      \spath_gsave_path:cV
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \l_@@_tmpa_tl
-    }
-  },
 %    \end{macrocode}
 %
 % Saves a soft path to the aux file.
@@ -5098,75 +5165,131 @@ manipulating PGF soft paths}
   },
 %    \end{macrocode}
 %
-% Restores a soft path to the current path.
+% Exports the path as an SVG file.
 %
 %    \begin{macrocode}
-  restore/.code={
+  export~ to~ svg/.code={
     \tl_if_exist:cTF
     {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_empty:cTF
+      \spath_export_to_svg:nv {#1}
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      {
-        \tl_clear:N \l_@@_tmpa_tl
-        \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
-        \tl_put_right:Nn \l_@@_tmpa_tl {{0pt}{0pt}}
-        \spath_set_current_path:V \l_@@_tmpa_tl
-        \spath_set_tikz_data:V \l_@@_tmpa_tl
-        \msg_warning:nnn { spath3 } { empty soft path } { #1 }
-      }
-      {
-        \spath_set_current_path:c
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-        \spath_set_tikz_data:v
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      }
     }
     {
-      \tl_clear:N \l_@@_tmpa_tl
-      \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
-      \tl_put_right:Nn \l_@@_tmpa_tl {{0pt}{0pt}}
-      \spath_set_current_path:V \l_@@_tmpa_tl
-      \spath_set_tikz_data:V \l_@@_tmpa_tl
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
 %    \end{macrocode}
 %
-% Restores the reverse of a soft path to the current path.
+% Inserts the named path at the current point in the path, with options for how this is accomplished.
+% The inserted path can be transformed, reversed, moved to the current point, and welded to the current path.
+% If this is used before the path has been started then it becomes the start of the path (and the ``current point'' is taken as the origin).
+%
 %
 %    \begin{macrocode}
-  restore~ reverse/.code={
+  use/.code={
+    \bool_set_false:N \l_@@_reverse_bool
+    \bool_set_false:N \l_@@_weld_bool
+    \bool_set_false:N \l_@@_move_bool
+    \tl_clear:N \l_@@_joinpath_tl
+    \tl_clear:N \l_@@_transformation_tl
+    \tikzset{
+      spath/join/.cd,
+      #1
+    }
+    
     \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_empty:cTF
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      {
-        \tl_clear:N \l_@@_tmpa_tl
-        \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
-        \tl_put_right:Nn \l_@@_tmpa_tl {{0pt}{0pt}}
-        \spath_set_current_path:V \l_@@_tmpa_tl
-        \spath_set_tikz_data:V \l_@@_tmpa_tl
-        \msg_warning:nnn { spath3 } { empty soft path } { #1 }
-      }
-      {
-        \spath_reverse:Nv
-        \l_@@_reverse_tl
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-        \spath_set_current_path:N \l_@@_reverse_tl
-        \spath_set_tikz_data:V \l_@@_reverse_tl
-      }
+      \tl_use:N \l_@@_prefix_tl
+      \tl_use:N \l_@@_joinpath_tl
+      \tl_use:N \l_@@_suffix_tl
     }
     {
-      \tl_clear:N \l_@@_tmpa_tl
-      \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
-      \tl_put_right:Nn \l_@@_tmpa_tl {{0pt}{0pt}}
-      \spath_set_current_path:V \l_@@_tmpa_tl
-      \spath_set_tikz_data:V \l_@@_tmpa_tl
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+      \tl_set_eq:Nc \l_@@_joinpath_tl
+      {
+        \tl_use:N \l_@@_prefix_tl
+        \tl_use:N \l_@@_joinpath_tl
+        \tl_use:N \l_@@_suffix_tl
+      }
+      \spath_get_current_path:N \l_@@_current_tl
+      
+      \bool_if:NT \l_@@_reverse_bool
+      {
+        \spath_reverse:N \l_@@_joinpath_tl
+      }
+      
+      \tl_if_empty:NF \l_@@_transformation_tl
+      {
+        \group_begin:
+        \pgftransformreset
+        \@@_tikzset:V \l_@@_transformation_tl
+        \pgfgettransform \l_@@_tmpa_tl
+        \tl_gset:Nn \g_@@_smuggle_tl
+        {
+          \spath_transform:Nnnnnnn
+          \l_@@_joinpath_tl
+        }
+        \tl_gput_right:NV \g_@@_smuggle_tl \l_@@_tmpa_tl
+        \group_end:
+        \tl_use:N \g_@@_smuggle_tl
+      }
+
+      \bool_if:NT \l_@@_move_bool
+      {
+        \tl_if_empty:NTF \l_@@_current_tl
+        {
+          \tl_set:Nn \l_@@_tmpc_tl { {0pt} {0pt} }
+        }
+        {
+          \spath_finalpoint:NV
+          \l_@@_tmpc_tl
+          \l_@@_current_tl
+        }
+        \spath_translate_to:NV \l_@@_joinpath_tl \l_@@_tmpc_tl
+      }
+
+      \tl_if_empty:NTF \l_@@_current_tl
+      {
+        \tl_set_eq:NN \l_@@_current_tl \l_@@_joinpath_tl
+      }
+      {
+      
+        \tl_clear:N \l_@@_tmpa_tl
+        \tl_set:Nn \l_@@_tmpa_tl {spath_}
+
+        \tl_put_right:Nn \l_@@_tmpa_tl {append}
+
+        \bool_if:NT \l_@@_weld_bool
+        {
+          \tl_put_right:Nn \l_@@_tmpa_tl {_no_move}
+        }
+        \tl_put_right:Nn \l_@@_tmpa_tl {:NV}
+        
+        \use:c {\tl_use:N \l_@@_tmpa_tl }
+        \l_@@_current_tl
+        \l_@@_joinpath_tl
+      }
+
+      \spath_set_current_path:N \l_@@_current_tl
+      \spath_set_tikz_data:V \l_@@_joinpath_tl
+    }
+    {
+      \msg_warning:nnx { spath3 } { missing soft path } {\tl_use:N \l_@@_joinpath_tl }
     }
   },
+%    \end{macrocode}
+%
+% Some aliases for the above.
+%
+%    \begin{macrocode}
+  restore/.style={/tikz/spath/use={#1}},
+  restore~ reverse/.style={/tikz/spath/use={reverse, #1}},
+  append/.style={/tikz/spath/use={move, weld, #1}},
+  append~ no~ move/.style={/tikz/spath/use={weld, #1}},
+  append~ reverse/.style={/tikz/spath/use={move, weld, reverse, #1}},
+  append~ reverse~ no~ move/.style={/tikz/spath/use={weld, reverse, #1}},
+  insert/.style={/tikz/spath/use={#1}},
+  insert~ reverse/.style={/tikz/spath/use={reverse, #1}},
 %    \end{macrocode}
 %
 % Diagnostic, show the current path in the terminal and log.
@@ -5205,45 +5328,96 @@ manipulating PGF soft paths}
   },
 %    \end{macrocode}
 %
-% Appends the named path to the current path with a weld.
-%
-%    \begin{macrocode}
-  append/.code={
-    \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_get_current_path:N \l_@@_current_tl
-      \spath_finalpoint:NV \l_@@_tmpa_tl \l_@@_current_tl
-      \tl_set_eq:Nc
-      \l_@@_tmpb_tl
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \spath_translate_to:NV \l_@@_tmpb_tl \l_@@_tmpa_tl
-      \spath_append_no_move:NV \l_@@_current_tl \l_@@_tmpb_tl
-      \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:V \l_@@_tmpb_tl
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
-    }
-  },
-%    \end{macrocode}
-%
-% Joins the second named path to the first.
+% This joins a path on to an existing path, possibly modifying it first.
+% The possible options are the same as those for \Verb+use+.
+% It is possible to specify the same path both for the initial and the joining path as a copy is made internally first.
 %
 %    \begin{macrocode}
   join~ with/.code~ 2~ args={
     \tl_if_exist:cTF
     {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
+      \bool_set_false:N \l_@@_reverse_bool
+      \bool_set_false:N \l_@@_weld_bool
+      \bool_set_false:N \l_@@_move_bool
+      \bool_set_false:N \l_@@_global_bool
+      \tl_clear:N \l_@@_joinpath_tl
+      \tl_clear:N \l_@@_transformation_tl
+      \tikzset{
+        spath/join/.cd,
+        #2
+      }
+
       \tl_if_exist:cTF
-      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
       {
-        \spath_append:cv
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-        {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        \tl_use:N \l_@@_prefix_tl
+        \tl_use:N \l_@@_joinpath_tl
+        \tl_use:N \l_@@_suffix_tl
       }
       {
-        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        \tl_set_eq:Nc \l_@@_joinpath_tl
+        {
+          \tl_use:N \l_@@_prefix_tl
+          \tl_use:N \l_@@_joinpath_tl
+          \tl_use:N \l_@@_suffix_tl
+        }
+        
+        \bool_if:NT \l_@@_reverse_bool
+        {
+          \spath_reverse:N \l_@@_joinpath_tl
+        }
+
+        \tl_if_empty:NF \l_@@_transformation_tl
+        {
+          \group_begin:
+          \pgftransformreset
+          \@@_tikzset:V \l_@@_transformation_tl
+          \pgfgettransform \l_@@_tmpa_tl
+          \tl_gset:Nn \g_@@_smuggle_tl
+          {
+            \spath_transform:Nnnnnnn
+            \l_@@_joinpath_tl
+          }
+          \tl_gput_right:NV \g_@@_smuggle_tl \l_@@_tmpa_tl
+          \group_end:
+          \tl_use:N \g_@@_smuggle_tl
+        }
+
+        \bool_if:NT \l_@@_move_bool
+        {
+          \spath_finalpoint:Nv
+          \l_@@_tmpc_tl
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+          \spath_translate_to:NV \l_@@_joinpath_tl \l_@@_tmpc_tl
+        }
+
+        \tl_clear:N \l_@@_tmpa_tl
+        \tl_set:Nn \l_@@_tmpa_tl {spath_}
+
+        \bool_if:NT \l_@@_global_bool
+        {
+          \tl_put_right:Nn \l_@@_tmpa_tl {g}
+        }
+
+        \tl_put_right:Nn \l_@@_tmpa_tl {append}
+
+        \bool_if:NT \l_@@_weld_bool
+        {
+          \tl_put_right:Nn \l_@@_tmpa_tl {_no_move}
+        }
+        \tl_put_right:Nn \l_@@_tmpa_tl {:cV}
+
+        \cs_if_exist:cF {\tl_use:N \l_@@_tmpa_tl}
+        {
+          \tl_show:N \l_@@_tmpa_tl
+        }
+        
+        \use:c {\tl_use:N \l_@@_tmpa_tl }
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \l_@@_joinpath_tl
+      }
+      {
+        \msg_warning:nnx { spath3 } { missing soft path } {\tl_use:N \l_@@_joinpath_tl }
       }
     }
     {
@@ -5299,113 +5473,6 @@ manipulating PGF soft paths}
     {
       \spath_reverse:c
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
-    }
-  },
-%    \end{macrocode}
-%
-% Appends the reversal of the path to the current path.
-%
-%    \begin{macrocode}
-  append~ reverse/.code={
-    \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_reverse:Nv
-      \l_@@_reverse_tl
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \spath_get_current_path:N \l_@@_current_tl
-      \spath_finalpoint:NV \l_@@_tmpa_tl \l_@@_current_tl
-      \spath_translate_to:NV \l_@@_reverse_tl \l_@@_tmpa_tl
-      \spath_append_no_move:NV \l_@@_current_tl \l_@@_reverse_tl
-      \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:V \l_@@_reverse_tl
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
-    }
-  },    
-%    \end{macrocode}
-%
-% Inserts the named path into the current path as-is, meaning without transforming or welding it.
-%
-%    \begin{macrocode}
-  insert/.code={
-    \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_get_current_path:N \l_@@_current_tl
-      \spath_append:Nv
-      \l_@@_current_tl
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:v
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
-    }
-  },
-%    \end{macrocode}
-%
-% Inserts the reverse of the named path.
-% 
-%    \begin{macrocode}
-  insert~ reverse/.code={
-    \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_reverse:Nv
-      \l_@@_reverse_tl
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \spath_get_current_path:N \l_@@_current_tl
-      \spath_append:NV \l_@@_current_tl \l_@@_reverse_tl
-      \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:V \l_@@_reverse_tl
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
-    }
-  },
-%    \end{macrocode}
-%
-% Appends the named path to the current path without translating it.
-%
-%    \begin{macrocode}
-  append~ no~ move/.code={
-    \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_get_current_path:N \l_@@_current_tl
-      \spath_append_no_move:Nv
-      \l_@@_current_tl
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:v
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
-    }
-  },
-%    \end{macrocode}
-%
-% Appends the reverse of the named path without translating it.
-% 
-%    \begin{macrocode}
-  append~ reverse~ no~ move/.code={
-    \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_reverse:Nv
-      \l_@@_reverse_tl
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \spath_get_current_path:N \l_@@_current_tl
-      \spath_append_no_move:NV \l_@@_current_tl \l_@@_reverse_tl
-      \spath_set_current_path:N \l_@@_current_tl
-      \spath_set_tikz_data:V \l_@@_reverse_tl
     }
     {
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
@@ -5520,36 +5587,94 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 %
 % Join the components of a path by splicing in the second path whenever the components are sufficiently far apart.
+% The third argument is a list of components to splice after, if it is empty then all components are used and a spot weld is done first so that the splicing only happens if there is an actual gap.
+%
 %
 %    \begin{macrocode}
   join~ components~ with/.code~2~args={
     \tl_if_exist:cTF
     {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF
-      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_head_is_group:nTF {#2}
       {
-        \spath_spot_weld_components:c
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \tl_set:Nx \l_@@_tmpc_tl { \tl_item:nn {#2} {1} }
+        \tl_set:Nx \l_@@_tmpd_tl { \tl_item:nn {#2} {2} }
+      }
+      {
+        \tl_set:Nn \l_@@_tmpc_tl {#2}
+        \tl_clear:N \l_@@_tmpd_tl
+      }
+      \tl_if_exist:cTF
+      {
+        \tl_use:N \l_@@_prefix_tl
+        \tl_use:N \l_@@_tmpc_tl
+        \tl_use:N \l_@@_suffix_tl
+      }
+      {
+        \tl_if_empty:NT \l_@@_tmpd_tl
+        {
+          \spath_spot_weld_components:c
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        }
 
         \spath_components_to_seq:Nv
         \l_@@_tmpa_seq
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
 
-        \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
-      
-        \seq_map_inline:Nn \l_@@_tmpa_seq
+        \seq_gclear:N \g_@@_tmpa_seq
+        
+        \tl_if_empty:NTF \l_@@_tmpd_tl
         {
-          \spath_splice_between:Nvn \l_@@_tmpa_tl
-          {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-          {##1}
+          \int_step_inline:nnnn {1}{1} {\seq_count:N \l_@@_tmpa_seq}
+          {
+            \seq_gput_right:Nn \g_@@_tmpa_seq {##1}
+          }
+        }
+        {
+          \foreach \l_@@_tmpa_tl in \l_@@_tmpd_tl
+          {
+            \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
+          }
+          \seq_gsort:Nn \g_@@_tmpa_seq
+          {
+            \int_compare:nNnTF {##1} < {##2}
+            { \sort_return_same: }
+            { \sort_return_swapped: }
+          }
+        }
+
+        \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+        \seq_gpop_left:NN \g_@@_tmpa_seq \l_@@_tmpb_tl
+
+        \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
+        {
+          \int_compare:nTF
+          {
+            ##1 == \l_@@_tmpb_tl
+          }
+          {
+            \seq_gpop_left:NNF \g_@@_tmpa_seq \l_@@_tmpb_tl
+            {
+              \tl_set:Nn \l_@@_tmpb_tl {-1}
+            }
+            \spath_splice_between:Nvn \l_@@_tmpa_tl
+            {
+              \tl_use:N \l_@@_prefix_tl
+              \tl_use:N \l_@@_tmpc_tl
+              \tl_use:N \l_@@_suffix_tl
+            }
+            {##2}
+          }
+          {
+            \tl_put_right:Nn \l_@@_tmpa_tl {##2}
+          }
         }
         \tl_set_eq:cN
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
         \l_@@_tmpa_tl
       }
       {
-        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        \msg_warning:nnx { spath3 } { missing soft path } { \tl_use:N \l_@@_tmpc_tl }
       }
     }
     {
@@ -5560,30 +5685,86 @@ manipulating PGF soft paths}
     \tl_if_exist:cTF
     {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF
-      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      \tl_if_head_is_group:nTF {#2}
       {
-        \spath_spot_gweld_components:c
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-        
+        \tl_set:Nx \l_@@_tmpc_tl { \tl_item:nn {#2} {1} }
+        \tl_set:Nx \l_@@_tmpd_tl { \tl_item:nn {#2} {2} }
+      }
+      {
+        \tl_set:Nn \l_@@_tmpc_tl {#2}
+        \tl_clear:N \l_@@_tmpd_tl
+      }
+      \tl_if_exist:cTF
+      {
+        \tl_use:N \l_@@_prefix_tl
+        \tl_use:N \l_@@_tmpc_tl
+        \tl_use:N \l_@@_suffix_tl
+      }
+      {
+        \tl_if_empty:NT \l_@@_tmpd_tl
+        {
+          \spath_spot_weld_components:c
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        }
+
         \spath_components_to_seq:Nv
         \l_@@_tmpa_seq
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
 
-        \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
-      
-        \seq_map_inline:Nn \l_@@_tmpa_seq
+        \seq_gclear:N \g_@@_tmpa_seq
+        
+        \tl_if_empty:NTF \l_@@_tmpd_tl
         {
-          \spath_gsplice_between:Nvn \l_@@_tmpa_tl
-          {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
-          {##1}
+          \int_step_inline:nnnn {1}{1} {\seq_count:N \l_@@_tmpa_seq}
+          {
+            \seq_gput_right:Nn \g_@@_tmpa_seq {##1}
+          }
         }
-        \tl_set_eq:cN
+        {
+          \foreach \l_@@_tmpa_tl in \l_@@_tmpd_tl
+          {
+            \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
+          }
+          \seq_gsort:Nn \g_@@_tmpa_seq
+          {
+            \int_compare:nNnTF {##1} < {##2}
+            { \sort_return_same: }
+            { \sort_return_swapped: }
+          }
+        }
+
+        \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+        \seq_gpop_left:NN \g_@@_tmpa_seq \l_@@_tmpb_tl
+
+        \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
+        {
+          \int_compare:nTF
+          {
+            ##1 == \l_@@_tmpb_tl
+          }
+          {
+            \seq_gpop_left:NNF \g_@@_tmpa_seq \l_@@_tmpb_tl
+            {
+              \tl_set:Nn \l_@@_tmpb_tl {-1}
+            }
+            \spath_splice_between:Nvn \l_@@_tmpa_tl
+            {
+              \tl_use:N \l_@@_prefix_tl
+              \tl_use:N \l_@@_tmpc_tl
+              \tl_use:N \l_@@_suffix_tl
+            }
+            {##2}
+          }
+          {
+            \tl_put_right:Nn \l_@@_tmpa_tl {##2}
+          }
+        }
+        \tl_gset_eq:cN
         {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
         \l_@@_tmpa_tl
       }
       {
-        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        \msg_warning:nnx { spath3 } { missing soft path } { \tl_use:N \l_@@_tmpc_tl }
       }
     }
     {
@@ -5783,22 +5964,6 @@ manipulating PGF soft paths}
     {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \spath_gnormalise:c
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    }
-    {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
-    }
-  },
-%    \end{macrocode}
-%
-% Exports the path as an SVG file.
-%
-%    \begin{macrocode}
-  export~ to~ svg/.code={
-    \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-    {
-      \spath_export_to_svg:nv {#1}
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     }
     {
