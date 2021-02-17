@@ -172,7 +172,7 @@ Exactly how the parameter is interpreted is the same as for the \Verb+spath+ coo
   append reverse no move
 }
 
-These are all aliases to various versions of \Verb+use+.
+These are all aliases to various versions of \Verb+use+ (they originally existed as separate code before I united them all as variants of \Verb+use+).
 The equivalences are:
 
 \begin{itemize}
@@ -251,12 +251,16 @@ This splices the middle path into the gap between the initial and final paths.
 The middle path is transformed to fit (don't try this with a path whose starting and ending points are close together) and the paths are joined so that the last component of the initial path and the first component of the splice path become a single component, and similarly at the other end.
 \end{function}
 
-\begin{function}{join components with, join components globally with}
+\begin{function}{join components with, join components globally with, join components upright with, join components globally upright with}
 \begin{syntax}
 |join components with=|\marg{path}\marg{splice path}
 |join components with=|\marg{path}\marg{splice path}\marg{list}
+|join components upright with=|\marg{path}\marg{splice path}
+|join components upright with=|\marg{path}\marg{splice path}\marg{list}
 |join components globally with=|\marg{path}\marg{splice path}
 |join components globally with=|\marg{path}\marg{splice path}\marg{list}
+|join components globally upright with=|\marg{path}\marg{splice path}
+|join components globally upright with=|\marg{path}\marg{splice path}\marg{list}
 \end{syntax}
 
 This inserts the |splice path| in the gaps between components of |path| specified by a comma separated list.
@@ -267,6 +271,8 @@ The spot weld is only performed if the list of components is empty.
 This does \emph{not} close the resulting path, even if the last component is specified in the list, for that see the key |close with|.
 
 Note that because there is an optional third argument to this key, the second argument must always be enclosed in braces unless it is a single token.
+
+The |upright| versions do a little test to see if the gap is oriented upside-down and if so then they insert the reflection of the splice path.
 \end{function}
 
 \begin{function}{close, close globally, close with, close globally with}
@@ -376,11 +382,14 @@ It applies the following styles (in this order):
 }
 \begin{syntax}
 |insert gaps after components=|\marg{path}\marg{gap}\marg{components}
+|insert gaps after components=|\marg{path}\marg{gap}
 |insert gaps globally after components=|\marg{path}\marg{gap}\marg{components}
+|insert gaps globally after components=|\marg{path}\marg{gap}
 \end{syntax}
 
 This inserts a gap between components of a path by shortening the end of the specified component and start of the next one.
 The list of components is passed through a |\foreach| loop so that syntax like |2,4,...,16| can be used.
+If the list of components is not given the gaps are inserted between all components.
 \end{function}
 
 \begin{function}{
@@ -854,5 +863,65 @@ arc[radius=.5cm,start angle=90, delta angle=-180]
 \tikzset{spath/knot={trefoil}{8pt}{1,3,5}}
 \end{tikzpicture}
 \end{example}
+
+\item Here's how to mark intersections of paths with ``bridges''.
+\begin{example}
+\begin{tikzpicture}
+\coordinate (a) at (-1,0.5);
+\coordinate (b) at (8,0.5);
+\coordinate (c) at (3,-0.5);
+\path[spath/save=sine]
+(-1.57,-1)
+cos ++(1.57,1)
+sin ++(1.57,1)
+cos ++(1.57,-1)
+sin ++(1.57,-1)
+cos ++(1.57,1)
+sin ++(1.57,1);
+\path[spath/save=over] (a) -- (c) |- (b);
+
+\path[spath/save=arc] (0,0) arc[radius=1cm, start angle=180, delta angle=-180];
+
+\tikzset{
+  spath/split at intersections with={over}{sine},
+  spath/insert gaps after components={over}{8pt},
+  spath/join components upright with={over}{arc},
+  spath/split at intersections with={sine}{over},
+  spath/insert gaps after components={sine}{4pt},
+}
+
+\draw[spath/use=sine];
+\draw[spath/use=over];
+\end{tikzpicture}
+\end{example}
+
+\item If there are lots of paths like the previous example, here's a convenient style to put them together.
+\begin{example}
+\tikzset{
+  bridging path/.initial=arc,
+  bridging span/.initial=8pt,
+  bridging gap/.initial=4pt,
+  bridge/.style 2 args={
+    spath/split at intersections with={#1}{#2},
+    spath/insert gaps after components={#1}{\pgfkeysvalueof{/tikz/bridging span}},
+    spath/join components upright with={#1}{\pgfkeysvalueof{/tikz/bridging path}},
+    spath/split at intersections with={#2}{#1},
+    spath/insert gaps after components={#2}{\pgfkeysvalueof{/tikz/bridging gap}},
+  }
+}
+
+% If used in the preamble, this needs surrounding in \AtBeginDocument
+%\AtBeginDocument{
+\tikz[overlay] \path[spath/save=arc] (0,0) arc[radius=1cm, start angle=180, delta angle=-180];
+%}
+\begin{tikzpicture}
+\path[spath/save=over] (0,0) -| ++(1,1) -| ++(-1,1) -| ++(1,1) -| ++(-1,1);
+\path[spath/save=under] (.5,-.5) -- ++(0,4);
+\tikzset{bridge={over}{under}}
+\draw[spath/use=over];
+\draw[spath/use=under];
+\end{tikzpicture}
+\end{example}
+
 \end{enumerate}
   \end{document}
