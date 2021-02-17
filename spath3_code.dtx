@@ -4929,6 +4929,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \msg_new:nnn { spath3 } { missing soft path } { Soft~ path~ #1~ doesn't~ exist }
 \msg_new:nnn { spath3 } { empty soft path } { Soft~ path~ #1~ is~ empty }
+\msg_new:nnn { spath3 } { load intersections } { You~ need~ to~ load~ the~ "intersections"~ library~ to~ work~ with~ intersections }
 %    \end{macrocode}
 %
 % When saving a soft path, by default we use a naming convention that is compatible with the intersections library so that paths saved here and paths saved by the \texttt{name path} facility of the intersections library are mutually exchangeable.
@@ -6024,40 +6025,58 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
   split~ at~ intersections~ with/.code~ n~ args={2}{
     \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      tikz@library@intersections@loaded
+    }
     {
       \tl_if_exist:cTF
-      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       {
-        \spath_split_path_at_intersections:cv
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \tl_if_exist:cTF
         {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        {
+          \spath_split_path_at_intersections:cv
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+          {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        }
+        {
+          \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        }
       }
       {
-        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        \msg_warning:nnn { spath3 } { missing soft path } { #1 }
       }
     }
     {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+      \msg_warning:nn { spath3 } { load intersections }
     }
   },
   split~ globally~ at~ intersections~ with/.code~ n~ args={2}{
     \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \tl_if_exist:cTF
-      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      tikz@library@intersections@loaded
+    }
+    {
+    \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       {
-        \spath_gsplit_path_at_intersections:cv
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \tl_if_exist:cTF
         {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        {
+          \spath_gsplit_path_at_intersections:cv
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+          {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        }
+        {
+          \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        }
       }
       {
-        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        \msg_warning:nnn { spath3 } { missing soft path } { #1 }
       }
     }
     {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+      \msg_warning:nn { spath3 } { load intersections }
     }
   },
 %    \end{macrocode}
@@ -6067,40 +6086,58 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
   split~ at~ intersections/.code~ n~ args={2}{
     \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      tikz@library@intersections@loaded
+    }
     {
       \tl_if_exist:cTF
-      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       {
-        \spath_split_at_intersections:cc
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \tl_if_exist:cTF
         {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        {
+          \spath_split_at_intersections:cc
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+          {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        }
+        {
+          \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        }
       }
       {
-        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        \msg_warning:nnn { spath3 } { missing soft path } { #1 }
       }
     }
     {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+      \msg_warning:nn { spath3 } { load intersections }
     }
   },
   split~ globally~ at~ intersections/.code~ n~ args={2}{
     \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      tikz@library@intersections@loaded
+    }
     {
       \tl_if_exist:cTF
-      {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
       {
-        \spath_gsplit_at_intersections:cc
-        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \tl_if_exist:cTF
         {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        {
+          \spath_gsplit_at_intersections:cc
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+          {\tl_use:N \l_@@_prefix_tl #2 \tl_use:N \l_@@_suffix_tl}
+        }
+        {
+          \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        }
       }
       {
-        \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+        \msg_warning:nnn { spath3 } { missing soft path } { #1 }
       }
     }
     {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+      \msg_warning:nn { spath3 } { load intersections }
     }
   },
 %    \end{macrocode}
@@ -6110,24 +6147,42 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
   split~ at~ self~ intersections/.code={
     \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \spath_split_at_self_intersections:c
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      tikz@library@intersections@loaded
     }
     {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      {
+        \spath_split_at_self_intersections:c
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+      }
+    }
+    {
+      \msg_warning:nn { spath3 } { load intersections }
     }
   },
   split~ globally~ at~ self~ intersections/.code={
     \tl_if_exist:cTF
-    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
-      \spath_gsplit_at_self_intersections:c
-      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      tikz@library@intersections@loaded
     }
     {
-      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+      \tl_if_exist:cTF
+      {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      {
+        \spath_gsplit_at_self_intersections:c
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      }
+      {
+        \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+      }
+    }
+    {
+      \msg_warning:nn { spath3 } { load intersections }
     }
   },
 %    \end{macrocode}
