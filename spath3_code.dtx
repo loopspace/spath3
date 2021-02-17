@@ -1756,7 +1756,7 @@ manipulating PGF soft paths}
 {
   \spath_splice_between:NVnn #1#1{#2}{#3}
 }
-\cs_generate_variant:Nn \spath_splice_between:Nnn {NVV, cnn, cvv, Nvn}
+\cs_generate_variant:Nn \spath_splice_between:Nnn {NVV, cnn, cvv, Nvn, NVn}
 \cs_new_protected_nopar:Npn \spath_gsplice_between:Nnnn #1#2#3#4
 {
   \@@_splice_between:nnn {#2}{#3}{#4}
@@ -1768,7 +1768,7 @@ manipulating PGF soft paths}
 {
   \spath_gsplice_between:NVnn #1#1{#2}{#3}
 }
-\cs_generate_variant:Nn \spath_gsplice_between:Nnn {NVV, cnn, cvv}
+\cs_generate_variant:Nn \spath_gsplice_between:Nnn {NVV, cnn, cvv, Nvn, NVn}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -4928,8 +4928,10 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
 \msg_new:nnn { spath3 } { missing soft path } { Soft~ path~ #1~ doesn't~ exist }
-\msg_new:nnn { spath3 } { empty soft path } { Soft~ path~ #1~ is~ empty }
-\msg_new:nnn { spath3 } { load intersections } { You~ need~ to~ load~ the~ "intersections"~ library~ to~ work~ with~ intersections }
+\msg_new:nnnn { spath3 } { empty soft path } { Soft~ path~ #1~ is~ empty}
+{If~ it~ was~ defined~ inside~ a~ group,~ try~ using~ "save~ global". }
+\msg_new:nnn { spath3 } { load intersections }
+{ You~ need~ to~ load~ the~ "intersections"~ library~ to~ work~ with~ intersections }
 %    \end{macrocode}
 %
 % When saving a soft path, by default we use a naming convention that is compatible with the intersections library so that paths saved here and paths saved by the \texttt{name path} facility of the intersections library are mutually exchangeable.
@@ -5198,7 +5200,7 @@ manipulating PGF soft paths}
       spath/join/.cd,
       #1
     }
-    
+
     \tl_if_exist:cTF
     {
       \tl_use:N \l_@@_prefix_tl
@@ -5206,6 +5208,15 @@ manipulating PGF soft paths}
       \tl_use:N \l_@@_suffix_tl
     }
     {
+      \tl_if_empty:cT
+      {
+        \tl_use:N \l_@@_prefix_tl
+        \tl_use:N \l_@@_joinpath_tl
+        \tl_use:N \l_@@_suffix_tl
+      }
+      {
+        \msg_warning:nnn { spath3 } { empty soft path } { #1 }
+      }
       \tl_set_eq:Nc \l_@@_joinpath_tl
       {
         \tl_use:N \l_@@_prefix_tl
@@ -5251,7 +5262,14 @@ manipulating PGF soft paths}
 
       \tl_if_empty:NTF \l_@@_current_tl
       {
-        \tl_set_eq:NN \l_@@_current_tl \l_@@_joinpath_tl
+        \tl_if_empty:NTF \l_@@_joinpath_tl
+        {
+          \tl_set_eq:NN \l_@@_current_tl \c_spath_moveto_tl
+          \tl_put_right:Nn \l_@@_current_tl {{0pt}{0pt}}
+        }
+        {
+          \tl_set_eq:NN \l_@@_current_tl \l_@@_joinpath_tl
+        }
       }
       {
       
@@ -5590,6 +5608,8 @@ manipulating PGF soft paths}
 % Join the components of a path by splicing in the second path whenever the components are sufficiently far apart.
 % The third argument is a list of components to splice after, if it is empty then all components are used and a spot weld is done first so that the splicing only happens if there is an actual gap.
 %
+% The \Verb+upright+ versions will join with the reflection of the splice path if it detects that the gap is ``upside-down''.
+%
 %
 %    \begin{macrocode}
   join~ components~ with/.code~2~args={
@@ -5755,6 +5775,230 @@ manipulating PGF soft paths}
               \tl_use:N \l_@@_suffix_tl
             }
             {##2}
+          }
+          {
+            \tl_put_right:Nn \l_@@_tmpa_tl {##2}
+          }
+        }
+        \tl_gset_eq:cN
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \l_@@_tmpa_tl
+      }
+      {
+        \msg_warning:nnx { spath3 } { missing soft path } { \tl_use:N \l_@@_tmpc_tl }
+      }
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+  join~ components~ upright~ with/.code~2~args={
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \tl_if_head_is_group:nTF {#2}
+      {
+        \tl_set:Nx \l_@@_tmpc_tl { \tl_item:nn {#2} {1} }
+        \tl_set:Nx \l_@@_tmpd_tl { \tl_item:nn {#2} {2} }
+      }
+      {
+        \tl_set:Nn \l_@@_tmpc_tl {#2}
+        \tl_clear:N \l_@@_tmpd_tl
+      }
+      \tl_if_exist:cTF
+      {
+        \tl_use:N \l_@@_prefix_tl
+        \tl_use:N \l_@@_tmpc_tl
+        \tl_use:N \l_@@_suffix_tl
+      }
+      {
+        \tl_if_empty:NT \l_@@_tmpd_tl
+        {
+          \spath_spot_weld_components:c
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        }
+
+        \spath_components_to_seq:Nv
+        \l_@@_tmpa_seq
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+
+        \seq_gclear:N \g_@@_tmpa_seq
+        
+        \tl_if_empty:NTF \l_@@_tmpd_tl
+        {
+          \int_step_inline:nnnn {1}{1} {\seq_count:N \l_@@_tmpa_seq}
+          {
+            \seq_gput_right:Nn \g_@@_tmpa_seq {##1}
+          }
+        }
+        {
+          \foreach \l_@@_tmpa_tl in \l_@@_tmpd_tl
+          {
+            \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
+          }
+          \seq_gsort:Nn \g_@@_tmpa_seq
+          {
+            \int_compare:nNnTF {##1} < {##2}
+            { \sort_return_same: }
+            { \sort_return_swapped: }
+          }
+        }
+
+        \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+        \seq_gpop_left:NN \g_@@_tmpa_seq \l_@@_tmpb_tl
+
+        \tl_set_eq:Nc \l_@@_tmpc_tl
+        {
+          \tl_use:N \l_@@_prefix_tl
+          \tl_use:N \l_@@_tmpc_tl
+          \tl_use:N \l_@@_suffix_tl
+        }
+        \spath_transform:NVnnnnnn \l_@@_tmpd_tl \l_@@_tmpc_tl {1}{0}{0}{-1}{0pt}{0pt}
+        
+        \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
+        {
+          \int_compare:nTF
+          {
+            ##1 == \l_@@_tmpb_tl
+          }
+          {
+            \seq_gpop_left:NNF \g_@@_tmpa_seq \l_@@_tmpb_tl
+            {
+              \tl_set:Nn \l_@@_tmpb_tl {-1}
+            }
+            \spath_finalpoint:NV \l_@@_tmpe_tl \l_@@_tmpa_tl
+            \spath_initialpoint:Nn \l_@@_tmpf_tl {##2}
+
+            \dim_compare:nTF
+            {
+              \tl_item:Nn \l_@@_tmpe_tl {1}
+              >
+              \tl_item:Nn \l_@@_tmpf_tl {1}
+            }
+            {
+              \spath_splice_between:NVn
+              \l_@@_tmpa_tl
+              \l_@@_tmpd_tl
+              {##2}
+            }
+            {
+              \spath_splice_between:NVn
+              \l_@@_tmpa_tl
+              \l_@@_tmpc_tl
+              {##2}
+            }
+          }
+          {
+            \tl_put_right:Nn \l_@@_tmpa_tl {##2}
+          }
+        }
+        \tl_set_eq:cN
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        \l_@@_tmpa_tl
+      }
+      {
+        \msg_warning:nnx { spath3 } { missing soft path } { \tl_use:N \l_@@_tmpc_tl }
+      }
+    }
+    {
+      \msg_warning:nnn { spath3 } { missing soft path } { #1 }
+    }
+  },
+  join~ components~ globally~ upright~ with/.code~2~args={
+    \tl_if_exist:cTF
+    {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+    {
+      \tl_if_head_is_group:nTF {#2}
+      {
+        \tl_set:Nx \l_@@_tmpc_tl { \tl_item:nn {#2} {1} }
+        \tl_set:Nx \l_@@_tmpd_tl { \tl_item:nn {#2} {2} }
+      }
+      {
+        \tl_set:Nn \l_@@_tmpc_tl {#2}
+        \tl_clear:N \l_@@_tmpd_tl
+      }
+      \tl_if_exist:cTF
+      {
+        \tl_use:N \l_@@_prefix_tl
+        \tl_use:N \l_@@_tmpc_tl
+        \tl_use:N \l_@@_suffix_tl
+      }
+      {
+        \tl_if_empty:NT \l_@@_tmpd_tl
+        {
+          \spath_spot_weld_components:c
+          {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+        }
+
+        \spath_components_to_seq:Nv
+        \l_@@_tmpa_seq
+        {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+
+        \seq_gclear:N \g_@@_tmpa_seq
+        
+        \tl_if_empty:NTF \l_@@_tmpd_tl
+        {
+          \int_step_inline:nnnn {1}{1} {\seq_count:N \l_@@_tmpa_seq}
+          {
+            \seq_gput_right:Nn \g_@@_tmpa_seq {##1}
+          }
+        }
+        {
+          \foreach \l_@@_tmpa_tl in \l_@@_tmpd_tl
+          {
+            \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
+          }
+          \seq_gsort:Nn \g_@@_tmpa_seq
+          {
+            \int_compare:nNnTF {##1} < {##2}
+            { \sort_return_same: }
+            { \sort_return_swapped: }
+          }
+        }
+
+        \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+        \seq_gpop_left:NN \g_@@_tmpa_seq \l_@@_tmpb_tl
+
+        \tl_set_eq:Nc \l_@@_tmpc_tl
+        {
+          \tl_use:N \l_@@_prefix_tl
+          \tl_use:N \l_@@_tmpc_tl
+          \tl_use:N \l_@@_suffix_tl
+        }
+        \spath_transform:NVnnnnnn \l_@@_tmpd_tl \l_@@_tmpc_tl {1}{0}{0}{-1}{0pt}{0pt}
+        
+        \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
+        {
+          \int_compare:nTF
+          {
+            ##1 == \l_@@_tmpb_tl
+          }
+          {
+            \seq_gpop_left:NNF \g_@@_tmpa_seq \l_@@_tmpb_tl
+            {
+              \tl_set:Nn \l_@@_tmpb_tl {-1}
+            }
+            \spath_finalpoint:NV \l_@@_tmpe_tl \l_@@_tmpa_tl
+            \spath_initialpoint:Nn \l_@@_tmpf_tl {##2}
+
+            \dim_compare:nTF
+            {
+              \tl_item:Nn \l_@@_tmpe_tl {1}
+              >
+              \tl_item:Nn \l_@@_tmpf_tl {1}
+            }
+            {
+              \spath_splice_between:NVn
+              \l_@@_tmpa_tl
+              \l_@@_tmpd_tl
+              {##2}
+            }
+            {
+              \spath_splice_between:NVn
+              \l_@@_tmpa_tl
+              \l_@@_tmpc_tl
+              {##2}
+            }
           }
           {
             \tl_put_right:Nn \l_@@_tmpa_tl {##2}
@@ -6290,40 +6534,64 @@ manipulating PGF soft paths}
 % The list of components is passed through a \Verb+\foreach+ loop so can use the shortcut syntax from those loops.
 %
 %    \begin{macrocode}
-  insert~ gaps~ after~ components/.code~ n~ args={3}{
+  insert~ gaps~ after~ components/.code~ 2~ args={
     \tl_if_exist:cTF
     {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
+      \tl_if_head_is_group:nTF {#2}
+      {
+        \tl_set:Nx \l_@@_tmpc_tl { \tl_item:nn {#2} {1} }
+        \tl_set:Nx \l_@@_tmpd_tl { \tl_item:nn {#2} {2} }
+      }
+      {
+        \tl_set:Nn \l_@@_tmpc_tl {#2}
+        \tl_clear:N \l_@@_tmpd_tl
+      }
       \seq_gclear:N \g_@@_tmpa_seq
       \seq_gclear:N \g_@@_tmpb_seq
       \spath_numberofcomponents:Nv \l_@@_tmpa_int
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \foreach \l_@@_tmpa_tl in {#3}
-      {
-        \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
-        \seq_gput_right:Nx
-        \g_@@_tmpb_seq
-        {\int_eval:n
-          {
-            \int_mod:nn { \l_@@_tmpa_tl }{ \l_@@_tmpa_int } + 1
-          }
-        }
-      }
+
       \spath_components_to_seq:Nv
       \l_@@_tmpa_seq
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      
+      \tl_if_empty:NTF \l_@@_tmpd_tl
+      {
+        \int_step_inline:nnnn {1}{1} { \l_@@_tmpa_int - 1 }
+        {
+          \seq_gput_right:Nn \g_@@_tmpa_seq {##1}
+          \seq_gput_right:Nx
+          \g_@@_tmpb_seq
+          {\int_eval:n {##1 + 1}}
+        }
+      }
+      {
+        \foreach \l_@@_tmpa_tl in \l_@@_tmpd_tl
+        {
+          \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
+          \seq_gput_right:Nx
+          \g_@@_tmpb_seq
+          {\int_eval:n
+            {
+              \int_mod:nn { \l_@@_tmpa_tl }{ \l_@@_tmpa_int } + 1
+            }
+          }
+        }
+      }
+
       \seq_clear:N \l_@@_tmpb_seq
       \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
       {
         \tl_set:Nn \l_@@_tmpa_tl {##2}
         \seq_if_in:NnT \g_@@_tmpa_seq {##1}
         {
-          \spath_shorten_at_end:Nn \l_@@_tmpa_tl {#2/2}
+          \spath_shorten_at_end:Nn \l_@@_tmpa_tl {\l_@@_tmpc_tl/2}
         }
         \seq_if_in:NnT \g_@@_tmpb_seq {##1}
         {
-          \spath_shorten_at_start:Nn \l_@@_tmpa_tl {#2/2}
+          \spath_shorten_at_start:Nn \l_@@_tmpa_tl {\l_@@_tmpc_tl/2}
         }
         \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpa_tl
       }
@@ -6338,41 +6606,64 @@ manipulating PGF soft paths}
       \msg_warning:nnn { spath3 } { missing soft path } { #1 }
     }
   },
-  insert~ gaps~ globally~ after~ components/.code~ n~ args={3}{
+  insert~ gaps~ globally~ after~ components/.code~ 2~ args={
     \tl_if_exist:cTF
     {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
     {
       \group_begin:
+      \tl_if_head_is_group:nTF {#2}
+      {
+        \tl_set:Nx \l_@@_tmpc_tl { \tl_item:nn {#2} {1} }
+        \tl_set:Nx \l_@@_tmpd_tl { \tl_item:nn {#2} {2} }
+      }
+      {
+        \tl_set:Nn \l_@@_tmpc_tl {#2}
+        \tl_clear:N \l_@@_tmpd_tl
+      }
       \seq_gclear:N \g_@@_tmpa_seq
       \seq_gclear:N \g_@@_tmpb_seq
       \spath_numberofcomponents:Nv \l_@@_tmpa_int
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
-      \foreach \l_@@_tmpa_tl in {#3}
-      {
-        \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
-        \seq_gput_right:Nx
-        \g_@@_tmpb_seq
-        {
-          \int_eval:n
-          {
-            \int_mod:nn { \l_@@_tmpa_tl }{ \l_@@_tmpa_int } + 1
-          }
-        }
-      }
+
       \spath_components_to_seq:Nv
       \l_@@_tmpa_seq
       {\tl_use:N \l_@@_prefix_tl #1 \tl_use:N \l_@@_suffix_tl}
+      
+      \tl_if_empty:NTF \l_@@_tmpd_tl
+      {
+        \int_step_inline:nnnn {1}{1} { \l_@@_tmpa_int - 1 }
+        {
+          \seq_gput_right:Nn \g_@@_tmpa_seq {##1}
+          \seq_gput_right:Nx
+          \g_@@_tmpb_seq
+          {\int_eval:n {##1 + 1}}
+        }
+      }
+      {
+        \foreach \l_@@_tmpa_tl in \l_@@_tmpd_tl
+        {
+          \seq_gput_right:NV \g_@@_tmpa_seq \l_@@_tmpa_tl
+          \seq_gput_right:Nx
+          \g_@@_tmpb_seq
+          {\int_eval:n
+            {
+              \int_mod:nn { \l_@@_tmpa_tl }{ \l_@@_tmpa_int } + 1
+            }
+          }
+        }
+      }
+
       \seq_clear:N \l_@@_tmpb_seq
       \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
       {
         \tl_set:Nn \l_@@_tmpa_tl {##2}
         \seq_if_in:NnT \g_@@_tmpa_seq {##1}
         {
-          \spath_shorten_at_end:Nn \l_@@_tmpa_tl {#2/2}
+          \spath_shorten_at_end:Nn \l_@@_tmpa_tl {\l_@@_tmpc_tl/2}
         }
         \seq_if_in:NnT \g_@@_tmpb_seq {##1}
         {
-          \spath_shorten_at_start:Nn \l_@@_tmpa_tl {#2/2}
+          \spath_shorten_at_start:Nn \l_@@_tmpa_tl {\l_@@_tmpc_tl/2}
         }
         \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpa_tl
       }
