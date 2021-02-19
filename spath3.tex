@@ -334,6 +334,20 @@ The second path is not changed.
 This inserts breaks into a pair of paths at their mutual intersections.
 \end{function}
 
+\begin{function}{
+  replace lines,
+  replace lines globally
+}
+\begin{syntax}
+|replace lines=|\meta{path}
+|replace lines globally=|\meta{path}
+\end{syntax}
+
+The PGF intersection routines have difficulties with parallel, or near parallel, lines.
+One way to counter this is to replace all line segments by ``curves''.
+This is done so that the parametrisation of the curve matches that of the line segment that it is replacing.
+\end{function}
+
 \subsection{Working with Components}
 
 \begin{function}{
@@ -493,8 +507,8 @@ Saves the path to the file \texttt{path.svg} as an SVG document.
 \subsection{Knots}
 
 \begin{function}{
-  global knot,
   knot,
+  global knot,
   draft mode
 }
 \begin{syntax}
