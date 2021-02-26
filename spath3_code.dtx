@@ -353,6 +353,12 @@ manipulating PGF soft paths}
 \bool_new:N \l_@@_closed_bool
 %    \end{macrocode}
 %
+% When restoring a path we need to know whether to update the stored moveto.
+%
+%    \begin{macrocode}
+\bool_new:N \l_@@_movetorelevant_bool
+%    \end{macrocode}
+%
 % The intersection routine can't happen inside a group so we need two token lists to hold the paths that we'll intersect.
 %
 %    \begin{macrocode}
@@ -4946,9 +4952,12 @@ manipulating PGF soft paths}
   }
   \tl_use:N \l_@@_tmpa_tl
   \spath_finalmovepoint:Nn \l_@@_tmpa_tl {#1}
-  \ifpgfsyssoftpathmovetorelevant%
-  \tl_gset_eq:cN {pgfsyssoftpath@lastmoveto} \l_@@_tmpa_tl
-  \fi
+  \bool_if:NT \l_@@_movetorelevant_bool
+  {
+    \ifpgfsyssoftpathmovetorelevant%
+    \tl_gset_eq:cN {pgfsyssoftpath@lastmoveto} \l_@@_tmpa_tl
+    \fi
+  }
   \tl_set:Nx \l_@@_tmpa_tl
   {
     \exp_not:c {pgf@x}=\tl_item:Nn \l_@@_tmpa_tl {1}
@@ -4959,12 +4968,15 @@ manipulating PGF soft paths}
     \pgftransforminvert
     \use:c {pgf@pos@transform@glob}
   }
-  \tl_set:Nx \l_@@_tmpa_tl
+  \bool_if:NT \l_@@_movetorelevant_bool
   {
-    \exp_not:c {tikz@lastmovetox}=\exp_not:c {pgf@x}
-    \exp_not:c {tikz@lastmovetoy}=\exp_not:c {pgf@y}
+    \tl_set:Nx \l_@@_tmpa_tl
+    {
+      \exp_not:c {tikz@lastmovetox}=\exp_not:c {pgf@x}
+      \exp_not:c {tikz@lastmovetoy}=\exp_not:c {pgf@y}
+    }
+    \tl_use:N \l_@@_tmpa_tl
   }
-  \tl_use:N \l_@@_tmpa_tl
   \tl_clear_new:c {tikz@timer}
   \tl_set:cn {tikz@timer}
   {
@@ -5345,6 +5357,7 @@ manipulating PGF soft paths}
     \bool_set_false:N \l_@@_reverse_bool
     \bool_set_false:N \l_@@_weld_bool
     \bool_set_false:N \l_@@_move_bool
+    \bool_set_true:N \l_@@_movetorelevant_bool
     \tl_clear:N \l_@@_joinpath_tl
     \tl_clear:N \l_@@_transformation_tl
     \tikzset{
@@ -5434,9 +5447,14 @@ manipulating PGF soft paths}
           \bool_if:NT \l_@@_weld_bool
           {
             \tl_put_right:Nn \l_@@_tmpa_tl {_no_move}
+            \spath_numberofcomponents:NV \l_@@_tmpa_int \l_@@_joinpath_tl
+            \int_compare:nT {\l_@@_tmpa_int == 1}
+            {
+              \bool_set_false:N \l_@@_movetorelevant_bool
+            }
           }
           \tl_put_right:Nn \l_@@_tmpa_tl {:NV}
-        
+
           \use:c {\tl_use:N \l_@@_tmpa_tl }
           \l_@@_current_tl
           \l_@@_joinpath_tl
