@@ -8,7 +8,11 @@
 \ExplSyntaxOff
 \usepackage{tabularx}
 \usepackage{tikz}
-\usetikzlibrary{spath3,intersections,patterns,hobby}
+\usetikzlibrary{
+  spath3,
+  intersections,
+  patterns,
+  hobby}
 
 \makeatletter
 \def\showpath{%
@@ -88,12 +92,262 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \ExplSyntaxOff
 \begin{document}
 
+\begin{tikzpicture}
+\path[spath/save=abc,draw=green, line width=5pt] (0,0) to[bend right] (1,0);
+\path[spath/save=def,draw=red, line width=5pt]
+  (0,0) -- ++(1,0)
+++(1,0) -- ++(1,0)
+++(1,0) -- ++(1,0)
+++(0,1) -- ++(-1,0)
+++(-1,0) -- ++(-1,0)
+++(-1,0) -- ++(-1,0)
+[
+  spath/join components with={current}{abc},
+]
+;
+
+\path[spath/save=ghi, draw, blue, line width=5pt] (1.5,-1) -- ++(0,3) -- ++(2,0) -- ++(0,-3);
+
+\tikzset{
+  spath/split at intersections={def}{ghi},
+}
+
+\draw[ultra thick, spath/use=def];
+
+\path[spath/save=jkl, draw=purple, line width=5pt] (0,-3) -- ++(1,1) -- ++(1,-1) -- ++(0,1) -- ++(-1,-1) -- ++(-1,1);
+
+\tikzset{
+  spath/split at self intersections=jkl,
+  spath/insert gaps after components={jkl}{5pt}{1,3},
+  spath/join components={jkl}{3,5},
+  spath/get components of={jkl}\Cpts
+}
+
+\tikzset{
+  every jkl component/.style={draw, ultra thick},
+  jkl component 1/.style={white},
+  jkl component 3/.style={white},
+  spath/render components=jkl
+}
+
+\draw[spath/transform to={jkl}{.25}] (0,0) -- +(0,1) node[above] {A};
+\draw[spath/upright transform to={jkl}{.75}] (0,0) -- +(0,1) node[below] {B};
+
+\draw[red] (spath cs:jkl .5) circle[radius=3pt];
+
+\end{tikzpicture}
+
+\end{document}
+
+% Checking errors
+\begin{tikzpicture}
+\foreach \pth in {a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}
+{
+  \path[spath/save=\pth] (0,0);
+}
+\foreach \pth in {A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z}
+{
+  \path[spath/save=\pth] (0,0);
+}
+
+\tikzset{
+  spath/.cd,
+  clone=aA,
+  clone global=bB,
+  save to aux=c,
+  export to svg=d,
+  use=e,
+  restore=f,
+  restore reverse=g,
+  append=h,
+  append no move=i,
+  append reverse=j,
+  append reverse no move=k,
+  insert=l,
+  insert reverse=m,
+  show=n,
+  join with=oO,
+  spot weld=p,
+  spot weld globally=q,
+  reverse=r,
+  reverse globally=s,
+  span=t{(0,0)}{(2,3)},
+  span global=u{(0,0)}{(2,3)},
+  splice=vVw,
+  splice global=xXy,
+  join components with=zZ,
+  join components globally with=aA,
+  join components upright with=bB,
+  join components globally upright with=cC,
+  close=d,
+  close globally=e,
+  close with=fF,
+  close globally with=gG,
+  shorten at end=h{5pt},
+  shorten at start=i{5pt},
+  shorten at both ends=j{5pt},
+  shorten globally at end=k{5pt},
+  shorten globally at start=l{5pt},
+  shorten globally at both ends=m{5pt},
+  translate=n{5pt}{5pt},
+  translate globally=o{5pt}{5pt},
+  normalise=p,
+  normalise globally=q,
+  transform=r{shift={(3,2)}},
+  transform globally=s{shift={(3,2)}},
+  split at intersections with=tT,
+  split globally at intersections with=uU,
+  split at intersections=vV,
+  split globally at intersections=wW,
+  split at self intersections=x,
+  split globally at self intersections=y,
+  get components of=z\cpts,
+  get components of globally=a\cpts,
+  render components=b,
+  insert gaps after components=c{5pt},
+  insert gaps globally after components=d{5pt},
+  join components=e,
+  join components globally=f,
+  remove empty components=g,
+  remove empty components globally=h,
+  replace lines=i,
+  replace lines globally=j,
+  remove components=k{2},
+  remove components globally=l{2},
+  maybe spot weld=m,
+  maybe spot weld globally=n,
+  transform to=o{1.5},
+  upright transform to=p{1.5},
+}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+
+\path[spath/save=zig] (0,0) |- ++(1,1) +(0,0) -| ++(1,-1);
+
+\draw (0,-2) -- ++(0,2) [spath/use={zig,weld}] -- cycle;
+
+\path[spath/save=zag] (3,0) |- ++(1,1) -| ++(1,-1);
+
+\draw (3,-2) -- ++(0,2) [spath/use={zag,weld}] -- cycle;
+\end{tikzpicture}
+
+
+
+\begin{tikzpicture}
+\begin{scope}
+\draw[spath/save=a] (0,0) -- +(2,0);
+\end{scope}
+
+\draw[spath/save=b] (0,-1) -- +(0,2);
+\tikzset{
+  spath/split at intersections with=ab
+}
+\end{tikzpicture}
+
+
+\begin{tikzpicture}[
+  use Hobby shortcut,
+  knot/.style 2 args={
+    every #1 component/.style={ultra thick, draw, red},
+    #1 component 1/.style={blue},
+    spath/.cd,
+    split at self intersections=#1,
+    remove empty components=#1,
+    insert gaps after components={#1}{8pt}{#2},
+    spot weld=#1,
+    render components=#1
+  }
+]
+\path[spath/save=trefoil] ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) } (90:2);
+\tikzset{knot={trefoil}{1,3,5}}
+\end{tikzpicture}
+
+
+
+\tikzset{
+  test/.code 2 args={
+    \message{Got: #1, #2}
+  },
+  test=abc,
+  test={a}{b}{c},
+  test={a}{bc}
+}
+
+\begin{tikzpicture}
+\path[
+  draw=orange,
+  ultra thick,
+  spath/save=arc] (0,0) arc[radius=1,start angle=180, end angle=0];
+
+\path[
+  draw=cyan,
+  ultra thick,
+  spath/save=start]
+(0,1) -- ++(1,1)
+++(1,0) -- ++(1,-1)
+++(0,-1) -- ++(-1,-1)
+++(-1,0) -- ++(-1,1)
+;
+
+\tikzset{
+  spath/join components with={start}{arc},
+  spath/close with={start}{arc},
+}
+
+\draw[spath/restore=start];
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\path[
+  draw=orange,
+  spath/save=arc] (0,0) arc[radius=1,start angle=180, end angle=0];
+
+\path[
+  draw=cyan,
+  line width=5pt,
+  spath/save=start]
+(0,1) -- ++(1,1)
+++(1,0) -- ++(1,-1)
+++(0,-1) -- ++(-1,-1)
+++(-1,0) -- ++(-1,1)
+;
+
+\fill[magenta]
+(0,1) circle[radius=6pt]
+;
+
+\tikzset{
+  spath/join components with={start}{arc}{1,2},
+}
+
+\draw[line width=2pt, spath/restore=start];
+\end{tikzpicture}
+
+
+
+
+\begin{tikzpicture}
+\path[spath/save=ab] (0,0) to[out=0,in=180] +(3,1);
+\path[spath/save=cd] (0,2) to[out=90,in=-90] +(3,1);
+\tikzset{
+  spath/join with={ab}{cd, reverse, move, weld, transform={scale=2,rotate=90}},
+  spath/show=ab,
+}
+\draw[
+  orange,
+  ultra thick,
+  spath/restore=ab
+];
+\end{tikzpicture}
+
+
 \begin{tikzpicture}[scale=2]
 \path[spath/save=ab] (0,1) -- ++(2,0);
 \draw[spath/restore=ab] node[auto,pos=.5] {ab} node[auto,pos=.75] {bc};
 \draw[spath/transform={ab}{scale=3},spath/restore=ab] node[auto,pos=.5] {ab};
 \end{tikzpicture}
-\end{document}
+
 
 \begin{tikzpicture}
 \draw[orange, ultra thick, spath/save=sq]
@@ -144,30 +398,6 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 }
 
 \draw[spath/transform={a}{scale=28},spath/restore=a];
-\end{tikzpicture}
-
-\begin{tikzpicture}
-\path[
-  draw=orange,
-  ultra thick,
-  spath/save=arc] (0,0) arc[radius=1,start angle=180, end angle=0];
-
-\path[
-  draw=cyan,
-  ultra thick,
-  spath/save=start]
-(0,1) -- ++(1,1)
-++(1,0) -- ++(1,-1)
-++(0,-1) -- ++(-1,-1)
-++(-1,0) -- ++(-1,1)
-;
-
-\tikzset{
-  spath/join components with={start}{arc},
-  spath/close with={start}{arc},
-}
-
-\draw[spath/restore=start];
 \end{tikzpicture}
 
 
@@ -345,22 +575,6 @@ node[pos=.84,auto,swap,sloped,allow upside down] {\(c\)}
 }
 \end{tikzpicture}
 
-\begin{tikzpicture}[
-  use Hobby shortcut,
-  knot/.style 2 args={
-    every #1 component/.style={ultra thick, draw, red},
-    #1 component 1/.style={blue},
-    spath/.cd,
-    split at self intersections=#1,
-    remove empty components=#1,
-    insert gaps after components={#1}{8pt}{#2},
-    spot weld=#1,
-    render components=#1
-  }
-]
-\path[spath/save=trefoil] ([closed]90:2) foreach \k in {1,...,3} { .. (-30+\k*240:.5) .. (90+\k*240:2) } (90:2);
-\tikzset{knot={trefoil}{1,3,5}}
-\end{tikzpicture}
 
 \begin{tikzpicture}
 \draw[spath/save=oval] (0,0) to[out=0,in=0] (0,2) to[out=180,in=180] (0,0);
