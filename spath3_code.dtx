@@ -2166,9 +2166,42 @@ manipulating PGF soft paths}
   \group_begin:
   \tl_set:Nn \l_@@_tmpa_tl {#1}
   \spath_finalmovepoint:NV \l_@@_tmpb_tl \l_@@_tmpa_tl
+  \spath_finalpoint:NV \l_@@_tmpc_tl \l_@@_tmpa_tl
   \tl_reverse:N \l_@@_tmpa_tl
   \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
   \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+  \tl_set:Nx \l_@@_tmpd_tl {\tl_head:N \l_@@_tmpa_tl}
+  \tl_if_eq:NNT \l_@@_tmpd_tl \c_spath_curveto_tl
+  {
+    \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+    \tl_clear:N \l_@@_tmpe_tl
+    \tl_set:Nx \l_@@_tmpe_tl {
+      {
+        \dim_eval:n
+        {
+          \tl_item:Nn \l_@@_tmpa_tl {1}
+          -
+          \tl_item:Nn \l_@@_tmpc_tl {2}
+          +
+          \tl_item:Nn \l_@@_tmpb_tl {2}
+        }
+      }
+      {
+        \dim_eval:n
+        {
+          \tl_item:Nn \l_@@_tmpa_tl {2}
+          -
+          \tl_item:Nn \l_@@_tmpc_tl {1}
+          +
+          \tl_item:Nn \l_@@_tmpb_tl {1}
+        }
+      }
+    }
+    \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+    \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+    \tl_put_left:NV \l_@@_tmpa_tl \l_@@_tmpe_tl
+    \tl_put_left:NV \l_@@_tmpa_tl \l_@@_tmpd_tl
+  }
   \tl_reverse:N \l_@@_tmpa_tl
   \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
   \tl_put_right:NV \l_@@_tmpa_tl \c_spath_closepath_tl
@@ -5319,6 +5352,7 @@ manipulating PGF soft paths}
 % \begin{macro}[internal]{
 % \@@_maybe_current_path:nn
 % \@@_maybe_current_path_reuse:nnn
+% \@@_maybe_current_two_paths_reuse:nnnn
 % }
 % If the named path is ``current'' then get the current path and use that.
 % The second version puts the resulting path back as the current path.
@@ -5345,6 +5379,35 @@ manipulating PGF soft paths}
     {
       \spath_set_current_path:c {\@@_path_name:n {#2}}
       \spath_set_tikz_data:v {\@@_path_name:n {#2}}
+    }
+  }
+}
+\cs_new_protected_nopar:Npn \@@_maybe_current_two_paths_reuse:nnnn #1#2#3#4
+{
+  \bool_set_true:N \l_spath_movetorelevant_bool
+  \tl_if_eq:nnT {#2} {current}
+  {
+    \spath_get_current_path:c {\@@_path_name:n {#2}}
+  }
+  \tl_if_eq:nnT {#3} {current}
+  {
+    \spath_get_current_path:c {\@@_path_name:n {#3}}
+  }
+  #1 {#2} {#3} #4
+  \tl_if_eq:nnT {#2} {current}
+  {
+    \tl_if_empty:cF {\@@_path_name:n {#2}}
+    {
+      \spath_set_current_path:c {\@@_path_name:n {#2}}
+      \spath_set_tikz_data:v {\@@_path_name:n {#2}}
+    }
+  }
+  \tl_if_eq:nnT {#3} {current}
+  {
+    \tl_if_empty:cF {\@@_path_name:n {#3}}
+    {
+      \spath_set_current_path:c {\@@_path_name:n {#3}}
+      \spath_set_tikz_data:v {\@@_path_name:n {#3}}
     }
   }
 }
@@ -5796,7 +5859,6 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \@@_get_components_aux:n #1
 {
-  \group_begin:
   \clist_gclear_new:N \g_@@_output_clist
   \spath_components_to_seq:Nn \l_@@_tmpa_seq {#1}
   
@@ -5807,7 +5869,6 @@ manipulating PGF soft paths}
     \tl_set:cn {\@@_path_name:V \l_@@_tmpa_tl} {##1}
     \clist_gput_right:NV \g_@@_output_clist \l_@@_tmpa_tl
   }
-  \group_end:
 }
 \cs_new_protected_nopar:Npn \@@_get_components:Nn #1#2
 {
@@ -6703,7 +6764,7 @@ manipulating PGF soft paths}
       tikz@library@intersections@loaded
     }
     {
-      \@@_maybe_current_path_reuse:nnn
+      \@@_maybe_current_path:nn
       {
         \@@_maybe_current_path_reuse:nnn
         {
@@ -6712,7 +6773,7 @@ manipulating PGF soft paths}
             \spath_split_path_at_intersections:cv            
           }
         } {#1}
-      } {{#2}} { {} }
+      } {#2} { {} }
     }
     {
       \msg_warning:nn { spath3 } { load intersections }
@@ -6733,7 +6794,7 @@ manipulating PGF soft paths}
             \spath_gsplit_path_at_intersections:cv
           }
         } {#1}
-      } {{#2}} {}
+      } {#2} { {} }
     }
     {
       \msg_warning:nn { spath3 } { load intersections }
@@ -6750,16 +6811,13 @@ manipulating PGF soft paths}
       tikz@library@intersections@loaded
     }
     {
-      \@@_maybe_current_path_reuse:nnn
+      \@@_maybe_current_two_paths_reuse:nnnn
       {
-        \@@_maybe_current_path_reuse:nnn
+        \@@_check_two_paths:nnnn
         {
-          \@@_check_two_paths:nnnn
-          {
-            \spath_split_at_intersections:cc
-          }
-        } {#1}
-      } {{#2}} { {} }
+          \spath_split_at_intersections:cc
+        }
+      } {#1} {#2} { {} }
     }
     {
       \msg_warning:nn { spath3 } { load intersections }
@@ -6771,16 +6829,13 @@ manipulating PGF soft paths}
       tikz@library@intersections@loaded
     }
     {
-      \@@_maybe_current_path_reuse:nnn
+      \@@_maybe_current_two_paths_reuse:nnnn
       {
-        \@@_maybe_current_path_reuse:nnn
+        \@@_check_two_paths:nnnn
         {
-          \@@_check_two_paths:nnnn
-          {
-            \spath_gsplit_at_intersections:cc
-          }
-        } {#1}
-      } {{#2}} { {} }
+          \spath_gsplit_at_intersections:cc
+        }
+      } {#1} {#2} { {} }
     }
     {
       \msg_warning:nn { spath3 } { load intersections }

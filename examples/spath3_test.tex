@@ -93,6 +93,14 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \begin{document}
 
 \begin{tikzpicture}
+\draw[line width=5pt,orange] (0,0) -- (2,0) to[out=90,in=90] (-.5,0);
+\draw[ultra thick] (0,0) -- (2,0) to[out=90,in=90] (-.5,0)
+[spath/adjust and close=current]
+;
+\end{tikzpicture}
+
+
+\begin{tikzpicture}
 \path[spath/save=abc,draw=green, line width=5pt] (0,0) to[bend right] (1,0);
 \path[spath/save=def,draw=red, line width=5pt]
   (0,0) -- ++(1,0)
@@ -137,7 +145,7 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 
 \end{tikzpicture}
 
-\end{document}
+
 
 % Checking errors
 \begin{tikzpicture}
