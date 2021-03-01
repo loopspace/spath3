@@ -5529,6 +5529,7 @@ manipulating PGF soft paths}
 \bool_new:N \l_@@_weld_bool
 \bool_new:N \l_@@_move_bool
 \bool_new:N \l_@@_global_bool
+\bool_new:N \l_@@_current_transformation_bool
 \tl_new:N \l_@@_joinpath_tl
 \tl_new:N \l_@@_transformation_tl
 
@@ -5571,6 +5572,10 @@ manipulating PGF soft paths}
     \@@_set_bool:Nn \l_@@_global_bool {#1}
   },
   global/.default = true,
+  use~ current~ transformation/.code={
+    \@@_set_bool:Nn \l_@@_current_transformation_bool {#1}
+  },
+  use~ current~ transformation/.default = true,
   transform/.store~in=\l_@@_transformation_tl,
   .unknown/.code = {
     \tl_set_eq:NN \l_@@_joinpath_tl \pgfkeyscurrentname
@@ -5602,7 +5607,15 @@ manipulating PGF soft paths}
   {
     \spath_reverse:N \l_@@_joinpath_tl
   }
-      
+
+  \bool_if:NT \l_@@_current_transformation_bool
+  {
+    \pgfgettransform \l_@@_tmpa_tl
+    \spath_transform:NV
+    \l_@@_joinpath_tl
+    \l_@@_tmpa_tl
+  }
+  
   \tl_if_empty:NF \l_@@_transformation_tl
   {
     \group_begin:
@@ -6313,6 +6326,7 @@ manipulating PGF soft paths}
     \bool_set_false:N \l_@@_reverse_bool
     \bool_set_false:N \l_@@_weld_bool
     \bool_set_false:N \l_@@_move_bool
+    \bool_set_false:N \l_@@_current_transformation_bool
     \bool_set_true:N \l_spath_movetorelevant_bool
     \tl_clear:N \l_@@_joinpath_tl
     \tl_clear:N \l_@@_transformation_tl
@@ -6375,6 +6389,7 @@ manipulating PGF soft paths}
     \bool_set_false:N \l_@@_weld_bool
     \bool_set_false:N \l_@@_move_bool
     \bool_set_false:N \l_@@_global_bool
+    \bool_set_false:N \l_@@_current_transformation_bool
     \tl_clear:N \l_@@_joinpath_tl
     \tl_clear:N \l_@@_transformation_tl
     \tikzset{
