@@ -5225,8 +5225,8 @@ manipulating PGF soft paths}
 % We surround all the keys with checks to ensure that the soft path under consideration does actually exist, but if it doesn't we should warn the user.
 %
 %    \begin{macrocode}
-\msg_new:nnn { spath3 } { missing soft path } { Soft~ path~ #1~ doesn't~ exist }
-\msg_new:nnnn { spath3 } { empty soft path } { Soft~ path~ #1~ is~ empty}
+\msg_new:nnn { spath3 } { missing soft path } { Soft~ path~ #1~ doesn't~ exist~ \msg_line_context:}
+\msg_new:nnnn { spath3 } { empty soft path } { Soft~ path~ #1~ is~ empty~ \msg_line_context:}
 {If~ it~ was~ defined~ inside~ a~ group,~ try~ using~ "save~ global". }
 \msg_new:nnn { spath3 } { load intersections }
 { You~ need~ to~ load~ the~ "intersections"~ library~ to~ work~ with~ intersections }
@@ -5352,7 +5352,9 @@ manipulating PGF soft paths}
 % \begin{macro}[internal]{
 % \@@_maybe_current_path:nn
 % \@@_maybe_current_path_reuse:nnn
-% \@@_maybe_current_two_paths_reuse:nnnn
+% \@@_maybe_current_two_paths_reuse_both:nnnn
+% \@@_maybe_current_two_paths_reuse_first:nnnn
+% \@@_maybe_current_two_paths_reuse_second:nnnn
 % }
 % If the named path is ``current'' then get the current path and use that.
 % The second version puts the resulting path back as the current path.
@@ -5382,7 +5384,7 @@ manipulating PGF soft paths}
     }
   }
 }
-\cs_new_protected_nopar:Npn \@@_maybe_current_two_paths_reuse:nnnn #1#2#3#4
+\cs_new_protected_nopar:Npn \@@_maybe_current_two_paths_reuse_both:nnnn #1#2#3#4
 {
   \bool_set_true:N \l_spath_movetorelevant_bool
   \tl_if_eq:nnT {#2} {current}
@@ -5402,6 +5404,48 @@ manipulating PGF soft paths}
       \spath_set_tikz_data:v {\@@_path_name:n {#2}}
     }
   }
+  \tl_if_eq:nnT {#3} {current}
+  {
+    \tl_if_empty:cF {\@@_path_name:n {#3}}
+    {
+      \spath_set_current_path:c {\@@_path_name:n {#3}}
+      \spath_set_tikz_data:v {\@@_path_name:n {#3}}
+    }
+  }
+}
+\cs_new_protected_nopar:Npn \@@_maybe_current_two_paths_reuse_first:nnnn #1#2#3#4
+{
+  \bool_set_true:N \l_spath_movetorelevant_bool
+  \tl_if_eq:nnT {#2} {current}
+  {
+    \spath_get_current_path:c {\@@_path_name:n {#2}}
+  }
+  \tl_if_eq:nnT {#3} {current}
+  {
+    \spath_get_current_path:c {\@@_path_name:n {#3}}
+  }
+  #1 {#2} {#3} #4
+  \tl_if_eq:nnT {#2} {current}
+  {
+    \tl_if_empty:cF {\@@_path_name:n {#2}}
+    {
+      \spath_set_current_path:c {\@@_path_name:n {#2}}
+      \spath_set_tikz_data:v {\@@_path_name:n {#2}}
+    }
+  }
+}
+\cs_new_protected_nopar:Npn \@@_maybe_current_two_paths_reuse_second:nnnn #1#2#3#4
+{
+  \bool_set_true:N \l_spath_movetorelevant_bool
+  \tl_if_eq:nnT {#2} {current}
+  {
+    \spath_get_current_path:c {\@@_path_name:n {#2}}
+  }
+  \tl_if_eq:nnT {#3} {current}
+  {
+    \spath_get_current_path:c {\@@_path_name:n {#3}}
+  }
+  #1 {#2} {#3} #4
   \tl_if_eq:nnT {#3} {current}
   {
     \tl_if_empty:cF {\@@_path_name:n {#3}}
@@ -6764,16 +6808,13 @@ manipulating PGF soft paths}
       tikz@library@intersections@loaded
     }
     {
-      \@@_maybe_current_path:nn
+      \@@_maybe_current_two_paths_reuse_first:nnnn
       {
-        \@@_maybe_current_path_reuse:nnn
+        \@@_check_two_paths:nnnn
         {
-          \@@_check_two_paths:nnnn
-          {
-            \spath_split_path_at_intersections:cv            
-          }
-        } {#1}
-      } {#2} { {} }
+          \spath_split_path_at_intersections:cv            
+        }
+      } {#1} {#2} { {} }
     }
     {
       \msg_warning:nn { spath3 } { load intersections }
@@ -6785,16 +6826,13 @@ manipulating PGF soft paths}
       tikz@library@intersections@loaded
     }
     {
-      \@@_maybe_current_path:nn
+      \@@_maybe_current_two_paths_reuse_first:nnnn
       {
-        \@@_maybe_current_path_reuse:nnn
+        \@@_check_two_paths:nnnn
         {
-          \@@_check_two_paths:nnnn
-          {
-            \spath_gsplit_path_at_intersections:cv
-          }
-        } {#1}
-      } {#2} { {} }
+          \spath_gsplit_path_at_intersections:cv
+        }
+      } {#1} {#2} { {} }
     }
     {
       \msg_warning:nn { spath3 } { load intersections }
@@ -6811,7 +6849,7 @@ manipulating PGF soft paths}
       tikz@library@intersections@loaded
     }
     {
-      \@@_maybe_current_two_paths_reuse:nnnn
+      \@@_maybe_current_two_paths_reuse_both:nnnn
       {
         \@@_check_two_paths:nnnn
         {
@@ -6829,7 +6867,7 @@ manipulating PGF soft paths}
       tikz@library@intersections@loaded
     }
     {
-      \@@_maybe_current_two_paths_reuse:nnnn
+      \@@_maybe_current_two_paths_reuse_both:nnnn
       {
         \@@_check_two_paths:nnnn
         {
