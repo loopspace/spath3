@@ -1,5 +1,5 @@
-\RequirePackage{shellesc}
-\immediate\write18{tex spath3_code.dtx}
+%\RequirePackage{shellesc}
+%\immediate\write18{tex spath3_code.dtx}
 \documentclass{l3doc}
 \usepackage{tikz}
 \usetikzlibrary{
@@ -89,12 +89,36 @@ The best way is to open an issue at the code repository on github, at \href{http
 \end{lstlisting}
 
 The \texttt{spath3} TikZ library defines a set of keys that can be issued to muck about with soft paths.
-These are all defined in the \texttt{spath} family, so all the following keys should be prefixed by \texttt{spath/}, or the key \texttt{spath/.cd} needs to be used beforehand (but note that as yet I haven't implemented sending unknown keys back to the main \Verb+tikz+ directory).
+These are all defined in the |spath| family, so all the following keys should be prefixed by |spath/|, or the key |spath/.cd| needs to be used beforehand (but note that as yet I haven't implemented sending unknown keys back to the main |tikz| directory).
 
-The keys try to gracefully fail if the path doesn't exist or is empty.
+The keys try to gracefully fail if the path doesn't exist or is empty\footnote{A path that was defined inside a group will be empty if referred to outside that group rather than not existing.}.
 The intention is that the document should still compile with a warning in the log file (and on the console output).
 If this doesn't happen, please report it.
 
+\subsection{Path Names}
+
+Soft paths are stored in macros but are referred to via a name.
+The macro is constructed from the name, but there is scope for a prefix and suffix.
+By default, these are set up so to be compatible with the |intersections| library -- this package and that save their paths in the same underlying macro.
+Some packages that are built on top of this one (such as the |knot| and |penrose| packages) install their own prefixes and suffixes to avoid clashes.
+
+Using names rather than macros directly also makes it possible to link a soft path with a set of TikZ styles (this is particularly useful when splitting the path into components).
+
+\begin{variable}{current}
+\begin{syntax}
+|\path (0,0) -- (3,0) to[out=90, in=90] (1,0) [spath/adjust and close=current];|
+\end{syntax}
+
+There is a special path name, |current|, which refers to the current path being built.
+To be clear, the test for this name takes place before any prefix or suffix is applied so it depends only on what the user uses.
+
+When this name is encountered, the current path is copied into a macro and that path is used in the command.
+If the command is such that it is possible that the path is modified in some fashion then after the command is finished the old current path is replaced by the new one.
+There are several commands that take multiple paths and |current| can be used in place of any of the paths, but usually there is only one that is modified and so that is the only one that would be used to replace the old current path. 
+
+It only makes sense to use it in a path-building context, and it refers to the path at the moment of invocation, so it doesn't do a lot in the main options on that path but it can be used in options later on in the process.
+
+\end{variable}
 
 \subsection{Saving and Using Soft Paths}
 
@@ -104,16 +128,12 @@ If this doesn't happen, please report it.
 |save global=|\meta{name}
 \end{syntax}
 
-Saves the current path with name \texttt{<name>}.
+Saves the current path with name \meta{name}.
 This delays until the path is fully constructed so can be issued in the options to the main command.
 
 Soft paths constructed this way are local to the group in which the path command is issued.
 The |global| version saves the path globally which is useful when the original path is inside a scope or even another tikzpicture.
 
-The soft path is actually stored in a macro constructed from the name.
-There are a couple of reasons for using a \emph{name} rather than a macro directly.
-One is so that it is compatible with the \texttt{intersections} library -- by default both this package and that save their paths in the same underlying macro.
-The other is to provide a way to link a soft path with a set of TikZ styles (this is particularly useful when splitting the path into components).
 \end{function}
 
 \begin{function}{clone, clone globally}
@@ -124,6 +144,22 @@ The other is to provide a way to link a soft path with a set of TikZ styles (thi
 
 Clones one soft path into another.
 In the second, the clone is global (the original need not be).
+
+By using |current| as the source name, the current soft path in its current state is copied.
+This can be used to get round the restriction whereby |save path| waits until the path is fully constructed before being saved.
+\end{function}
+
+\begin{function}{show, show current path}
+\begin{syntax}
+|show=|\meta{name}
+|show current path|
+\end{syntax}
+
+These keys display a path on the terminal and in the log file.
+They do a bit of sensible line formatting so that the paths are relatively easy to scan through.
+
+The key |show current path| delays the logging until the path is fully constructed.
+To get a view of what the path is at an intermediate stage of construction, use |show=current|.
 \end{function}
 
 \begin{function}{use}
@@ -145,20 +181,21 @@ The options is a comma separated list and can include:
 \item |weld|, |no weld| determines whether to weld the inserted path to the current path.
 Welding means that the |move to| at the start of the inserted path is removed.
 Note that this doesn't \emph{move} the inserted path so this will usually modify the first segment of the inserted path, possibly in unexpected ways.
+The expected use is that when the |weld| key is used then the inserted path starts where the current path ends either because it already does or because the |move| key has also been invoked.
+But there's nothing \emph{stopping} anyone using this key in other circumstances.
 \item |move|, |no move| determines whether the inserted path is translated so that it starts where the current path ends.
 \item |transform=|\marg{transformations} applies the specified transformations to the inserted path.
-See the |transform| key in Section~\ref{sec:transform}
+See the |transform| key in Section~\ref{sec:transform}.
+\item |use current transformation| applies the current transformation to the inserted path.
+Note that because the keys are processed and then acted upon, this key is always applied \emph{before} the |transform| key.
 \item Any other key is taken as the name of the path (so it doesn't have to be specified first) with the last one winning.
 \end{itemize}
 
 One thing should be noted about transformations.
 By the time a soft path is built, all available transformations have been applied.
-This means that when re-inserting a soft path back into a high level command (such as |\draw|), the effect of existing transformations might produce some confusing effects.
+This means that when re-inserting a soft path back into a high level command (such as |\draw|), existing transformations should have no effect (other than those specified via the |transform| key).
+Where this gets a little tricky is with things like node placement -- using the \Verb+pos=D+ key on a node positions that node at a particular point on the path\footnote{Exactly how the parameter is interpreted is the same as for the \Verb+spath+ coordinate system described in Section~\ref{sec:coordinates}.}.
 When restoring a path then the library tries to set up various internals of TikZ correctly, but there may be some things I've overlooked or not accounted for particularly with regard to existing transformations; if you spot anything working oddly then please report it to me.
-
-In particular, restoring a path should sets things right for positioning nodes along the path.
-Using the \Verb+pos=D+ key on a node positions that node at a particular point on the path.
-Exactly how the parameter is interpreted is the same as for the \Verb+spath+ coordinate system described in Section~\ref{sec:coordinates}.
 \end{function}
 
 \begin{function}{
@@ -183,6 +220,19 @@ The equivalences are:
 \end{itemize}
 \end{function}
 
+\begin{function}{join with}
+\begin{syntax}
+|join with=|\marg{path}\marg{path, options}
+\end{syntax}
+
+This joins the second path to the first, with applying the specified options.
+The options are the same as for the |use| key.
+The first path is modified, the second is not (the second path is copied before any modifications are applied).
+
+It is almost the case that |join with={current}{...}| is synonymous with |use={...}|.
+The difference is that |use={...}| applies an extra check to ensure that the resulting path is not empty.
+\end{function}
+
 \begin{function}{to}
 \begin{syntax}
 |to=|\marg{name}
@@ -198,7 +248,7 @@ The path is transformed by rotation, translation, and uniform scaling so that it
 \label{sec:transform}
 
 The following keys all apply some sort of transformation to the soft path.
-They do not render the path, but simply adjust it.
+They do not render the path, but simply adjust it (but they can be used to modify the current path by invoking with the path name |current|).
 The global versions apply their transformation globally, otherwise it is local to the current group (or scope).
 
 \begin{function}{reverse, reverse global}
@@ -241,59 +291,10 @@ This transforms the named path so that it goes from the start point to the end p
 As with the \Verb+to+ path construction and the \Verb+splice+ method, this won't work if the path ends very close to where it starts.
 \end{function}
 
-\begin{function}{splice, splice global}
-\begin{syntax}
-|splice=|\marg{initial path}\marg{splice path}\marg{final path}
-|splice globally=|\marg{initial path}\marg{splice path}\marg{final path}
-\end{syntax}
-
-This splices the middle path into the gap between the initial and final paths.
-The middle path is transformed to fit (don't try this with a path whose starting and ending points are close together) and the paths are joined so that the last component of the initial path and the first component of the splice path become a single component, and similarly at the other end.
-\end{function}
-
-\begin{function}{join components with, join components globally with, join components upright with, join components globally upright with}
-\begin{syntax}
-|join components with=|\marg{path}\marg{splice path}
-|join components with=|\marg{path}\marg{splice path}\marg{list}
-|join components upright with=|\marg{path}\marg{splice path}
-|join components upright with=|\marg{path}\marg{splice path}\marg{list}
-|join components globally with=|\marg{path}\marg{splice path}
-|join components globally with=|\marg{path}\marg{splice path}\marg{list}
-|join components globally upright with=|\marg{path}\marg{splice path}
-|join components globally upright with=|\marg{path}\marg{splice path}\marg{list}
-\end{syntax}
-
-This inserts the |splice path| in the gaps between components of |path| specified by a comma separated list.
-The splice is inserted between each specified component and the next one.
-If the \marg{list} is not given (or is empty) then the splice is inserted between every component except that a \emph{spot weld} is performed first to join any components where the end of one is the start of the next.
-The spot weld is only performed if the list of components is empty.
-
-This does \emph{not} close the resulting path, even if the last component is specified in the list, for that see the key |close with|.
-
-Note that because there is an optional third argument to this key, the second argument must always be enclosed in braces unless it is a single token.
-
-The |upright| versions do a little test to see if the gap is oriented upside-down and if so then they insert the reflection of the splice path.
-\end{function}
-
-\begin{function}{close, close globally, close with, close globally with}
-\begin{syntax}
-|close=|\marg{path}
-|close globally=|\marg{path}
-|close with=|\marg{path}\marg{splice path}
-|close globally with=|\marg{path}\marg{splice path}
-\end{syntax}
-
-These all close the last component of the given path.
-The first two will insert a line segment if the initial and final points of the component are not sufficiently close.
-The latter two allow you to specify another path to insert.
-\end{function}
 
 \subsection{Intersection Routines}
 
 To use these features you need to use the \texttt{intersections} library.
-Note that there is currently an issue with the intersections routine when trying to intersect two parallel (or near parallel) lines.
-One workaround is to replace one of the lines by a B\'ezier curve along the same path.
-The best such replacement is to put the control points at one third and two thirds between the start and end.
 
 \begin{function}{
   split at self intersections,
@@ -420,6 +421,31 @@ The list of components is processed by |\foreach|.
 If the component is the first one then it is joined to the last component.
 \end{function}
 
+\begin{function}{join components with, join components globally with, join components upright with, join components globally upright with}
+\begin{syntax}
+|join components with=|\marg{path}\marg{splice path}
+|join components with=|\marg{path}\marg{splice path}\marg{list}
+|join components upright with=|\marg{path}\marg{splice path}
+|join components upright with=|\marg{path}\marg{splice path}\marg{list}
+|join components globally with=|\marg{path}\marg{splice path}
+|join components globally with=|\marg{path}\marg{splice path}\marg{list}
+|join components globally upright with=|\marg{path}\marg{splice path}
+|join components globally upright with=|\marg{path}\marg{splice path}\marg{list}
+\end{syntax}
+
+This inserts the |splice path| in the gaps between components of |path| specified by a comma separated list.
+The splice is inserted between each specified component and the next one.
+If the \marg{list} is not given (or is empty) then the splice is inserted between every component except that a \emph{spot weld} is performed first to join any components where the end of one is the start of the next.
+The spot weld is only performed if the list of components is empty.
+
+This does \emph{not} close the resulting path, even if the last component is specified in the list, for that see the key |close with|.
+
+Note that because there is an optional third argument to this key, the second argument must always be enclosed in braces unless it is a single token.
+
+The |upright| versions do a little test to see if the gap is oriented upside-down and if so then they insert the reflection of the splice path.
+\end{function}
+
+
 \begin{function}{
   spot weld,
   spot weld globally
@@ -456,6 +482,36 @@ This removes empty components of the path (which consist of simply a move).
 This removes the listed components of the path.
 As with other list routines, the list is parsed via |foreach| first.
 \end{function}
+
+
+\begin{function}{close, close globally, close with, close globally with}
+\begin{syntax}
+|close=|\marg{path}
+|close globally=|\marg{path}
+|close with=|\marg{path}\marg{splice path}
+|close globally with=|\marg{path}\marg{splice path}
+|adjust and close=|\marg{path}
+|adjust and close globally=|\marg{path}
+\end{syntax}
+
+These all close the last component of the given path.
+The first two will insert a line segment if the initial and final points of the component are not sufficiently close.
+The two |with| variants allow you to specify another path to insert between the end and start of the path.
+The two |adjust| variants shift the end point of the path so that it is at the same place as the start of that component.
+If the last segment is a B\'ezier curve then the second control point is also shifted.
+(The intention with the |adjust| keys is where the start and end of the component are very close together so the adjustment creates a smaller visual effect than adding in a line -- see Example~\ref{ex:close}.) 
+\end{function}
+
+\begin{function}{splice, splice global}
+\begin{syntax}
+|splice=|\marg{initial path}\marg{splice path}\marg{final path}
+|splice globally=|\marg{initial path}\marg{splice path}\marg{final path}
+\end{syntax}
+
+This splices the middle path into the gap between the initial and final paths.
+The middle path is transformed to fit (don't try this with a path whose starting and ending points are close together) and the paths are joined so that the last component of the initial path and the first component of the splice path become a single component, and similarly at the other end.
+\end{function}
+
 
 \subsection{Shortening Paths}
 
@@ -672,6 +728,24 @@ The intention with the second key is that it is similar to what happens with the
 
 \draw (0,0) -- (2,0) [spath/append=curve] node[pos=.5,auto,sloped] {node} -- +(2,0);
 
+\end{tikzpicture}
+\end{example}
+
+\item Closing and adjusting paths.
+\label{ex:close}
+
+\begin{example}
+\begin{tikzpicture}
+\draw[line width=.2cm] (0,0) -- +(1,0) -- +(1,1) -- +(0,1) -- +(.01,.01);
+
+\draw[line width=.2cm] (2,0) -- +(1,0) -- +(1,1) -- +(0,1) -- +(.01,.01)
+-- cycle;
+
+\draw[line width=.2cm] (4,0) -- +(1,0) -- +(1,1) -- +(0,1) -- +(.01,.01)
+[spath/close=current];
+
+\draw[line width=.2cm] (6,0) -- +(1,0) -- +(1,1) -- +(0,1) -- +(.01,.01)
+[spath/adjust and close=current];
 \end{tikzpicture}
 \end{example}
 

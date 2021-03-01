@@ -93,6 +93,47 @@ Max bb & \showpath\SPathInfoInto{#1}{maxbb}{\stuff}\expandafter\pgfqpoint\stuff
 \begin{document}
 
 \begin{tikzpicture}
+\path[spath/save=a] (0,0) -- (2,1);
+\begin{scope}[xshift=3cm,rotate=90]
+\draw[spath/use=a,orange,line width=4mm];
+\draw[spath/use={a, transform={xshift=3cm, rotate=90}},green, line width=4mm];
+\draw[spath/use={a,use current transformation},line width=2mm];
+\draw[line width=1mm,blue] (0,0) -- (2,1);
+\end{scope}
+\end{tikzpicture}
+
+
+
+\begin{tikzpicture}
+\coordinate (a) at (-1,0.5);
+\coordinate (b) at (8,0.5);
+\coordinate (c) at (3,-0.5);
+\path[spath/save=sine]
+(-1.57,-1)
+cos ++(1.57,1)
+sin ++(1.57,1)
+cos ++(1.57,-1)
+sin ++(1.57,-1)
+cos ++(1.57,1)
+sin ++(1.57,1);
+\path[spath/save=over] (a) -- (c) |- (b);
+
+\path[spath/save=arc] (0,0) arc[radius=1cm, start angle=180, delta angle=-180];
+
+\tikzset{
+  spath/split at intersections with={over}{sine},
+  spath/insert gaps after components={over}{8pt},
+  spath/join components upright with={over}{arc},
+  spath/split at intersections with={sine}{over},
+  spath/insert gaps after components={sine}{4pt},
+}
+
+\draw[spath/use=sine];
+\draw[spath/use=over];
+\end{tikzpicture}
+
+
+\begin{tikzpicture}
 \draw[line width=5pt,orange] (0,0) -- (2,0) to[out=90,in=90] (-.5,0);
 \draw[ultra thick] (0,0) -- (2,0) to[out=90,in=90] (-.5,0)
 [spath/adjust and close=current]
