@@ -5076,8 +5076,8 @@ manipulating PGF soft paths}
   \spath_finalpoint:Nn \l_@@_tmpa_tl {#1}
   \tl_set:Nx \l_@@_tmpa_tl
   {
-    \exp_not:c {pgf@x}=\tl_item:Nn \l_@@_tmpa_tl {1}
-    \exp_not:c {pgf@y}=\tl_item:Nn \l_@@_tmpa_tl {2}
+    \exp_not:c {pgf@x}=\tl_item:Nn \l_@@_tmpa_tl {1} \relax
+    \exp_not:c {pgf@y}=\tl_item:Nn \l_@@_tmpa_tl {2} \relax
   }
   \use:c {pgf@process}{%
     \tl_use:N \l_@@_tmpa_tl
@@ -5086,10 +5086,10 @@ manipulating PGF soft paths}
   }
   \tl_set:Nx \l_@@_tmpa_tl
   {
-    \exp_not:c {tikz@lastx}=\exp_not:c {pgf@x}
-    \exp_not:c {tikz@lasty}=\exp_not:c {pgf@y}
-    \exp_not:c {tikz@lastxsaved}=\exp_not:c {pgf@x}
-    \exp_not:c {tikz@lastysaved}=\exp_not:c {pgf@y}
+    \exp_not:c {tikz@lastx}=\exp_not:c {pgf@x} \relax
+    \exp_not:c {tikz@lasty}=\exp_not:c {pgf@y} \relax
+    \exp_not:c {tikz@lastxsaved}=\exp_not:c {pgf@x} \relax
+    \exp_not:c {tikz@lastysaved}=\exp_not:c {pgf@y} \relax
   }
   \tl_use:N \l_@@_tmpa_tl
   \spath_finalmovepoint:Nn \l_@@_tmpa_tl {#1}
@@ -5101,8 +5101,8 @@ manipulating PGF soft paths}
   }
   \tl_set:Nx \l_@@_tmpa_tl
   {
-    \exp_not:c {pgf@x}=\tl_item:Nn \l_@@_tmpa_tl {1}
-    \exp_not:c {pgf@y}=\tl_item:Nn \l_@@_tmpa_tl {2}
+    \exp_not:c {pgf@x}=\tl_item:Nn \l_@@_tmpa_tl {1} \relax
+    \exp_not:c {pgf@y}=\tl_item:Nn \l_@@_tmpa_tl {2} \relax
   }
   \use:c {pgf@process}{%
     \tl_use:N \l_@@_tmpa_tl
@@ -5111,12 +5111,15 @@ manipulating PGF soft paths}
   }
   \bool_if:NT \l_spath_movetorelevant_bool
   {
-    \tl_set:Nx \l_@@_tmpa_tl
+    \dim_if_exist:cT {tikz@lastmovetox}
     {
-      \exp_not:c {tikz@lastmovetox}=\exp_not:c {pgf@x}
-      \exp_not:c {tikz@lastmovetoy}=\exp_not:c {pgf@y}
+      \tl_set:Nx \l_@@_tmpa_tl
+      {
+        \exp_not:c {tikz@lastmovetox}=\exp_not:c {pgf@x} \relax
+        \exp_not:c {tikz@lastmovetoy}=\exp_not:c {pgf@y} \relax
+      }
+      \tl_use:N \l_@@_tmpa_tl
     }
-    \tl_use:N \l_@@_tmpa_tl
   }
   \tl_clear_new:c {tikz@timer}
   \tl_set:cn {tikz@timer}
