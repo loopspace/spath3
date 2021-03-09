@@ -3606,6 +3606,7 @@ manipulating PGF soft paths}
   \spath_shorten_at_start:Nn #1{#2}
   \spath_shorten_at_end:Nn #1{#2}
 }
+\cs_generate_variant:Nn \spath_shorten_at_both_ends:Nn {cn, cV, NV}
 \cs_new_protected_nopar:Npn \spath_gshorten_at_both_ends:Nnn #1#2#3
 {
   \spath_gshorten_at_start:Nnn #1{#2}{#3}
@@ -3616,6 +3617,7 @@ manipulating PGF soft paths}
   \spath_gshorten_at_start:Nn #1{#2}
   \spath_gshorten_at_end:Nn #1{#2}
 }
+\cs_generate_variant:Nn \spath_gshorten_at_both_ends:Nn {cn, cV, NV}
 %    \end{macrocode}
 % \end{macro}
 %
