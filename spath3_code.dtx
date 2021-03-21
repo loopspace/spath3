@@ -143,7 +143,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{8929}
+% \CheckSum{9067}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -867,6 +867,170 @@ manipulating PGF soft paths}
   \tl_gclear:N \g_@@_output_tl
 }
 \cs_generate_variant:Nn \spath_gfinalmovepoint:Nn {NV, cn, cV}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{
+% \spath_initialtangent:Nn,
+% \spath_ginitialtangent:Nn
+% }
+% The starting tangent of the path.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_initialtangent:n #1
+{
+  \group_begin:
+  \tl_clear:N \l_@@_tmpa_tl
+  \tl_set:Nx \l_@@_tmpa_tl
+  {
+    {
+      \fp_to_dim:n {
+        \tl_item:nn {#1} {5}
+        -
+        \tl_item:nn {#1} {2}
+      }
+    }
+    {
+      \fp_to_dim:n {
+        \tl_item:nn {#1} {6}
+        -
+        \tl_item:nn {#1} {3}
+      }
+    }
+  }
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_initialtangent:Nn #1#2
+{
+  \@@_initialtangent:n {#2}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_initialtangent:Nn {NV, cn, cV, Nv}
+\cs_new_protected_nopar:Npn \spath_ginitialtangent:Nn #1#2
+{
+  \@@_initialtangent:n {#2}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_ginitialtangent:Nn {NV, cn, cV, Nv}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{
+% \spath_finaltangent:Nn,
+% \spath_gfinaltangent:Nn,
+% }
+% The final tangent of the path.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_finaltangent:n #1
+{
+  \group_begin:
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
+  \tl_reverse:N \l_@@_tmpa_tl
+  \tl_clear:N \l_@@_tmpb_tl
+  \tl_set:Nx \l_@@_tmpb_tl
+  {
+    {
+      \fp_to_dim:n {
+        \tl_item:Nn \l_@@_tmpa_tl {2}
+        -
+        \tl_item:Nn \l_@@_tmpa_tl {5}
+      }
+    }
+    {
+      \fp_to_dim:n {
+        \tl_item:Nn \l_@@_tmpa_tl {1}
+        -
+        \tl_item:Nn \l_@@_tmpa_tl {4}
+      }
+    }
+  }
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpb_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_finaltangent:Nn #1#2
+{
+  \@@_finaltangent:n {#2}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_finaltangent:Nn {NV, cn, cV, Nv}
+\cs_new_protected_nopar:Npn \spath_gfinaltangent:Nn #1#2
+{
+  \@@_finaltangent:n {#2}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gfinaltangent:Nn {NV, cn, cV, Nv}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}[internal]{
+% \spath_finalmovetangent:Nn,
+% \spath_gfinalmovetangent:Nn
+% }
+% Get the last move on the path.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_finalmovetangent:n #1
+{
+  \group_begin:
+  \tl_set:Nn \l_@@_tmpc_tl { {0pt} {0pt} }
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
+  \bool_do_until:nn
+  {
+    \tl_if_empty_p:N \l_@@_tmpa_tl
+  }
+  {
+    \tl_set:Nx \l_@@_tmpb_tl {\tl_head:N \l_@@_tmpa_tl}
+    \tl_case:Nn \l_@@_tmpb_tl
+    {
+      \c_spath_moveto_tl
+      {
+        \tl_set:Nx \l_@@_tmpc_tl
+        {
+          {
+            \fp_to_dim:n
+            {
+              \tl_item:Nn \l_@@_tmpa_tl {5}
+              -
+              \tl_item:Nn \l_@@_tmpa_tl {2}
+            }
+          }
+          {
+            \fp_to_dim:n
+            {
+              \tl_item:Nn \l_@@_tmpa_tl {6}
+              -
+              \tl_item:Nn \l_@@_tmpa_tl {3}
+            }
+          }
+        }
+      }
+    }
+    \prg_replicate:nn {3}
+    {
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+    }
+  }
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpc_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_finalmovetangent:Nn #1#2
+{
+  \@@_finalmovetangent:n {#2}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_finalmovetangent:Nn {NV, cn, cV}
+\cs_new_protected_nopar:Npn \spath_gfinalmovetangent:Nn #1#2
+{
+  \@@_finalmovetangent:n {#2}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gfinalmovetangent:Nn {NV, cn, cV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1766,8 +1930,8 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_splice_between:nnn #1#2#3
 {
   \group_begin:
-  \spath_finalpoint:NV \l_@@_tmpd_tl {#1}
-  \spath_initialpoint:NV \l_@@_tmpe_tl {#3}
+  \spath_finalpoint:Nn \l_@@_tmpd_tl {#1}
+  \spath_initialpoint:Nn \l_@@_tmpe_tl {#3}
   \spath_span:NnVV \l_@@_tmpb_tl {#2} \l_@@_tmpd_tl \l_@@_tmpe_tl
   \spath_append_no_move:NnV \l_@@_tmpa_tl {#1} \l_@@_tmpb_tl
   \spath_append_no_move:Nn \l_@@_tmpa_tl {#3}
@@ -1798,6 +1962,149 @@ manipulating PGF soft paths}
   \spath_gsplice_between:NVnn #1#1{#2}{#3}
 }
 \cs_generate_variant:Nn \spath_gsplice_between:Nnn {NVV, cnn, cvv, Nvn, NVn}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{
+% \spath_curve_between:Nnn,
+% \spath_curve_between:Nn,
+% \spath_gcurve_between:Nnn,
+% \spath_gcurve_between:Nn
+% }
+% This takes two paths and returns a single path formed by joining the two paths by a curve.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_curve_between:nn #1#2
+{
+  \group_begin:
+  \spath_finalpoint:Nn \l_@@_tmpa_tl {#1}
+  \spath_finaltangent:Nn \l_@@_tmpb_tl {#1}
+  \spath_initialpoint:Nn \l_@@_tmpc_tl {#2}
+  \spath_initialtangent:Nn \l_@@_tmpd_tl {#2}
+
+  \fp_set:Nn \l_@@_tmpa_fp
+  {
+    (\tl_item:Nn \l_@@_tmpc_tl {1} - \tl_item:Nn \l_@@_tmpa_tl {1})^2
+    +
+    (\tl_item:Nn \l_@@_tmpc_tl {2} - \tl_item:Nn \l_@@_tmpa_tl {2})^2
+  }
+  \fp_set:Nn \l_@@_tmpb_fp
+  {
+    \tl_item:Nn \l_@@_tmpb_tl {1}
+    *
+    (\tl_item:Nn \l_@@_tmpc_tl {1} - \tl_item:Nn \l_@@_tmpa_tl {1})
+    +
+    \tl_item:Nn \l_@@_tmpb_tl {2}
+    *
+    (\tl_item:Nn \l_@@_tmpc_tl {2} - \tl_item:Nn \l_@@_tmpa_tl {2})
+  }
+  \tl_set:Nx \l_@@_tmpb_tl
+  {
+    {
+      \fp_to_dim:n
+      {
+        (\tl_item:Nn \l_@@_tmpb_tl {1})
+        *
+        \l_@@_tmpa_fp
+        /
+        \l_@@_tmpb_fp
+        /
+        3
+        +
+        (\tl_item:Nn \l_@@_tmpa_tl {1})
+      }
+    }
+    {
+      \fp_to_dim:n
+      {
+        (\tl_item:Nn \l_@@_tmpb_tl {2})
+        *
+        \l_@@_tmpa_fp
+        /
+        \l_@@_tmpb_fp
+        /
+        3
+        +
+        (\tl_item:Nn \l_@@_tmpa_tl {2})
+      }
+    }
+  }
+  \fp_set:Nn \l_@@_tmpb_fp
+  {
+    (\tl_item:Nn \l_@@_tmpd_tl {1})
+    *
+    (\tl_item:Nn \l_@@_tmpc_tl {1} - \tl_item:Nn \l_@@_tmpa_tl {1})
+    +
+    (\tl_item:Nn \l_@@_tmpd_tl {2})
+    *
+    (\tl_item:Nn \l_@@_tmpc_tl {2} - \tl_item:Nn \l_@@_tmpa_tl {2})
+  }
+  \tl_set:Nx \l_@@_tmpd_tl
+  {
+    {
+      \fp_to_dim:n
+      {
+        (- \tl_item:Nn \l_@@_tmpd_tl {1})
+        *
+        \l_@@_tmpa_fp
+        /
+        \l_@@_tmpb_fp
+        /
+        3
+        +
+        (\tl_item:Nn \l_@@_tmpc_tl {1})
+      }
+    }
+    {
+      \fp_to_dim:n
+      {
+        (- \tl_item:Nn \l_@@_tmpd_tl {2})
+        *
+        \l_@@_tmpa_fp
+        /
+        \l_@@_tmpb_fp
+        /
+        3
+        +
+        (\tl_item:Nn \l_@@_tmpc_tl {2})
+      }
+    }
+  }
+
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
+  \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curvetoa_tl
+  \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
+  \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curvetob_tl
+  \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpd_tl
+  \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curveto_tl
+  \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpc_tl
+  \spath_append_no_move:Nn \l_@@_tmpa_tl {#2}
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_curve_between:Nnn #1#2#3
+{
+  \@@_curve_between:nn {#2}{#3}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_curve_between:Nnn {NVn, NVV}
+\cs_new_protected_nopar:Npn \spath_curve_between:Nn #1#2
+{
+  \spath_curve_between:NVn #1#1{#2}
+}
+\cs_generate_variant:Nn \spath_curve_between:Nn {NV, cn, cv}
+\cs_new_protected_nopar:Npn \spath_gcurve_between:Nnn #1#2#3
+{
+  \@@_curve_between:nn {#2}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gcurve_between:Nnn {NVn, NVV}
+\cs_new_protected_nopar:Npn \spath_gcurve_between:Nn #1#2
+{
+  \spath_gcurve_between:NVnn #1#1{#2}
+}
+\cs_generate_variant:Nn \spath_gcurve_between:Nn {NV, cn, cv}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1863,6 +2170,167 @@ manipulating PGF soft paths}
   \spath_gclose_with:NVn #1#1{#2}
 }
 \cs_generate_variant:Nn \spath_gclose_with:Nn {cn, cV, cv, NV}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{
+% \spath_close_with_curve:N,
+% \spath_gclose_with_curve:N
+% }
+% Closes the path with a curve.
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_close_with_curve:n #1
+{
+  \group_begin:
+  \spath_finalpoint:Nn \l_@@_tmpa_tl {#1}
+  \spath_finaltangent:Nn \l_@@_tmpb_tl {#1}
+  \spath_finalmovepoint:Nn \l_@@_tmpc_tl {#1}
+  \spath_finalmovetangent:Nn \l_@@_tmpd_tl {#1}
+  \dim_compare:nTF
+  {
+    \dim_abs:n
+    {
+      \tl_item:Nn \l_@@_tmpa_tl {1}
+      -
+      \tl_item:Nn \l_@@_tmpc_tl {1}
+    }
+    +
+    \dim_abs:n
+    {
+      \tl_item:Nn \l_@@_tmpa_tl {2}
+      -
+      \tl_item:Nn \l_@@_tmpc_tl {2}
+    }
+    < 0.01pt
+  }
+  {
+    \@@_close:n {#1}
+  }
+  {
+    \fp_set:Nn \l_@@_tmpa_fp
+    {
+      (\tl_item:Nn \l_@@_tmpc_tl {1} - \tl_item:Nn \l_@@_tmpa_tl {1})^2
+      +
+      (\tl_item:Nn \l_@@_tmpc_tl {2} - \tl_item:Nn \l_@@_tmpa_tl {2})^2
+    }
+    \fp_set:Nn \l_@@_tmpb_fp
+    {
+      \tl_item:Nn \l_@@_tmpb_tl {1}
+      *
+      (\tl_item:Nn \l_@@_tmpc_tl {1} - \tl_item:Nn \l_@@_tmpa_tl {1})
+      +
+      \tl_item:Nn \l_@@_tmpb_tl {2}
+      *
+      (\tl_item:Nn \l_@@_tmpc_tl {2} - \tl_item:Nn \l_@@_tmpa_tl {2})
+    }
+    \tl_set:Nx \l_@@_tmpb_tl
+    {
+      {
+        \fp_to_dim:n
+        {
+          (\tl_item:Nn \l_@@_tmpb_tl {1})
+          *
+          \l_@@_tmpa_fp
+          /
+          \l_@@_tmpb_fp
+          /
+          3
+          +
+          (\tl_item:Nn \l_@@_tmpa_tl {1})
+        }
+      }
+      {
+        \fp_to_dim:n
+        {
+          (\tl_item:Nn \l_@@_tmpb_tl {2})
+          *
+          \l_@@_tmpa_fp
+          /
+          \l_@@_tmpb_fp
+          /
+          3
+          +
+          (\tl_item:Nn \l_@@_tmpa_tl {2})
+        }
+      }
+    }
+    \fp_set:Nn \l_@@_tmpb_fp
+    {
+      (\tl_item:Nn \l_@@_tmpd_tl {1})
+      *
+      (\tl_item:Nn \l_@@_tmpc_tl {1} - \tl_item:Nn \l_@@_tmpa_tl {1})
+      +
+      (\tl_item:Nn \l_@@_tmpd_tl {2})
+      *
+      (\tl_item:Nn \l_@@_tmpc_tl {2} - \tl_item:Nn \l_@@_tmpa_tl {2})
+    }
+    \tl_set:Nx \l_@@_tmpd_tl
+    {
+      {
+        \fp_to_dim:n
+        {
+          (- \tl_item:Nn \l_@@_tmpd_tl {1})
+          *
+          \l_@@_tmpa_fp
+          /
+          \l_@@_tmpb_fp
+          /
+          3
+          +
+          (\tl_item:Nn \l_@@_tmpc_tl {1})
+        }
+      }
+      {
+        \fp_to_dim:n
+        {
+          (- \tl_item:Nn \l_@@_tmpd_tl {2})
+          *
+          \l_@@_tmpa_fp
+          /
+          \l_@@_tmpb_fp
+          /
+          3
+          +
+          (\tl_item:Nn \l_@@_tmpc_tl {2})
+        }
+      }
+    }
+    
+    \tl_set:Nn \l_@@_tmpa_tl {#1}
+    \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curvetoa_tl
+    \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
+    \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curvetob_tl
+    \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpd_tl
+    \tl_put_right:NV \l_@@_tmpa_tl \c_spath_curveto_tl
+    \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpc_tl
+    \@@_close:V \l_@@_tmpa_tl
+  }
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_close_with_curve:Nn #1#2
+{
+  \@@_close_with_curve:n {#2}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_close_with_curve:Nn {cn, cV, cv, NV}
+\cs_new_protected_nopar:Npn \spath_close_with_curve:N #1
+{
+  \spath_close_with_curve:NV #1#1
+}
+\cs_generate_variant:Nn \spath_close_with_curve:N {c}
+\cs_new_protected_nopar:Npn \spath_gclose_with_curve:Nn #1#2
+{
+  \@@_close_with_curve:n {#2}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gclose_with_curve:Nn {cn, cV, cv, NV}
+\cs_new_protected_nopar:Npn \spath_gclose_with_curve:N #1
+{
+  \spath_gclose_with_curve:NV #1#1
+}
+\cs_generate_variant:Nn \spath_gclose_with_curve:N {c}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5461,6 +5929,7 @@ manipulating PGF soft paths}
   }
 }
 \cs_generate_variant:Nn \@@_maybe_current_path:nn {nV}
+\cs_generate_variant:Nn \@@_maybe_current_path_reuse:nnn {nVn}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -6055,6 +6524,78 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 % \begin{macro}{
+% \@@_insert_gaps_after_segments:Nn
+% }
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_insert_gaps_after_segments_aux:nnn #1#2#3
+{
+  \group_begin:
+  \spath_reallength:Nn \l_@@_tmpa_int {#1}
+  \@@_seq_from_foreach:NVn \l_@@_tmpa_seq \l_@@_tmpa_int {#3}
+
+  \tl_if_empty:nT {#3}
+  {
+    \seq_pop_right:NN \l_@@_tmpb_seq \l_@@_tmpa_tl
+  }
+
+  \seq_clear:N \l_@@_tmpb_seq
+  \seq_map_inline:Nn \l_@@_tmpa_seq {
+    \seq_put_right:Nx
+    \l_@@_tmpb_seq
+    {\int_eval:n
+      {
+        \int_mod:nn { ##1 }{ \l_@@_tmpa_int } + 1
+      }
+    }
+  }
+
+  \spath_segments_to_seq:Nn \l_@@_tmpc_seq {#1}
+
+  \seq_clear:N \l_@@_tmpd_seq
+  \seq_map_indexed_inline:Nn \l_@@_tmpc_seq
+  {
+    \tl_set:Nn \l_@@_tmpa_tl {##2}
+    \seq_if_in:NnT \l_@@_tmpa_seq {##1}
+    {
+      \spath_shorten_at_end:Nn \l_@@_tmpa_tl {(#2)/2}
+    }
+    \seq_if_in:NnT \l_@@_tmpb_seq {##1}
+    {
+      \spath_shorten_at_start:Nn \l_@@_tmpa_tl {(#2)/2}
+    }
+    \seq_put_right:NV \l_@@_tmpd_seq \l_@@_tmpa_tl
+  }
+  \tl_gset:Nx \g_@@_output_tl {\seq_use:Nn \l_@@_tmpd_seq {} }
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \@@_insert_gaps_after_segments:Nnnn #1#2#3#4
+{
+  \@@_insert_gaps_after_segments_aux:nnn {#2}{#3}{#4}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \@@_insert_gaps_after_segments:Nnnn {NVnn}
+\cs_new_protected_nopar:Npn \@@_insert_gaps_after_segments:Nnn #1#2#3
+{
+  \@@_insert_gaps_after_segments:NVnn #1#1{#2}{#3}
+}
+\cs_generate_variant:Nn \@@_insert_gaps_after_segments:Nnn {cnn, cVV}
+\cs_new_protected_nopar:Npn \@@_ginsert_gaps_after_segments:Nnnn #1#2#3#4
+{
+  \@@_insert_gaps_after_segments_aux:nnn {#2}{#3}{#4}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \@@_ginsert_gaps_after_segments:Nnnn {NVnn}
+\cs_new_protected_nopar:Npn \@@_ginsert_gaps_after_segments:Nnn #1#2#3
+{
+  \@@_ginsert_gaps_after_segments:NVnn #1#1{#2}{#3}
+}
+\cs_generate_variant:Nn \@@_ginsert_gaps_after_segments:Nnn {cnn, cVV}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{
 % \@@_join_components:Nn
 % }
 %    \begin{macrocode}
@@ -6102,6 +6643,73 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{
+% \@@_join_components_with_bezier:Nn
+% }
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_join_components_with_bezier_aux:nn #1#2
+{
+  \group_begin:
+  \tl_set:Nn \l_@@_tmpc_tl {#1}
+  \tl_if_empty:nT {#2}
+  {
+    \spath_spot_weld_components:N \l_@@_tmpc_tl
+  }
+
+  \spath_numberofcomponents:NV \l_@@_tmpa_int \l_@@_tmpc_tl
+  \@@_seq_from_foreach:NVn \l_@@_tmpb_seq \l_@@_tmpa_int {#2}
+
+  \spath_components_to_seq:NV \l_@@_tmpa_seq \l_@@_tmpc_tl
+  
+  \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
+  \seq_pop_left:NN \l_@@_tmpb_seq \l_@@_tmpb_tl
+
+  \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
+  {
+    \int_compare:nTF
+    {
+      ##1 == \l_@@_tmpb_tl
+    }
+    {
+      \seq_pop_left:NNF \l_@@_tmpb_seq \l_@@_tmpb_tl
+      {
+        \tl_set:Nn \l_@@_tmpb_tl {-1}
+      }
+      \spath_curve_between:Nn \l_@@_tmpa_tl {##2}
+    }
+    {
+      \tl_put_right:Nn \l_@@_tmpa_tl {##2}
+    }
+  }
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \@@_join_components_with_bezier:Nnn #1#2#3
+{
+  \@@_join_components_with_bezier_aux:nn {#2}{#3}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \@@_join_components_with_bezier:Nnn {NVn}
+\cs_new_protected_nopar:Npn \@@_join_components_with_bezier:Nn #1#2
+{
+  \@@_join_components_with_bezier:NVn #1#1{#2}
+}
+\cs_generate_variant:Nn \@@_join_components_with_bezier:Nn {cV}
+\cs_new_protected_nopar:Npn \@@_gjoin_components_with_bezier:Nnn #1#2#3
+{
+  \@@_join_components_with_bezier_aux:nn {#2}{#3}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \@@_gjoin_components_with_bezier:Nnn {NVn}
+\cs_new_protected_nopar:Npn \@@_gjoin_components_with_bezier:Nn #1#2
+{
+  \@@_gjoin_components_with_bezier:NVn #1#1{#2}
+}
+\cs_generate_variant:Nn \@@_gjoin_components_with_bezier:Nn {cV}
+%    \end{macrocode}
+% \end{macro}
 %
 % \begin{macro}[internal]{
 % \@@_remove_components:nn
@@ -6275,9 +6883,9 @@ manipulating PGF soft paths}
       \@@_check_path:nnn {
         \tl_clear_new:c {\@@_path_name:n {#1}}
         \tl_set_eq:cc {\@@_path_name:n {#1}}
-      }{#2}{}
+      }
     }
-    {#2}
+    {#2}{}
   },
   clone~ global/.code~ 2~ args={
     \@@_maybe_current_path:nn
@@ -6285,9 +6893,9 @@ manipulating PGF soft paths}
       \@@_check_path:nnn {
         \tl_gclear_new:c {\@@_path_name:n {#1}}
         \tl_gset_eq:cc {\@@_path_name:n {#1}}
-      }{#2}{}
+      }
     }
-    {#2}
+    {#2}{}
   },
 %    \end{macrocode}
 %
@@ -6564,7 +7172,7 @@ manipulating PGF soft paths}
     {
       \@@_check_two_paths:nnVn
       {
-        \@@_join_components_with:cvV
+        \@@_gjoin_components_with:cvV
       }
     } {#1} { \l_@@_tmpc_tl {} \l_@@_tmpd_tl  } 
   },
@@ -6605,6 +7213,34 @@ manipulating PGF soft paths}
         \@@_gjoin_components_upright_with:cvV
       }
     } {#1} { \l_@@_tmpc_tl {} \l_@@_tmpd_tl  } 
+  },
+  join~ components~ with~ bezier/.code={
+    \tl_if_head_is_group:nTF {#1}
+    {
+      \tl_set:Nx \l_@@_tmpc_tl { \tl_item:nn {#1} {1} }
+      \tl_set:Nx \l_@@_tmpd_tl { \tl_item:nn {#1} {2} }
+    }
+    {
+      \tl_set:Nn \l_@@_tmpc_tl {#1}
+      \tl_clear:N \l_@@_tmpd_tl
+    }
+    
+    \@@_maybe_current_path_reuse:nVn
+    {
+      \@@_check_path:nnn
+      {
+        \@@_join_components_with_bezier:cV
+      }
+    } \l_@@_tmpc_tl { {} \l_@@_tmpd_tl }
+  },
+  join~ components~ globally~ with~ bezier/.code~2~args={
+    \@@_maybe_current_path_reuse:nnn
+    {
+      \@@_check_path:nnn
+      {
+        \@@_gjoin_components_with_bezier:cn
+      }
+    } {#1} { {} {#2} }
   },
 %    \end{macrocode}
 %
@@ -6674,6 +7310,29 @@ manipulating PGF soft paths}
         \spath_gclose_with:cv
       }
     } {#1} { {#2} {} } 
+  },
+%    \end{macrocode}
+%
+% Close a path with a curve.
+%
+%    \begin{macrocode}
+  close~ with~ curve/.code={
+    \@@_maybe_current_path_reuse:nnn
+    {
+      \@@_check_path:nnn
+      {
+        \spath_close_with_curve:c
+      }
+    } {#1} { {} }
+  },
+  close~ globally~ with~ curve/.code={
+    \@@_maybe_current_path_reuse:nnn
+    {
+      \@@_check_path:nnn
+      {
+        \spath_gclose_with_curve:c
+      }
+    } {#1} { {} }
   },
 %    \end{macrocode}
 %
@@ -7023,6 +7682,50 @@ manipulating PGF soft paths}
         \@@_ginsert_gaps_after_components:cVV
       }
     } {#1} { {} \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
+  },
+%    \end{macrocode}
+%
+% This puts gaps between segments of a soft path.
+% The list of segments is passed through a \Verb+\foreach+ loop so can use the shortcut syntax from those loops.
+%
+%    \begin{macrocode}
+  insert~ gaps~ after~ segments/.code~ 2~ args={
+    \tl_if_head_is_group:nTF {#2}
+    {
+      \tl_set:Nx \l__tikzspath_tmpc_tl { \tl_item:nn {#2} {1} }
+      \tl_set:Nx \l__tikzspath_tmpd_tl { \tl_item:nn {#2} {2} }
+    }
+    {
+      \tl_set:Nn \l__tikzspath_tmpc_tl {#2}
+      \tl_clear:N \l__tikzspath_tmpd_tl
+    }
+
+    \__tikzspath_maybe_current_path_reuse:nnn
+    {
+      \__tikzspath_check_path:nnn
+      {
+        \__tikzspath_insert_gaps_after_segments:cVV
+      }
+    } {#1} { {} \l__tikzspath_tmpc_tl \l__tikzspath_tmpd_tl  } 
+  },
+  insert~ gaps~ globally~ after~ segments/.code~ 2~ args={
+    \tl_if_head_is_group:nTF {#2}
+    {
+      \tl_set:Nx \l__tikzspath_tmpc_tl { \tl_item:nn {#2} {1} }
+      \tl_set:Nx \l__tikzspath_tmpd_tl { \tl_item:nn {#2} {2} }
+    }
+    {
+      \tl_set:Nn \l__tikzspath_tmpc_tl {#2}
+      \tl_clear:N \l__tikzspath_tmpd_tl
+    }
+
+    \__tikzspath_maybe_current_path_reuse:nnn
+    {
+      \__tikzspath_check_path:nnn
+      {
+        \__tikzspath_ginsert_gaps_after_segments:cVV
+      }
+    } {#1} { {} \l__tikzspath_tmpc_tl \l__tikzspath_tmpd_tl  } 
   },
 %    \end{macrocode}
 %
