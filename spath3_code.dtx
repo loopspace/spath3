@@ -882,21 +882,37 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \@@_initialtangent:n #1
 {
   \group_begin:
+  \tl_set:Nx \l_@@_tmpb_tl {\tl_item:nn {#1} {4}}
+  \tl_if_eq:NNTF \l_@@_tmpb_tl \c_spath_curvetoa_tl
+  {
+    \fp_set:Nn \l_@@_tmpa_fp {3}
+  }
+  {
+    \fp_set:Nn \l_@@_tmpa_fp {1}
+  }
   \tl_clear:N \l_@@_tmpa_tl
   \tl_set:Nx \l_@@_tmpa_tl
   {
     {
       \fp_to_dim:n {
+        \l_@@_tmpa_fp
+        *
+        (
         \tl_item:nn {#1} {5}
         -
         \tl_item:nn {#1} {2}
+        )
       }
     }
     {
       \fp_to_dim:n {
+        \l_@@_tmpa_fp
+        *
+        (
         \tl_item:nn {#1} {6}
         -
         \tl_item:nn {#1} {3}
+        )
       }
     }
   }
@@ -931,21 +947,37 @@ manipulating PGF soft paths}
   \group_begin:
   \tl_set:Nn \l_@@_tmpa_tl {#1}
   \tl_reverse:N \l_@@_tmpa_tl
+  \tl_set:Nx \l_@@_tmpb_tl {\tl_item:nn {#1} {6}}
+  \tl_if_eq:NNTF \l_@@_tmpb_tl \c_spath_curveto_tl
+  {
+    \fp_set:Nn \l_@@_tmpa_fp {3}
+  }
+  {
+    \fp_set:Nn \l_@@_tmpa_fp {1}
+  }
   \tl_clear:N \l_@@_tmpb_tl
   \tl_set:Nx \l_@@_tmpb_tl
   {
     {
       \fp_to_dim:n {
+        \l_@@_tmpa_fp
+        *
+        (
         \tl_item:Nn \l_@@_tmpa_tl {2}
         -
         \tl_item:Nn \l_@@_tmpa_tl {5}
+        )
       }
     }
     {
       \fp_to_dim:n {
+        \l_@@_tmpa_fp
+        *
+        (
         \tl_item:Nn \l_@@_tmpa_tl {1}
         -
         \tl_item:Nn \l_@@_tmpa_tl {4}
+        )
       }
     }
   }
@@ -991,22 +1023,38 @@ manipulating PGF soft paths}
     {
       \c_spath_moveto_tl
       {
+        \tl_set:Nx \l_@@_tmpd_tl { \tl_item:Nn \l_@@_tmpa_tl {4} }
+        \tl_if_eq:NNTF \l_@@_tmpd_tl \c_spath_curveto_tl
+        {
+          \fp_set:Nn \l_@@_tmpa_fp {3}
+        }
+        {
+          \fp_set:Nn \l_@@_tmpa_fp {1}
+        }
         \tl_set:Nx \l_@@_tmpc_tl
         {
           {
             \fp_to_dim:n
             {
+              \l_@@_tmpa_fp
+              *
+              (
               \tl_item:Nn \l_@@_tmpa_tl {5}
               -
               \tl_item:Nn \l_@@_tmpa_tl {2}
+              )
             }
           }
           {
             \fp_to_dim:n
             {
+              \l_@@_tmpa_fp
+              *
+              (
               \tl_item:Nn \l_@@_tmpa_tl {6}
               -
               \tl_item:Nn \l_@@_tmpa_tl {3}
+              )
             }
           }
         }
@@ -1981,7 +2029,7 @@ manipulating PGF soft paths}
 %
 % Something a bit weird here as the components are opposite to how I thought they should be ...
 %    \begin{macrocode}
-  \fp_set:Nn \l_@@_tmpb_fp
+  \fp_set:Nn \l_@@_tmpa_fp
   {
     (
     (\tl_item:nn {#2} {1})
@@ -2008,16 +2056,17 @@ manipulating PGF soft paths}
     )
     )
   }
-  \fp_set:Nn \l_@@_tmpa_fp
+  \fp_set:Nn \l_@@_tmpb_fp
   {
     (
-    (\tl_item:nn {#2} {2})
-    *
-    (\tl_item:nn {#4} {1} - \tl_item:nn {#1} {1})
     -
     (\tl_item:nn {#2} {1})
     *
     (\tl_item:nn {#4} {2} - \tl_item:nn {#1} {2})
+    +
+    (\tl_item:nn {#2} {2})
+    *
+    (\tl_item:nn {#4} {1} - \tl_item:nn {#1} {1})
     )
     /
     sqrt
@@ -2038,41 +2087,14 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 % Second tangent vector projected onto vector between endpoints
 %    \begin{macrocode}
-  \fp_set:Nn \l_@@_tmpd_fp
-  {
-    -(
-    (\tl_item:nn {#3} {1})
-    *
-    (\tl_item:nn {#4} {1} - \tl_item:nn {#1} {1})
-    +
-    (\tl_item:nn {#3} {2})
-    *
-    (\tl_item:nn {#4} {2} - \tl_item:nn {#1} {2})
-    )
-    /
-    sqrt
-    (
-    (
-    (\tl_item:nn {#3} {1})^2
-    +
-    (\tl_item:nn {#3} {2})^2
-    )
-    *
-    (
-    (\tl_item:nn {#4} {1} - \tl_item:nn {#1} {1})^2
-    +
-    (\tl_item:nn {#4} {2} - \tl_item:nn {#1} {2})^2
-    )
-    )
-  }
   \fp_set:Nn \l_@@_tmpc_fp
   {
     (
-    (\tl_item:nn {#3} {2})
+    (\tl_item:nn {#3} {1})
     *
     (\tl_item:nn {#4} {1} - \tl_item:nn {#1} {1})
-    -
-    (\tl_item:nn {#3} {1})
+    +
+    (\tl_item:nn {#3} {2})
     *
     (\tl_item:nn {#4} {2} - \tl_item:nn {#1} {2})
     )
@@ -2092,7 +2114,34 @@ manipulating PGF soft paths}
     )
     )
   }
-  
+  \fp_set:Nn \l_@@_tmpd_fp
+  {
+    (
+    (\tl_item:nn {#3} {1})
+    *
+    (\tl_item:nn {#4} {2} - \tl_item:nn {#1} {2})
+    -
+    (\tl_item:nn {#3} {2})
+    *
+    (\tl_item:nn {#4} {1} - \tl_item:nn {#1} {1})
+    )
+    /
+    sqrt
+    (
+    (
+    (\tl_item:nn {#3} {1})^2
+    +
+    (\tl_item:nn {#3} {2})^2
+    )
+    *
+    (
+    (\tl_item:nn {#4} {1} - \tl_item:nn {#1} {1})^2
+    +
+    (\tl_item:nn {#4} {2} - \tl_item:nn {#1} {2})^2
+    )
+    )
+  }
+
   \fp_set:Nn \l_@@_tmpe_fp
   {
     (
@@ -2109,11 +2158,11 @@ manipulating PGF soft paths}
     +
     (1 - (3 - sqrt(5))/2)
     *
-    \l_@@_tmpb_fp
+    \l_@@_tmpa_fp
     +
     (3 - sqrt(5))/2
     *
-    \l_@@_tmpd_fp
+    \l_@@_tmpc_fp
     )
     *
     sqrt
@@ -2148,11 +2197,11 @@ manipulating PGF soft paths}
     +
     (1 - (3 - sqrt(5))/2)
     *
-    \l_@@_tmpd_fp
+    \l_@@_tmpc_fp
     +
     (3 - sqrt(5))/2
     *
-    \l_@@_tmpb_fp
+    \l_@@_tmpa_fp
     )
     *
     sqrt
@@ -2201,7 +2250,7 @@ manipulating PGF soft paths}
       \fp_to_dim:n
       {
         \tl_item:nn {#4} {1}
-        +
+        -
         \l_@@_tmpf_fp
         *
         (\tl_item:nn {#3} {1})
@@ -2211,7 +2260,7 @@ manipulating PGF soft paths}
       \fp_to_dim:n
       {
         \tl_item:nn {#4} {2}
-        +
+        -
         \l_@@_tmpf_fp
         *
         (\tl_item:nn {#3} {2})
@@ -2265,12 +2314,6 @@ manipulating PGF soft paths}
   \spath_initialpoint:Nn \l_@@_tmpc_tl {#2}
   \spath_initialtangent:Nn \l_@@_tmpd_tl {#2}
 
-  \tl_set:Nx \l_@@_tmpd_tl
-  {
-    {\fp_to_dim:n { - (\tl_item:Nn \l_@@_tmpd_tl {1})}}
-    {\fp_to_dim:n { - (\tl_item:Nn \l_@@_tmpd_tl {2})}}
-  }
-  
   \spath_hobby_curve:NVVVV \l_@@_tmpe_tl \l_@@_tmpa_tl \l_@@_tmpb_tl \l_@@_tmpd_tl \l_@@_tmpc_tl
 
 
@@ -2407,12 +2450,6 @@ manipulating PGF soft paths}
   }
   {
     
-    \tl_set:Nx \l_@@_tmpd_tl
-    {
-      {\fp_to_dim:n { - (\tl_item:Nn \l_@@_tmpd_tl {1})}}
-      {\fp_to_dim:n { - (\tl_item:Nn \l_@@_tmpd_tl {2})}}
-    }
-  
     \spath_hobby_curve:NVVVV \l_@@_tmpe_tl \l_@@_tmpa_tl \l_@@_tmpb_tl \l_@@_tmpd_tl \l_@@_tmpc_tl
 
     \tl_set:Nn \l_@@_tmpa_tl {#1}
