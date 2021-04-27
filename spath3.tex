@@ -1,5 +1,5 @@
-%\RequirePackage{shellesc}
-%\immediate\write18{tex spath3_code.dtx}
+\RequirePackage{shellesc}
+\immediate\write18{tex spath3_code.dtx}
 \documentclass{l3doc}
 \usepackage{tikz}
 \usetikzlibrary{
@@ -393,18 +393,27 @@ It applies the following styles (in this order):
 
 \begin{function}{
   insert gaps after components,
-  insert gaps globally after components
+  insert gaps globally after components,
+  insert gaps after segments,
+  insert gaps globally after segments
 }
 \begin{syntax}
 |insert gaps after components=|\marg{path}\marg{gap}\marg{components}
 |insert gaps after components=|\marg{path}\marg{gap}
 |insert gaps globally after components=|\marg{path}\marg{gap}\marg{components}
 |insert gaps globally after components=|\marg{path}\marg{gap}
+|insert gaps after segments=|\marg{path}\marg{gap}\marg{segments}
+|insert gaps after segments=|\marg{path}\marg{gap}
+|insert gaps globally after segments=|\marg{path}\marg{gap}\marg{segments}
+|insert gaps globally after segments=|\marg{path}\marg{gap}
 \end{syntax}
 
 This inserts a gap between components of a path by shortening the end of the specified component and start of the next one.
 The list of components is passed through a |\foreach| loop so that syntax like |2,4,...,16| can be used.
 If the list of components is not given the gaps are inserted between all components.
+
+The \texttt{segments} versions work on the segments of the path rather than its components.
+A \emph{segment} is a minimal drawing piece, meaning a line or B\'ezier curve.
 \end{function}
 
 \begin{function}{
@@ -421,16 +430,20 @@ The list of components is processed by |\foreach|.
 If the component is the first one then it is joined to the last component.
 \end{function}
 
-\begin{function}{join components with, join components globally with, join components upright with, join components globally upright with}
+\begin{function}{join components with, join components globally with, join components upright with, join components globally upright with, join components with curve, join components globally with curve}
 \begin{syntax}
 |join components with=|\marg{path}\marg{splice path}
 |join components with=|\marg{path}\marg{splice path}\marg{list}
 |join components upright with=|\marg{path}\marg{splice path}
 |join components upright with=|\marg{path}\marg{splice path}\marg{list}
+|join components with curve=|\marg{path}
+|join components with curve=|\marg{path}\marg{list}
 |join components globally with=|\marg{path}\marg{splice path}
 |join components globally with=|\marg{path}\marg{splice path}\marg{list}
 |join components globally upright with=|\marg{path}\marg{splice path}
 |join components globally upright with=|\marg{path}\marg{splice path}\marg{list}
+|join components globally with curve=|\marg{path}
+|join components globally with curve=|\marg{path}\marg{list}
 \end{syntax}
 
 This inserts the |splice path| in the gaps between components of |path| specified by a comma separated list.
@@ -443,6 +456,9 @@ This does \emph{not} close the resulting path, even if the last component is spe
 Note that because there is an optional third argument to this key, the second argument must always be enclosed in braces unless it is a single token.
 
 The |upright| versions do a little test to see if the gap is oriented upside-down and if so then they insert the reflection of the splice path.
+
+The |with curve| versions insert a single B\'ezier curve into the gap.
+The curve is chosen to match the tangents of the segments either side of the gap and uses John Hobby's construction of a B\'ezier curve from its tangent directions.
 \end{function}
 
 
@@ -484,12 +500,14 @@ As with other list routines, the list is parsed via |foreach| first.
 \end{function}
 
 
-\begin{function}{close, close globally, close with, close globally with}
+\begin{function}{close, close globally, close with, close globally with, close with curve, close globally with curve, adjust and close, adjust and close globally}
 \begin{syntax}
 |close=|\marg{path}
 |close globally=|\marg{path}
 |close with=|\marg{path}\marg{splice path}
 |close globally with=|\marg{path}\marg{splice path}
+|close with curve=|\marg{path}
+|close globally with curve=|\marg{path}
 |adjust and close=|\marg{path}
 |adjust and close globally=|\marg{path}
 \end{syntax}
@@ -497,6 +515,7 @@ As with other list routines, the list is parsed via |foreach| first.
 These all close the last component of the given path.
 The first two will insert a line segment if the initial and final points of the component are not sufficiently close.
 The two |with| variants allow you to specify another path to insert between the end and start of the path.
+The two |with curve| variants insert a B\'ezier curve in the gap; the choice of curve depends on the tangents of the path segments being joined and uses John Hobby's B\'ezier curve construction (as used in the \texttt{hobby} TikZ library).
 The two |adjust| variants shift the end point of the path so that it is at the same place as the start of that component.
 If the last segment is a B\'ezier curve then the second control point is also shifted.
 (The intention with the |adjust| keys is where the start and end of the component are very close together so the adjustment creates a smaller visual effect than adding in a line -- see Example~\ref{ex:close}.) 
