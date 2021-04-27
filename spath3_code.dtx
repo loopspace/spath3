@@ -6614,7 +6614,7 @@ manipulating PGF soft paths}
 
   \tl_if_empty:nT {#3}
   {
-    \seq_pop_right:NN \l_@@_tmpb_seq \l_@@_tmpa_tl
+    \seq_pop_right:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
   }
 
   \seq_clear:N \l_@@_tmpb_seq
@@ -7843,40 +7843,40 @@ manipulating PGF soft paths}
   insert~ gaps~ after~ segments/.code~ 2~ args={
     \tl_if_head_is_group:nTF {#2}
     {
-      \tl_set:Nx \l__tikzspath_tmpc_tl { \tl_item:nn {#2} {1} }
-      \tl_set:Nx \l__tikzspath_tmpd_tl { \tl_item:nn {#2} {2} }
+      \tl_set:Nx \l_@@_tmpc_tl { \tl_item:nn {#2} {1} }
+      \tl_set:Nx \l_@@_tmpd_tl { \tl_item:nn {#2} {2} }
     }
     {
-      \tl_set:Nn \l__tikzspath_tmpc_tl {#2}
-      \tl_clear:N \l__tikzspath_tmpd_tl
+      \tl_set:Nn \l_@@_tmpc_tl {#2}
+      \tl_clear:N \l_@@_tmpd_tl
     }
 
-    \__tikzspath_maybe_current_path_reuse:nnn
+    \@@_maybe_current_path_reuse:nnn
     {
-      \__tikzspath_check_path:nnn
+      \@@_check_path:nnn
       {
-        \__tikzspath_insert_gaps_after_segments:cVV
+        \@@_insert_gaps_after_segments:cVV
       }
-    } {#1} { {} \l__tikzspath_tmpc_tl \l__tikzspath_tmpd_tl  } 
+    } {#1} { {} \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
   },
   insert~ gaps~ globally~ after~ segments/.code~ 2~ args={
     \tl_if_head_is_group:nTF {#2}
     {
-      \tl_set:Nx \l__tikzspath_tmpc_tl { \tl_item:nn {#2} {1} }
-      \tl_set:Nx \l__tikzspath_tmpd_tl { \tl_item:nn {#2} {2} }
+      \tl_set:Nx \l_@@_tmpc_tl { \tl_item:nn {#2} {1} }
+      \tl_set:Nx \l_@@_tmpd_tl { \tl_item:nn {#2} {2} }
     }
     {
-      \tl_set:Nn \l__tikzspath_tmpc_tl {#2}
-      \tl_clear:N \l__tikzspath_tmpd_tl
+      \tl_set:Nn \l_@@_tmpc_tl {#2}
+      \tl_clear:N \l_@@_tmpd_tl
     }
 
-    \__tikzspath_maybe_current_path_reuse:nnn
+    \@@_maybe_current_path_reuse:nnn
     {
-      \__tikzspath_check_path:nnn
+      \@@_check_path:nnn
       {
-        \__tikzspath_ginsert_gaps_after_segments:cVV
+        \@@_ginsert_gaps_after_segments:cVV
       }
-    } {#1} { {} \l__tikzspath_tmpc_tl \l__tikzspath_tmpd_tl  } 
+    } {#1} { {} \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
   },
 %    \end{macrocode}
 %
