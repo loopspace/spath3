@@ -5814,10 +5814,13 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_tikz_path:nn #1#2
 {
-  \path[#1] \pgfextra{
-    \spath_set_current_path:n {#2}
-    \tl_put_left:Nn \tikz@preactions {\def\tikz@actions@path{#2}}
-  };
+  \tl_if_empty:nF {#2}
+  {
+    \path[#1] \pgfextra{
+      \spath_set_current_path:n {#2}
+      \tl_put_left:Nn \tikz@preactions {\def\tikz@actions@path{#2}}
+    };
+  }
 }
 \cs_generate_variant:Nn \spath_tikz_path:nn {Vn, VV, nv, Vv, nV}
 %    \end{macrocode}
@@ -6001,15 +6004,31 @@ manipulating PGF soft paths}
 % 
 %    \begin{macrocode}
 \tl_new:N \g_@@_tikzfinish_tl
+\tl_new:N \l_@@_tikzfinish_outside_tl
 \cs_new_protected_nopar:Npn \spath_at_end_of_path:
 {
   \tl_use:N \g_@@_tikzfinish_tl
-  \tl_gclear:N \g_@@_tikzfinish_tl
 }
 \tl_put_right:Nn \tikz@finish {\spath_at_end_of_path:}
 
+\tikzset{
+  every~ scope/.append~ style={
+    execute~ at~ begin~ scope={
+      \tl_set_eq:NN \l_@@_tikzfinish_outside_tl \g_@@_tikzfinish_tl
+    },
+    execute~ at~ end~ scope={
+      \tl_gset_eq:NN \g_@@_tikzfinish_tl \l_@@_tikzfinish_outside_tl
+    },
+  },
+}
+
+
 \cs_new_protected_nopar:Npn \spath_save_path:Nn #1#2
 {
+  \tl_if_empty:NF \g_@@_tikzfinish_tl
+  {
+    \tl_use:N \g_@@_tikzfinish_tl
+  }
   \tl_gput_right:Nn \g_@@_tikzfinish_tl
   {
     \tl_clear_new:N #1
@@ -9645,7 +9664,7 @@ manipulating PGF soft paths}
   {
     ,
     knot~ diagram/only~ when~ rendering/.try,
-    only~ when~ rendering/.try
+    only~ when~ rendering/.try,
   }
   \spath_tikz_path:Vv \l_@@_tmpa_tl {knot strand #1}
   \group_end:
