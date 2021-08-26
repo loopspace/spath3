@@ -328,6 +328,8 @@ manipulating PGF soft paths}
 
 \dim_new:N \l_@@_tmpa_dim
 \dim_new:N \l_@@_tmpb_dim
+\dim_new:N \l_@@_rectx_dim
+\dim_new:N \l_@@_recty_dim
 
 \fp_new:N \l_@@_tmpa_fp
 \fp_new:N \l_@@_tmpb_fp
@@ -378,6 +380,8 @@ manipulating PGF soft paths}
 \tl_const:Nn \c_spath_curvetoa_tl {\pgfsyssoftpath@curvetosupportatoken}
 \tl_const:Nn \c_spath_curvetob_tl {\pgfsyssoftpath@curvetosupportbtoken}
 \tl_const:Nn \c_spath_closepath_tl {\pgfsyssoftpath@closepathtoken}
+\tl_const:Nn \c_spath_rectcorner_tl {\pgfsyssoftpath@rectcornertoken}
+\tl_const:Nn \c_spath_rectsize_tl {\pgfsyssoftpath@rectsizetoken}
 %    \end{macrocode}
 %
 % We will want to be able to use anonymous spaths internally, so we create a global counter that we can use to refer to them.
@@ -512,6 +516,33 @@ manipulating PGF soft paths}
 
       }
 
+      \c_spath_rectcorner_tl
+      {
+        \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_moveto_tl
+        \tl_put_right:Nx \l_@@_tmpb_tl
+        {
+          {\dim_use:N \l_@@_tmpa_dim}
+          {\dim_use:N \l_@@_tmpb_dim}
+        }
+        \tl_put_right:NV \l_@@_tmpb_tl \c_spath_rectcorner_tl
+
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+        \tl_put_right:Nx \l_@@_tmpb_tl {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+
+        \tl_put_right:Nx \l_@@_tmpb_tl {{\tl_head:N \l_@@_tmpa_tl}}
+        \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+
+      }
+
       \c_spath_closepath_tl
       {
         \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_moveto_tl
@@ -602,6 +633,11 @@ manipulating PGF soft paths}
       \seq_put_right:NV \l_@@_tmpa_seq \l_@@_tmpb_tl
       \tl_clear:N \l_@@_tmpb_tl
     }
+    \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_rectcorner_tl
+    {
+      \seq_put_right:NV \l_@@_tmpa_seq \l_@@_tmpb_tl
+      \tl_clear:N \l_@@_tmpb_tl
+    }
     \tl_if_single:NTF \l_@@_tmpc_tl
     {
       \tl_put_right:NV \l_@@_tmpb_tl \l_@@_tmpc_tl
@@ -667,7 +703,7 @@ manipulating PGF soft paths}
 % \spath_reallength:Nn,
 % \spath_greallength:Nn
 % }
-% The real length of a path is the number of triples that actually draw something (that is, the number of lines, curves, and closepaths).
+% The real length of a path is the number of triples that actually draw something (that is, the number of lines, curves, rectangles, and closepaths).
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \@@_reallength:n #1
 {
@@ -680,6 +716,7 @@ manipulating PGF soft paths}
       \c_spath_lineto_tl {}
       \c_spath_curveto_tl {}
       \c_spath_closepath_tl {}
+      \c_spath_rectsize_tl {}
     }
     {
       \int_incr:N \l_@@_tmpa_int
@@ -722,6 +759,10 @@ manipulating PGF soft paths}
     \tl_case:Nn \l_@@_tmpa_tl
     {
       \c_spath_moveto_tl
+      {
+        \int_incr:N \l_@@_tmpa_int
+      }
+      \c_spath_rectcorner_tl
       {
         \int_incr:N \l_@@_tmpa_int
       }
@@ -795,10 +836,35 @@ manipulating PGF soft paths}
   \tl_set:Nn \l_@@_tmpa_tl {#1}
   \tl_reverse:N \l_@@_tmpa_tl
   \tl_clear:N \l_@@_tmpb_tl
-  \tl_set:Nx \l_@@_tmpb_tl
+  \tl_set:Nx \l_@@_tmpc_tl {\tl_item:Nn \l_@@_tmpa_tl {3}}
+  \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectsize_tl
   {
-    { \tl_item:Nn \l_@@_tmpa_tl {2} }
-    { \tl_item:Nn \l_@@_tmpa_tl {1} }
+    \tl_set:Nx \l_@@_tmpb_tl
+    {
+      {
+        \dim_eval:n
+        {
+          \tl_item:Nn \l_@@_tmpa_tl {2}
+          +
+          \tl_item:Nn \l_@@_tmpa_tl {5}
+        }
+      }
+      {
+        \dim_eval:n
+        {
+          \tl_item:Nn \l_@@_tmpa_tl {1}
+          +
+          \tl_item:Nn \l_@@_tmpa_tl {4}
+        }
+      }
+    }
+  }
+  {
+    \tl_set:Nx \l_@@_tmpb_tl
+    {
+      { \tl_item:Nn \l_@@_tmpa_tl {2} }
+      { \tl_item:Nn \l_@@_tmpa_tl {1} }
+    }
   }
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpb_tl
   \group_end:
@@ -1098,107 +1164,171 @@ manipulating PGF soft paths}
 
   \tl_clear:N \l_@@_tmpb_tl
   \tl_clear:N \l_@@_tmpd_tl
-  \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-  \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
-  \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-  \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
-  \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-  
-  \tl_put_left:Nx \l_@@_tmpd_tl
-  {
-    {\dim_use:N \l_@@_tmpa_dim}
-    {\dim_use:N \l_@@_tmpb_dim}
-  }
-  
-  \bool_set_false:N \l_@@_closed_bool
-  
-  \bool_until_do:nn {
-    \tl_if_empty_p:N \l_@@_tmpa_tl
+
+  \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
+  \bool_while_do:nn {
+    \tl_if_eq_p:NN \l_@@_tmpc_tl \c_spath_rectcorner_tl
   }
   {
+    \tl_put_left:Nx \l_@@_tmpd_tl
+    {
+      \tl_item:Nn \l_@@_tmpa_tl {1}
+      {\tl_item:Nn \l_@@_tmpa_tl {2}}
+      {\tl_item:Nn \l_@@_tmpa_tl {3}}
+      \tl_item:Nn \l_@@_tmpa_tl {4}
+      {\tl_item:Nn \l_@@_tmpa_tl {5}}
+      {\tl_item:Nn \l_@@_tmpa_tl {6}}
+    }
+    \prg_replicate:nn {6}
+    {
+      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+    }
     \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
-
-    \tl_case:NnTF \l_@@_tmpc_tl
-    {
-      \c_spath_moveto_tl {
-        
-        \bool_if:NT \l_@@_closed_bool
-        {
-          \tl_put_right:NV \l_@@_tmpd_tl \c_spath_closepath_tl
-          \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpd_tl}
-          \tl_put_right:Nx \l_@@_tmpd_tl
-          {
-            { \tl_head:N \l_@@_tmpd_tl }
-            { \tl_head:N \l_@@_tmpe_tl }
-          }
-        }
-        \bool_set_false:N \l_@@_closed_bool
-        \tl_put_left:NV \l_@@_tmpd_tl \c_spath_moveto_tl
-        \tl_put_left:NV \l_@@_tmpb_tl \l_@@_tmpd_tl
-        \tl_clear:N \l_@@_tmpd_tl
-      }
-      \c_spath_lineto_tl {
-        \tl_put_left:NV \l_@@_tmpd_tl \c_spath_lineto_tl
-      }
-      \c_spath_curveto_tl {
-        \tl_put_left:NV \l_@@_tmpd_tl \c_spath_curvetoa_tl
-      }
-      \c_spath_curvetoa_tl {
-        \tl_put_left:NV \l_@@_tmpd_tl \c_spath_curveto_tl
-      }
-      \c_spath_curvetob_tl {
-        \tl_put_left:NV \l_@@_tmpd_tl \c_spath_curvetob_tl
-      }
-    }
-    {
-      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-
-      \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
-      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-      \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
-      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-
-      \tl_put_left:Nx \l_@@_tmpd_tl
-      {
-        {\dim_use:N \l_@@_tmpa_dim}
-        {\dim_use:N \l_@@_tmpb_dim}
-      }
-
-    }
-    {
-      \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_closepath_tl
-      {
-        \bool_set_true:N \l_@@_closed_bool
-      }
-      {
-        \msg_warning:nnx
-        { spath3 }
-        { unknown path construction }
-        {\l_@@_tmpc_tl }
-      }
-
-      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-      \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-
-    }
   }
 
-  \bool_if:NT \l_@@_closed_bool
+  \tl_if_empty:NF \l_@@_tmpa_tl
   {
-    \tl_put_right:NV \l_@@_tmpd_tl \c_spath_closepath_tl
-    \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpd_tl}
-    \tl_put_right:Nx \l_@@_tmpd_tl
+  
+    \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+    \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
+    \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+    \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
+    \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+  
+    \tl_put_left:Nx \l_@@_tmpd_tl
     {
-      { \tl_head:N \l_@@_tmpd_tl }
-      { \tl_head:N \l_@@_tmpe_tl }
+      {\dim_use:N \l_@@_tmpa_dim}
+      {\dim_use:N \l_@@_tmpb_dim}
     }
+  
+    \bool_set_false:N \l_@@_closed_bool
+  
+    \bool_until_do:nn {
+      \tl_if_empty_p:N \l_@@_tmpa_tl
+    }
+    {
+      \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
+
+      \tl_case:NnTF \l_@@_tmpc_tl
+      {
+        \c_spath_moveto_tl {
+        
+          \bool_if:NT \l_@@_closed_bool
+          {
+            \tl_put_right:NV \l_@@_tmpd_tl \c_spath_closepath_tl
+            \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpd_tl}
+            \tl_put_right:Nx \l_@@_tmpd_tl
+            {
+              { \tl_head:N \l_@@_tmpd_tl }
+              { \tl_head:N \l_@@_tmpe_tl }
+            }
+          }
+          \bool_set_false:N \l_@@_closed_bool
+          \tl_put_left:NV \l_@@_tmpd_tl \c_spath_moveto_tl
+          \tl_put_left:NV \l_@@_tmpb_tl \l_@@_tmpd_tl
+          \tl_clear:N \l_@@_tmpd_tl
+        }
+        \c_spath_rectcorner_tl {
+        
+          \bool_if:NT \l_@@_closed_bool
+          {
+            \tl_put_right:NV \l_@@_tmpd_tl \c_spath_closepath_tl
+            \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpd_tl}
+            \tl_put_right:Nx \l_@@_tmpd_tl
+            {
+              { \tl_head:N \l_@@_tmpd_tl }
+              { \tl_head:N \l_@@_tmpe_tl }
+            }
+          }
+          \bool_set_false:N \l_@@_closed_bool
+          \tl_put_left:NV \l_@@_tmpd_tl \c_spath_moveto_tl
+          \tl_put_left:NV \l_@@_tmpb_tl \l_@@_tmpd_tl
+          \tl_clear:N \l_@@_tmpd_tl
+          
+          \bool_while_do:nn {
+            \tl_if_eq_p:NN \l_@@_tmpc_tl \c_spath_rectcorner_tl
+          }
+          {
+            \tl_put_left:Nx \l_@@_tmpb_tl
+            {
+              \tl_item:Nn \l_@@_tmpa_tl {1}
+              {\tl_item:Nn \l_@@_tmpa_tl {2}}
+              {\tl_item:Nn \l_@@_tmpa_tl {3}}
+              \tl_item:Nn \l_@@_tmpa_tl {4}
+              {\tl_item:Nn \l_@@_tmpa_tl {5}}
+              {\tl_item:Nn \l_@@_tmpa_tl {6}}
+            }
+            \prg_replicate:nn {6}
+            {
+              \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+            }
+            \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
+          }
+          
+        }
+        \c_spath_lineto_tl {
+          \tl_put_left:NV \l_@@_tmpd_tl \c_spath_lineto_tl
+        }
+        \c_spath_curveto_tl {
+          \tl_put_left:NV \l_@@_tmpd_tl \c_spath_curvetoa_tl
+        }
+        \c_spath_curvetoa_tl {
+          \tl_put_left:NV \l_@@_tmpd_tl \c_spath_curveto_tl
+        }
+        \c_spath_curvetob_tl {
+          \tl_put_left:NV \l_@@_tmpd_tl \c_spath_curvetob_tl
+        }
+      }
+      {
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+
+        \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+        \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+        
+        \tl_put_left:Nx \l_@@_tmpd_tl
+        {
+          {\dim_use:N \l_@@_tmpa_dim}
+          {\dim_use:N \l_@@_tmpb_dim}
+        }
+        
+      }
+      {
+        \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_closepath_tl
+        {
+          \bool_set_true:N \l_@@_closed_bool
+        }
+        {
+          \msg_warning:nnx
+          { spath3 }
+          { unknown path construction }
+          { \l_@@_tmpc_tl }
+        }
+
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+        \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+        
+      }
+    }
+
+    \bool_if:NT \l_@@_closed_bool
+    {
+      \tl_put_right:NV \l_@@_tmpd_tl \c_spath_closepath_tl
+      \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpd_tl}
+      \tl_put_right:Nx \l_@@_tmpd_tl
+      {
+        { \tl_head:N \l_@@_tmpd_tl }
+        { \tl_head:N \l_@@_tmpe_tl }
+      }
+    }
+
+    \bool_set_false:N \l_@@_closed_bool
+    \tl_put_left:NV \l_@@_tmpd_tl \c_spath_moveto_tl
   }
-
-  \bool_set_false:N \l_@@_closed_bool
-  \tl_put_left:NV \l_@@_tmpd_tl \c_spath_moveto_tl
+  
   \tl_put_left:NV \l_@@_tmpb_tl \l_@@_tmpd_tl
-
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpb_tl
   \group_end:
 }
@@ -1293,6 +1423,10 @@ manipulating PGF soft paths}
     \tl_if_eq:NNT \l_@@_tmpb_tl \c_spath_curvetoa_tl
     {
       \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_curveto_tl
+    }
+    \tl_if_eq:NNT \l_@@_tmpb_tl \c_spath_rectsize_tl
+    {
+      \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_rectcorner_tl
     }
   }
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpb_tl
@@ -5682,7 +5816,7 @@ manipulating PGF soft paths}
 {
   \path[#1] \pgfextra{
     \spath_set_current_path:n {#2}
-    \tl_put_right:Nn \tikz@preactions {\def\tikz@actions@path{#2}}
+    \tl_put_left:Nn \tikz@preactions {\def\tikz@actions@path{#2}}
   };
 }
 \cs_generate_variant:Nn \spath_tikz_path:nn {Vn, VV, nv, Vv, nV}
@@ -9157,6 +9291,7 @@ manipulating PGF soft paths}
 \bool_new:N \l_@@_append_next_bool
 \bool_new:N \l_@@_skip_bool
 \bool_new:N \l_@@_save_bool
+\bool_new:N \l_@@_debugging_bool
 
 \seq_new:N \g_@@_nodes_seq
 
@@ -9293,6 +9428,14 @@ manipulating PGF soft paths}
     \bool_set_true:N \l_@@_draft_bool
     \bool_set_true:N \l_@@_super_draft_bool
   },
+  debug/.is~ choice,
+  debug/true/.code={
+    \bool_set_true:N \l_@@_debugging_bool
+  },
+  debug/false/.code={
+    \bool_set_false:N \l_@@_debugging_bool
+  },
+  debug/.default=true,
   draft/.is~ family,
   draft,
   crossing~ label/.style={
@@ -9316,10 +9459,24 @@ manipulating PGF soft paths}
 }
 %    \end{macrocode}
 %
+% \begin{macro}[internal]{\knot_debug:n}
+% Debugging
+%    \begin{macrocode}
+\cs_new_nopar:Npn \knot_debug:n #1
+{
+  \bool_if:NT \l_@@_debugging_bool
+  {
+    \iow_term:n {===Knot~ debug: #1===}
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % Wrapper around \Verb+\tikzset+ for applying keys from a token list, checking for if the given token list exists.
 %    \begin{macrocode}
 \cs_new_nopar:Npn \knot_apply_style:N #1
 {
+  \knot_debug:n {knot~ apply~ style}
   \tl_if_exist:NT #1 {
     \exp_args:NV \tikzset #1
   }
@@ -9368,6 +9525,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_initialise:n #1
 {
+  \knot_debug:n {knot~ initialise}
   \tikzset{knot~ diagram/.cd,every~ knot~ diagram/.try,#1}
   \int_zero:N \l_@@_strands_int
   \tl_clear:N \l_@@_redraws_tl
@@ -9381,6 +9539,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_render:
 {
+  \knot_debug:n {knot~ render}
 %    \end{macrocode}
 % Start a scope and reset the transformation (since all transformations have already been taken into account when defining the strands).
 %    \begin{macrocode}
@@ -9476,6 +9635,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_draw_strand:n #1
 {
+  \knot_debug:n {knot~ draw~ strand}
   \pgfscope
   \group_begin:
   \spath_bake_round:c {knot strand #1}
@@ -9501,6 +9661,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_draw_labels:n #1
 {
+  \knot_debug:n {knot~ draw~ labels}
   \bool_if:NT \l_@@_draft_bool
   {
     \spath_finalpoint:Nv \l_@@_tmpb_tl {knot strand #1}
@@ -9541,6 +9702,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_split_self_intersects:N #1
 {
+  \knot_debug:n {knot~ split~ self~ intersects}
   \tl_set:Nx \l_@@_tmpc_tl {\tl_item:nn {#1} {4}}
   \tl_case:NnF \l_@@_tmpc_tl
   {
@@ -9634,6 +9796,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_intersections:nn #1#2
 {
+  \knot_debug:n {knot~ intersections}
   \group_begin:
   \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_prefix_tl
   \tl_put_right:Nn \l_@@_tmpa_tl {#1}
@@ -9684,6 +9847,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_save_intersections:nn #1#2
 {
+  \knot_debug:n {knot~ save~ intersections}
   \bool_if:NT \l_@@_save_bool
   {
     \tl_clear:N \l_@@_aux_tl
@@ -9737,6 +9901,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_do_intersection:n #1
 {
+  \knot_debug:n {knot~ do~ intersection}
 %    \end{macrocode}
 % Get the intersection coordinates.
 %    \begin{macrocode}
@@ -9893,9 +10058,9 @@ manipulating PGF soft paths}
             {
               \l_@@_splits_bool
               &&
-              \tl_if_exist_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
+              \tl_if_exist_p:c {knot previous \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
               &&
-              !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
+              !\tl_if_empty_p:c {knot previous \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
             }
             {
               \knot_test_endpoint:NvnT
@@ -9914,6 +10079,7 @@ manipulating PGF soft paths}
               }
             }
           }
+
 %    \end{macrocode}
 % Now the same for appending.
 %    \begin{macrocode}
@@ -9923,7 +10089,7 @@ manipulating PGF soft paths}
             &&
             \tl_if_exist_p:c {knot next \tl_use:N \l_@@_tmpg_tl}
             &&
-            !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
+            !\tl_if_empty_p:c {knot next \tl_use:N \l_@@_tmpg_tl}
           }
           {
             \spath_append_no_move:cv
@@ -9933,10 +10099,10 @@ manipulating PGF soft paths}
             {
               \l_@@_splits_bool
               &&
-              \tl_if_exist_p:c {knot previous \tl_use:N
-                \l_@@_tmpg_tl}
+              \tl_if_exist_p:c {knot next \tl_use:c { knot next \tl_use:N
+                \l_@@_tmpg_tl}}
               &&
-              !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
+              !\tl_if_empty_p:c {knot next \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}}
             }
             {
               \knot_test_endpoint:NvnT
@@ -10046,6 +10212,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_draw_crossing:nnn #1#2#3
 {
+  \knot_debug:n {knot~ draw~ crossing}
   \group_begin:
   \pgfscope
   \path[knot~ diagram/background~ clip] (#2, #3)
@@ -10100,6 +10267,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_split_strands:
 {
+  \knot_debug:n {knot~ split~ strands}
   \int_gzero:N \g_@@_filaments_int
   \int_step_function:nnnN {1} {1} {\l_@@_strands_int} \knot_split_strand:n
   \int_step_function:nnnN {1} {1} {\g_@@_filaments_int} \knot_compute_nexts:n
@@ -10113,6 +10281,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_compute_nexts:n #1
 {
+  \knot_debug:n {knot~ compute~ nexts}
   \tl_clear_new:c {knot next \tl_use:c {knot previous filament #1}}
   \tl_set:cn {knot next \tl_use:c {knot previous filament #1}} {filament #1}
 }
@@ -10124,6 +10293,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_split_strand:n #1
 {
+  \knot_debug:n {knot~ split~ strand}
   \int_set_eq:NN \l_@@_component_start_int \g_@@_filaments_int
   \int_incr:N \l_@@_component_start_int
   \tl_set_eq:Nc \l_@@_tmpa_tl {l_@@_options_strand #1}
@@ -10138,6 +10308,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_save_filament:N #1
 {
+  \knot_debug:n {knot~ save~ filament}
   \tl_set:Nx \l_@@_tmpb_tl {\tl_item:nn {#1} {4}}
   \tl_case:NnF \l_@@_tmpb_tl
   {
