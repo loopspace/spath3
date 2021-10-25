@@ -9488,6 +9488,8 @@ manipulating PGF soft paths}
     \iow_term:n {===Knot~ debug: #1===}
   }
 }
+
+\cs_generate_variant:Nn \knot_debug:n {x}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -9645,6 +9647,7 @@ manipulating PGF soft paths}
 % Close the scope
 %    \begin{macrocode}
   \endpgfscope
+  \knot_debug:x {knot~rendered,~found~\int_use:N  \g_@@_intersections_int \c_space_tl~intersections}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -9654,7 +9657,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_draw_strand:n #1
 {
-  \knot_debug:n {knot~ draw~ strand}
+  \knot_debug:n {knot~ draw~ strand~ #1}
   \pgfscope
   \group_begin:
   \spath_bake_round:c {knot strand #1}
@@ -9815,7 +9818,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_intersections:nn #1#2
 {
-  \knot_debug:n {knot~ intersections}
+  \knot_debug:x {knot~ intersections~ between~ \l_@@_prefix_tl \c_space_tl #1~ and~ #2}
   \group_begin:
   \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_prefix_tl
   \tl_put_right:Nn \l_@@_tmpa_tl {#1}
@@ -9847,6 +9850,7 @@ manipulating PGF soft paths}
 
   }
 
+  \knot_debug:x {found~\pgfintersectionsolutions\c_space_tl~ intersections}
   \int_compare:nT {\pgfintersectionsolutions > 0}
   {
     \int_step_function:nnnN
@@ -9920,13 +9924,14 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_do_intersection:n #1
 {
-  \knot_debug:n {knot~ do~ intersection}
+  \knot_debug:n {knot~ do~ intersection~ #1}
 %    \end{macrocode}
 % Get the intersection coordinates.
 %    \begin{macrocode}
   \pgfpointintersectionsolution{#1}
   \dim_set:Nn \l_@@_tmpa_dim {\pgf@x}
   \dim_set:Nn \l_@@_tmpb_dim {\pgf@y}
+  \knot_debug:x {intersection~at~(\dim_use:N \l_@@_tmpa_dim,\dim_use:N \l_@@_tmpb_dim)}
 %    \end{macrocode}
 % If we're dealing with filaments, we can get false positives from the end points.
 %    \begin{macrocode}
@@ -9985,8 +9990,9 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
   \bool_if:NF \l_@@_skip_bool
   {
-
+    
     \int_gincr:N \g_@@_intersections_int
+    \knot_debug:x {Processing~intersection~\int_use:N \g_@@_intersections_int}
 %    \end{macrocode}
 % This is the intersection test.
 % If the intersection finder finds too many, it might be useful to ignore some.
@@ -10067,6 +10073,7 @@ manipulating PGF soft paths}
             !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
           }
           {
+            \knot_debug:x {Prepending~ \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
             \spath_prepend_no_move:cv
             {knot \tl_use:N \l_@@_prefix_tl -1}
             {knot \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
@@ -10087,6 +10094,7 @@ manipulating PGF soft paths}
               {knot previous \tl_use:N \l_@@_tmpg_tl}
               {initial point}
               {
+                \knot_debug:x {Prepending~ \tl_use:c {knot previous \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}}
                 \spath_prepend_no_move:cv
                 {knot \tl_use:N \l_@@_prefix_tl -1}
                 {knot \tl_use:c
@@ -10111,6 +10119,7 @@ manipulating PGF soft paths}
             !\tl_if_empty_p:c {knot next \tl_use:N \l_@@_tmpg_tl}
           }
           {
+            \knot_debug:x {Appending~ \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}
             \spath_append_no_move:cv
             {knot \tl_use:N \l_@@_prefix_tl -1}
             {knot \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}
@@ -10124,11 +10133,13 @@ manipulating PGF soft paths}
               !\tl_if_empty_p:c {knot next \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}}
             }
             {
+              \knot_debug:x {Testing~ whether~ to~ append~ {knot next \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}}}
               \knot_test_endpoint:NvnT
               \l_@@_redraw_tolerance_dim
-              {knot previous \tl_use:N \l_@@_tmpg_tl}
+              {knot next \tl_use:N \l_@@_tmpg_tl}
               {final point}
               {
+                \knot_debug:x {Appending~ {knot next \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}}}
                 \spath_append_no_move:cv
                 {knot \tl_use:N \l_@@_prefix_tl -1}
                 {knot \tl_use:c
