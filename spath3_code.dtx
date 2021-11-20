@@ -4149,7 +4149,7 @@ manipulating PGF soft paths}
   \tl_set:Nx #2 {\tl_item:Nn \g_@@_output_tl {2}}
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_split_at_normalised:NNnn {NNVn, NNVV, NNnV}
+\cs_generate_variant:Nn \spath_split_at_normalised:NNnn {NNVn, NNVV, NNnV, ccvn}
 \cs_new_protected_nopar:Npn \spath_gsplit_at_normalised:NNnn #1#2#3#4
 {
   \@@_split_at_normalised:nn {#3}{#4}
@@ -4157,7 +4157,7 @@ manipulating PGF soft paths}
   \tl_gset:Nx #2 {\tl_item:Nn \g_@@_output_tl {2}}
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_gsplit_at_normalised:NNnn {NNVn, NNVV, NNnV}
+\cs_generate_variant:Nn \spath_gsplit_at_normalised:NNnn {NNVn, NNVV, NNnV, ccvn}
 \cs_new_protected_nopar:Npn \spath_split_at_normalised_keep_start:Nnn #1#2#3
 {
   \@@_split_at_normalised:nn {#2}{#3}
@@ -8017,6 +8017,24 @@ manipulating PGF soft paths}
         \spath_gsplit_at_normalised:cn
       }
     } {#1} { {} {#2} }
+  },
+  split~ at~ into/.code~ n~ args={4}{
+    \@@_maybe_current_path_reuse:nnn
+    {
+      \@@_check_path:nnn
+      {
+        \spath_split_at_normalised:ccvn {\@@_path_name:n {#1}}  {\@@_path_name:n {#2}}
+      }
+    } {#3} { {} {#4} }
+  },
+  split~ globally~ at~ into/.code~ n~ args={4}{
+    \@@_maybe_current_path_reuse:nnn
+    {
+      \@@_check_path:nnn
+      {
+        \spath_gsplit_at_normalised:ccvn {\@@_path_name:n {#1}}  {\@@_path_name:n {#2}}
+      }
+    } {#3} { {} {#4} }
   },
   split~ at~ keep~ start/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
