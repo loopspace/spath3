@@ -4255,6 +4255,7 @@ manipulating PGF soft paths}
 {
   \spath_split_at_normalised:NVn #1#1{#2}
 }
+\cs_generate_variant:Nn \spath_split_at_normalised:Nn {cn}
 \cs_new_protected_nopar:Npn \spath_gsplit_at_normalised:Nnn #1#2#3
 {
   \@@_split_at_normalised:nn {#2}{#3}
@@ -4270,6 +4271,7 @@ manipulating PGF soft paths}
 {
   \spath_gsplit_at_normalised:NVn #1#1{#2}
 }
+\cs_generate_variant:Nn \spath_gsplit_at_normalised:Nn {cn}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -7995,9 +7997,27 @@ manipulating PGF soft paths}
   },
 %    \end{macrocode}
 %
-% These keys shorten the path by parameter.
+% These keys split a path at a parameter, the \texttt{keep} versions only keep one part of the resultant path.
 %
 %    \begin{macrocode}
+  split~ at/.code~ 2~ args={
+    \@@_maybe_current_path_reuse:nnn
+    {
+      \@@_check_path:nnn
+      {
+        \spath_split_at_normalised:cn
+      }
+    } {#1} { {} {#2} }
+  },
+  split~ globally~ at/.code~ 2~ args={
+    \@@_maybe_current_path_reuse:nnn
+    {
+      \@@_check_path:nnn
+      {
+        \spath_gsplit_at_normalised:cn
+      }
+    } {#1} { {} {#2} }
+  },
   split~ at~ keep~ start/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
     {
