@@ -1706,10 +1706,10 @@ manipulating PGF soft paths}
 
     \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectcorner_tl
     {
-      \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
+      \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
     }
     {
-      \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl + #3}
+      \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl + #3}
     }
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
@@ -6274,13 +6274,15 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 %
 % When a soft path is grabbed from TikZ we're usually deep in a group so I've adapted the code from the intersections library to dig the definition out of the group without making everything global.
-% 
+%
+% Interestingly, the intersections library doesn't clear its naming code once it is used meaning that it keeps resetting the definition of a path back to its original one every time a path command is called.
 %    \begin{macrocode}
 \tl_new:N \g_@@_tikzfinish_tl
 \tl_new:N \l_@@_tikzfinish_outside_tl
 \cs_new_protected_nopar:Npn \spath_at_end_of_path:
 {
   \tl_use:N \g_@@_tikzfinish_tl
+  \tl_gclear:N \g_@@_tikzfinish_tl
 }
 \tl_put_right:Nn \tikz@finish {\spath_at_end_of_path:}
 
