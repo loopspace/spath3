@@ -328,8 +328,6 @@ manipulating PGF soft paths}
 
 \dim_new:N \l_@@_tmpa_dim
 \dim_new:N \l_@@_tmpb_dim
-\dim_new:N \l_@@_rectx_dim
-\dim_new:N \l_@@_recty_dim
 
 \fp_new:N \l_@@_tmpa_fp
 \fp_new:N \l_@@_tmpb_fp
@@ -356,6 +354,17 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
 \bool_new:N \l_@@_closed_bool
+%    \end{macrocode}
+%
+% True rectangles are rare, but need special handling.
+% They are specified by two tokens, the first specifies the lower left corner which can be handled pretty much as other tokens but the second specifies the width and height meaning that it transforms differently.
+% So when encountering on, the coordinates of the lower left corner are useful to remember.
+%
+%    \begin{macrocode}
+\dim_new:N \l_@@_rectx_dim
+\dim_new:N \l_@@_recty_dim
+
+\bool_new:N \l_@@_rect_bool
 %    \end{macrocode}
 %
 % When restoring a path we need to know whether to update the stored moveto.
@@ -1175,6 +1184,8 @@ manipulating PGF soft paths}
   \tl_clear:N \l_@@_tmpb_tl
   \tl_clear:N \l_@@_tmpd_tl
 
+  \bool_set_false:N \l_@@_rect_bool
+
   \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
   \bool_while_do:nn {
     \tl_if_eq_p:NN \l_@@_tmpc_tl \c_spath_rectcorner_tl
@@ -1194,11 +1205,11 @@ manipulating PGF soft paths}
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     }
     \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
+    \bool_set_true:N \l_@@_rect_bool
   }
 
   \tl_if_empty:NF \l_@@_tmpa_tl
   {
-  
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
@@ -1212,12 +1223,13 @@ manipulating PGF soft paths}
     }
   
     \bool_set_false:N \l_@@_closed_bool
-  
+
     \bool_until_do:nn {
       \tl_if_empty_p:N \l_@@_tmpa_tl
     }
     {
       \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
+      \bool_set_false:N \l_@@_rect_bool
 
       \tl_case:NnTF \l_@@_tmpc_tl
       {
@@ -1239,7 +1251,7 @@ manipulating PGF soft paths}
           \tl_clear:N \l_@@_tmpd_tl
         }
         \c_spath_rectcorner_tl {
-        
+
           \bool_if:NT \l_@@_closed_bool
           {
             \tl_put_right:NV \l_@@_tmpd_tl \c_spath_closepath_tl
@@ -1274,6 +1286,7 @@ manipulating PGF soft paths}
             }
             \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
           }
+          \bool_set_true:N \l_@@_rect_bool
           
         }
         \c_spath_lineto_tl {
@@ -1290,6 +1303,8 @@ manipulating PGF soft paths}
         }
       }
       {
+        \tl_if_empty:NF \l_@@_tmpa_tl
+        {
         \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
         \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
@@ -1302,7 +1317,7 @@ manipulating PGF soft paths}
           {\dim_use:N \l_@@_tmpa_dim}
           {\dim_use:N \l_@@_tmpb_dim}
         }
-        
+        }        
       }
       {
         \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_closepath_tl
@@ -1335,7 +1350,10 @@ manipulating PGF soft paths}
     }
 
     \bool_set_false:N \l_@@_closed_bool
-    \tl_put_left:NV \l_@@_tmpd_tl \c_spath_moveto_tl
+    \bool_if:NF \l_@@_rect_bool
+    {
+      \tl_put_left:NV \l_@@_tmpd_tl \c_spath_moveto_tl
+    }
   }
   
   \tl_put_left:NV \l_@@_tmpb_tl \l_@@_tmpd_tl
@@ -1379,14 +1397,21 @@ manipulating PGF soft paths}
 {
   \group_begin:
   \tl_clear:N \l_@@_tmpa_tl
-  \int_compare:nT
+  \tl_set:Nx \l_@@_tmpb_tl {\tl_head:n {#1}}
+  \tl_if_eq:NNTF \l_@@_tmpb_tl \c_spath_rectcorner_tl
   {
-    \tl_count:n {#1} > 3
+    \tl_set_eq:NN \l_@@_tmpa_tl \c_spath_rectcorner_tl
   }
   {
-    \tl_set:Nx \l_@@_tmpa_tl
+    \int_compare:nT
     {
-      \tl_item:Nn {#1} {4}
+      \tl_count:n {#1} > 3
+    }
+    {
+      \tl_set:Nx \l_@@_tmpa_tl
+      {
+        \tl_item:Nn {#1} {4}
+      }
     }
   }
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
@@ -1481,8 +1506,8 @@ manipulating PGF soft paths}
 
   \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_rectcorner_tl
   {
-    \dim_seq_eq:NN \l_@@_rectx_dim \l_@@_tmpa_dim
-    \dim_seq_eq:NN \l_@@_recty_dim \l_@@_tmpb_dim
+    \dim_set_eq:NN \l_@@_rectx_dim \l_@@_tmpa_dim
+    \dim_set_eq:NN \l_@@_recty_dim \l_@@_tmpb_dim
   }
   \bool_until_do:nn {
     \tl_if_empty_p:N \l_@@_tmpa_tl
@@ -1494,28 +1519,31 @@ manipulating PGF soft paths}
     \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectsize_tl
     {
       \dim_set:Nn \l_@@_tmpa_dim
-      {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpa_dim + \l_@@_rectx_dim}}
+      {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl + \l_@@_rectx_dim} {\l_@@_tmpa_dim}}
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     
       \dim_set:Nn \l_@@_tmpb_dim
-      {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpb_dim + \l_@@_recty_dim}}
+      {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl + \l_@@_recty_dim} {\l_@@_tmpb_dim}}
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     }
     {
       \dim_set:Nn \l_@@_tmpa_dim
       {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpa_dim}}
+      \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_rectcorner_tl
+      {
+        \dim_set:Nn \l_@@_rectx_dim {\tl_head:N \l_@@_tmpa_tl}
+      }
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     
       \dim_set:Nn \l_@@_tmpb_dim
       {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpb_dim}}
+      \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_rectcorner_tl
+      {
+        \dim_set:Nn \l_@@_recty_dim {\tl_head:N \l_@@_tmpa_tl}
+      }
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     }
     
-    \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_rectcorner_tl
-    {
-      \dim_seq_eq:NN \l_@@_rectx_dim \l_@@_tmpa_dim
-      \dim_seq_eq:NN \l_@@_recty_dim \l_@@_tmpb_dim
-    }
   }
   \tl_clear:N \l_@@_tmpb_tl
   \tl_put_right:Nx \l_@@_tmpb_tl
@@ -1565,8 +1593,8 @@ manipulating PGF soft paths}
 
   \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_rectcorner_tl
   {
-    \dim_seq_eq:NN \l_@@_rectx_dim \l_@@_tmpa_dim
-    \dim_seq_eq:NN \l_@@_recty_dim \l_@@_tmpb_dim
+    \dim_set_eq:NN \l_@@_rectx_dim \l_@@_tmpa_dim
+    \dim_set_eq:NN \l_@@_recty_dim \l_@@_tmpb_dim
   }
   \bool_until_do:nn {
     \tl_if_empty_p:N \l_@@_tmpa_tl
@@ -1578,31 +1606,34 @@ manipulating PGF soft paths}
     \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectsize_tl
     {
       \dim_set:Nn \l_@@_tmpa_dim
-      {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpa_dim + \l_@@_rectx_dim}}
+      {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl + \l_@@_rectx_dim} {\l_@@_tmpa_dim}}
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     
       \dim_set:Nn \l_@@_tmpb_dim
-      {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpb_dim + \l_@@_recty_dim}}
+      {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl + \l_@@_recty_dim} {\l_@@_tmpb_dim}}
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     }
     {
       \dim_set:Nn \l_@@_tmpa_dim
       {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpa_dim}}
+      \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_rectcorner_tl
+      {
+        \dim_set:Nn \l_@@_rectx_dim {\tl_head:N \l_@@_tmpa_tl}
+      }
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-    
+
       \dim_set:Nn \l_@@_tmpb_dim
       {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl} {\l_@@_tmpb_dim}}
+      \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_rectcorner_tl
+      {
+        \dim_set:Nn \l_@@_recty_dim {\tl_head:N \l_@@_tmpa_tl}
+      }
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     }
     
-    \tl_if_eq:NNT \l_@@_tmpc_tl \c_spath_rectcorner_tl
-    {
-      \dim_seq_eq:NN \l_@@_rectx_dim \l_@@_tmpa_dim
-      \dim_seq_eq:NN \l_@@_recty_dim \l_@@_tmpb_dim
-    }
   }
   \tl_clear:N \l_@@_tmpb_tl
-  \tl_put_right:Nx \l_@@_tmpb_tl
+  \tl_set:Nx \l_@@_tmpb_tl
   {
     {\dim_use:N \l_@@_tmpa_dim}
     {\dim_use:N \l_@@_tmpb_dim}
@@ -1695,7 +1726,7 @@ manipulating PGF soft paths}
     \tl_put_right:Nx \l_@@_tmpb_tl {\tl_head:N \l_@@_tmpa_tl}
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-    \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectcorner_tl
+    \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectsize_tl
     {
       \dim_set:Nn \l_@@_tmpa_dim {\tl_head:N \l_@@_tmpa_tl}
     }
@@ -1704,7 +1735,7 @@ manipulating PGF soft paths}
     }
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-    \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectcorner_tl
+    \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectsize_tl
     {
       \dim_set:Nn \l_@@_tmpb_dim {\tl_head:N \l_@@_tmpa_tl}
     }
@@ -2772,16 +2803,25 @@ manipulating PGF soft paths}
 % \spath_gappend_no_move:Nn,
 % }
 % Append the path from the second \Verb+spath+ to the first, removing
-% the adjoining move.
+% the adjoining move if neither path has a rectangle either side of the join.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \@@_append_no_move:nn #1#2
 {
   \group_begin:
   \tl_set:Nn \l_@@_tmpa_tl {#1}
   \tl_set:Nn \l_@@_tmpb_tl {#2}
-  \tl_set:Nx \l_@@_tmpb_tl {\tl_tail:N \l_@@_tmpb_tl}
-  \tl_set:Nx \l_@@_tmpb_tl {\tl_tail:N \l_@@_tmpb_tl}
-  \tl_set:Nx \l_@@_tmpb_tl {\tl_tail:N \l_@@_tmpb_tl}
+  \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpb_tl}
+  \spath_finalaction:Nn \l_@@_tmpd_tl {#1}
+  \bool_if:nT {
+    ! \tl_if_eq_p:NN \l_@@_tmpd_tl \c_spath_rectcorner_tl
+    &&
+    \tl_if_eq_p:NN \l_@@_tmpc_tl \c_spath_moveto_tl
+  }
+  {
+    \tl_set:Nx \l_@@_tmpb_tl {\tl_tail:N \l_@@_tmpb_tl}
+    \tl_set:Nx \l_@@_tmpb_tl {\tl_tail:N \l_@@_tmpb_tl}
+    \tl_set:Nx \l_@@_tmpb_tl {\tl_tail:N \l_@@_tmpb_tl}
+  }
   
   \tl_put_right:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
   \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
@@ -6276,6 +6316,9 @@ manipulating PGF soft paths}
 % When a soft path is grabbed from TikZ we're usually deep in a group so I've adapted the code from the intersections library to dig the definition out of the group without making everything global.
 %
 % Interestingly, the intersections library doesn't clear its naming code once it is used meaning that it keeps resetting the definition of a path back to its original one every time a path command is called.
+%
+% Also, when the hook is restored outside a scope then no check is made to ensure that the inner one was actually invoked.
+% This can cause issues when the syntax \Verb!\tikz .. ;! is used since the end of the path coincides with the end of the picture.
 %    \begin{macrocode}
 \tl_new:N \g_@@_tikzfinish_tl
 \tl_new:N \l_@@_tikzfinish_outside_tl
@@ -6292,6 +6335,8 @@ manipulating PGF soft paths}
       \tl_set_eq:NN \l_@@_tikzfinish_outside_tl \g_@@_tikzfinish_tl
     },
     execute~ at~ end~ scope={
+      \tl_use:N \g_@@_tikzfinish_tl
+      \tl_gclear:N \g_@@_tikzfinish_tl
       \tl_gset_eq:NN \g_@@_tikzfinish_tl \l_@@_tikzfinish_outside_tl
     },
   },
