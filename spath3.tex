@@ -1019,7 +1019,7 @@ sin ++(1.57,1);
 
 % If used in the preamble, this needs surrounding in \AtBeginDocument
 %\AtBeginDocument{
-\tikz[overlay] \path[spath/save=arc] (0,0) arc[radius=1cm, start angle=180, delta angle=-180];
+\tikz[overlay] { \path[spath/save global=arc] (0,0) arc[radius=1cm, start angle=180, delta angle=-180]; }
 %}
 \begin{tikzpicture}
 \path[spath/save=over] (0,0) -| ++(1,1) -| ++(-1,1) -| ++(1,1) -| ++(-1,1);
