@@ -623,9 +623,11 @@ manipulating PGF soft paths}
   \group_begin:
   \tl_set:Nn \l_@@_tmpa_tl {#1}
   \seq_clear:N \l_@@_tmpa_seq
+  \tl_set:Nx \l_@@_tmpb_tl {\tl_head:N \l_@@_tmpa_tl}
   \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
+  
   \tl_put_right:NV \l_@@_tmpa_tl \c_spath_moveto_tl
-  \tl_set_eq:NN \l_@@_tmpb_tl \c_spath_moveto_tl
+
   \bool_do_until:nn {
     \tl_if_empty_p:N \l_@@_tmpa_tl
   }
@@ -5447,19 +5449,21 @@ manipulating PGF soft paths}
   \tl_set:Nn \l_@@_tmpb_tl {#1}
   \tl_set:Nn \l_@@_tmpc_tl {#2}
 
-  \spath_reallength:Nn \l_@@_tmpa_int {#1}
-  
   % Remember if the component is closed
   \spath_finalaction:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
-  
+
   \bool_set:Nn \l_@@_closed_bool
   {
     \tl_if_eq_p:NN \l_@@_tmpa_tl \c_spath_closepath_tl
+    ||
+    \tl_if_eq_p:NN \l_@@_tmpa_tl \c_spath_rectcorner_tl
   }
-
+  
   % Open it
   \spath_open:N \l_@@_tmpb_tl
 
+  \spath_reallength:NV \l_@@_tmpa_int \l_@@_tmpb_tl
+  
   % Sort intersections along the component
   \pgfintersectionsortbyfirstpath
   \spath_intersect:NN \l_@@_tmpb_tl \l_@@_tmpc_tl
@@ -5482,6 +5486,7 @@ manipulating PGF soft paths}
     {
       \bool_set_false:N \l_@@_closed_bool
     }
+
     \seq_get_right:NN \l_@@_tmpb_seq \l_@@_tmpa_tl
     \fp_compare:nT
     {
@@ -5490,7 +5495,6 @@ manipulating PGF soft paths}
     {
       \bool_set_false:N \l_@@_closed_bool
     }
-
     
     \tl_set:Nn \l_@@_tmpg_tl {-1}
 
@@ -5538,6 +5542,7 @@ manipulating PGF soft paths}
     \tl_set_eq:NN \l_@@_tmpb_tl \l_@@_tmpe_tl
   }
 
+  
   \bool_if:NT \l_@@_closed_bool
   {
     \spath_join_component:Nn \l_@@_tmpb_tl {1}
