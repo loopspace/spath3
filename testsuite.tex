@@ -10,13 +10,16 @@
 
 \ExplSyntaxOn
 
+% Success/fail messages
 \msg_new:nnn { test suite } { passed } { Test~ #1~ passed~ for:~ #2}
 \msg_new:nnn { test suite } { failed } { Test~ #1~ failed~ for:~ #2.\iow_newline: #3}
 
+% Set this boolean to indicate success/failure
 \bool_new:N \l_test_bool
 \tl_new:N \l_test_result_tl
 \tl_new:N \l_test_var_tl
 
+% Test resulting tl/int against expected tl/int
 \tl_new:N \l_test_return_tl
 \tl_new:N \l_test_expected_tl
 
@@ -25,6 +28,7 @@
 
 \cs_generate_variant:Nn \msg_term:nnnnn {nnnnV}
 
+% Run a test
 \cs_new_protected_nopar:Npn \test_cs:nnnn #1#2#3#4
 {
   \use:c {#2} #3
@@ -39,6 +43,7 @@
   }
 }
 
+% Set the test result message
 \cs_new_protected_nopar:Npn \test_set_result:nn #1#2
 {
   \tl_set:Nn \l_test_result_tl
@@ -49,6 +54,7 @@
 }
 \cs_generate_variant:Nn \test_set_result:nn {VV}
 
+% Check an integer output
 \cs_new_protected_nopar:Npn \test_check_int:nn #1#2
 {
   \bool_set:Nn \l_test_bool
@@ -60,7 +66,7 @@
 
 \cs_generate_variant:Nn \test_check_int:nn {Vn, VV}
 
-
+% Run a test that produces an integer
 \cs_new_protected_nopar:Npn \test_cs_int:Nnn #1#2#3
 {
   \seq_map_indexed_inline:Nn #1
@@ -74,6 +80,7 @@
   }
 }
 
+% Check if two points (specified by coordinates) are equal, allowing a small amount of tolerance
 \cs_new_protected_nopar:Npn \test_check_point:nn #1#2
 {
   \bool_set:Nn \l_test_bool
@@ -87,7 +94,7 @@
 
 \cs_generate_variant:Nn \test_check_point:nn {Vn, VV}
 
-
+% Run a test expecting a coordinate result
 \cs_new_protected_nopar:Npn \test_cs_point:Nnn #1#2#3
 {
   \seq_map_indexed_inline:Nn #1
@@ -101,6 +108,7 @@
   }
 }
 
+% Check if two token lists are equal
 \tl_new:N \l_test_tmpa_tl
 \tl_new:N \l_test_tmpb_tl
 \cs_new_protected_nopar:Npn \test_check_tl:nn #1#2
@@ -117,7 +125,7 @@
 
 \cs_generate_variant:Nn \test_check_tl:nn {Vn, VV}
 
-
+% Run a test expecting token lists as output
 \cs_new_protected_nopar:Npn \test_cs_tl:Nnn #1#2#3
 {
   \seq_map_indexed_inline:Nn #1
@@ -132,8 +140,7 @@
 }
 \cs_generate_variant:Nn \test_cs_tl:Nnn {NnV}
 
-
-
+% Test if two paths are equal
 \cs_new_protected_nopar:Npn \test_check_path_tl:nn #1#2
 {
   \spath_if_eq:nnTF {#1}{#2}
@@ -148,7 +155,7 @@
 
 \cs_generate_variant:Nn \test_check_path_tl:nn {Vn, VV}
 
-
+% Run a test expecting a path as output
 \cs_new_protected_nopar:Npn \test_cs_path:Nnnn #1#2#3#4
 {
   \seq_map_indexed_inline:Nn #1
@@ -163,6 +170,7 @@
 }
 \cs_generate_variant:Nn \test_cs_path:Nnnn {NnnV, NnVV}
 
+% Run a test expecting a path as output but with the test inputs in the other order
 \cs_new_protected_nopar:Npn \test_cs_other_path:Nnnn #1#2#3#4
 {
   \seq_map_indexed_inline:Nn #1
@@ -177,13 +185,17 @@
 }
 \cs_generate_variant:Nn \test_cs_other_path:Nnnn {NnnV, NnVV}
 
+% Sequence of test paths
 \seq_new:N \l_test_paths_seq
+% Sequence of test components
 \seq_new:N \l_test_components_seq
 \makeatletter
+% Line
 \seq_put_right:Nn \l_test_paths_seq {
   \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
   \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
 }
+% Line and curve
 \seq_put_right:Nn \l_test_paths_seq {
   \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
   \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
@@ -191,6 +203,7 @@
   \pgfsyssoftpath@curvetosupportbtoken {94.59259pt}{39.54845pt}
   \pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
 }
+% Line, move, curve
 \seq_put_right:Nn \l_test_paths_seq {
   \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
   \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
@@ -199,6 +212,7 @@
   \pgfsyssoftpath@curvetosupportbtoken {94.59259pt}{39.54845pt}
   \pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
 }
+% Line, curve, closed
 \seq_put_right:Nn \l_test_paths_seq {
   \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
   \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
@@ -207,6 +221,7 @@
   \pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
   \pgfsyssoftpath@closepathtoken {0.0pt}{0.0pt}
 }
+%Line, move, curve, closed
 \seq_put_right:Nn \l_test_paths_seq {
   \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
   \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
@@ -216,7 +231,27 @@
   \pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
   \pgfsyssoftpath@closepathtoken {56.90549pt}{28.45274pt}
 }
+% Rectangle x2, move, line, rectangle x2, move, line, rectangle x2
+\seq_put_right:Nn \l_test_paths_seq {
+  \pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@movetotoken {28.45274pt}{85.35823pt}
+  \pgfsyssoftpath@linetotoken {56.90549pt}{113.81097pt}
+  \pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@movetotoken {85.35823pt}{85.35823pt}
+  \pgfsyssoftpath@linetotoken {113.81097pt}{56.90549pt}
+  \pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+}
 
+% Sequence of test components
 \seq_put_right:Nn \l_test_components_seq {
   \pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
   \pgfsyssoftpath@linetotoken {56.90549pt}{28.45274pt}
@@ -252,7 +287,26 @@
   \pgfsyssoftpath@curvetotoken {113.81097pt}{28.45274pt}
   \pgfsyssoftpath@closepathtoken {0.0pt}{0.0pt}
 }
+\seq_put_right:Nn \l_test_components_seq {
+\pgfsyssoftpath@rectcornertoken {29.25275pt}{-21.96231pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {29.25275pt}{-21.96231pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {28.45274pt}{5.69043pt}
+\pgfsyssoftpath@linetotoken {56.90549pt}{34.14317pt}
+\pgfsyssoftpath@rectcornertoken {56.90549pt}{34.14317pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {56.90549pt}{34.14317pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {85.35823pt}{5.69043pt}
+\pgfsyssoftpath@linetotoken {113.81097pt}{-22.76231pt}
+\pgfsyssoftpath@rectcornertoken {113.81097pt}{-22.76231pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {113.81097pt}{-22.76231pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+}
 
+% Result of intersecting with the components
 \tl_new:N \l_test_components_tl
 \tl_set:Nn \l_test_components_tl
 {
@@ -402,6 +456,7 @@
   \pgfsyssoftpath@closepathtoken {56.90549pt}{28.45274pt}
 }
 
+% Expected results of reversing the paths
 \tl_new:N \l_test_reverse_paths_tl
 \tl_set:Nn \l_test_reverse_paths_tl
 {
@@ -435,8 +490,26 @@
   \pgfsyssoftpath@closepathtoken {113.81097pt}{28.45274pt}
   \pgfsyssoftpath@movetotoken {56.90549pt}{28.45274pt}
   \pgfsyssoftpath@linetotoken {0.0pt}{0.0pt}
+  ,
+  \pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@movetotoken {113.81097pt}{56.90549pt}
+  \pgfsyssoftpath@linetotoken {85.35823pt}{85.35823pt}
+  \pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@movetotoken {56.90549pt}{113.81097pt}
+  \pgfsyssoftpath@linetotoken {28.45274pt}{85.35823pt}
+  \pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
 }
 
+% Expected results from translation
 \tl_new:N \l_test_translate_paths_tl
 \tl_set:Nn \l_test_translate_paths_tl
 {
@@ -469,7 +542,24 @@
 \pgfsyssoftpath@curvetosupportatoken {133.02936pt}{124.90668pt}
 \pgfsyssoftpath@curvetosupportbtoken {151.49808pt}{124.90668pt}
 \pgfsyssoftpath@curvetotoken {170.71646pt}{113.81097pt}
-\pgfsyssoftpath@closepathtoken {113.81097pt}{113.81097pt}
+  \pgfsyssoftpath@closepathtoken {113.81097pt}{113.81097pt}
+  ,
+  \pgfsyssoftpath@rectcornertoken {86.15824pt}{143.06372pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@rectcornertoken {86.15824pt}{143.06372pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@movetotoken {85.35823pt}{170.71646pt}
+  \pgfsyssoftpath@linetotoken {113.81097pt}{199.1692pt}
+  \pgfsyssoftpath@rectcornertoken {113.81097pt}{199.1692pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@rectcornertoken {113.81097pt}{199.1692pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@movetotoken {142.26372pt}{170.71646pt}
+  \pgfsyssoftpath@linetotoken {170.71646pt}{142.26372pt}
+  \pgfsyssoftpath@rectcornertoken {170.71646pt}{142.26372pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+  \pgfsyssoftpath@rectcornertoken {170.71646pt}{142.26372pt}
+  \pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
 }
 
 \tl_new:N \l_test_scale_paths_tl
@@ -504,7 +594,24 @@
 \pgfsyssoftpath@curvetosupportatoken {380.61935pt}{197.74223pt}
 \pgfsyssoftpath@curvetosupportbtoken {472.96295pt}{197.74223pt}
 \pgfsyssoftpath@curvetotoken {569.05487pt}{142.26372pt}
-\pgfsyssoftpath@closepathtoken {284.52744pt}{142.26372pt}
+  \pgfsyssoftpath@closepathtoken {284.52744pt}{142.26372pt}
+  ,
+  \pgfsyssoftpath@rectcornertoken {146.26375pt}{288.52745pt}
+  \pgfsyssoftpath@rectsizetoken {142.26365pt}{71.13175pt}
+  \pgfsyssoftpath@rectcornertoken {146.26375pt}{288.52745pt}
+  \pgfsyssoftpath@rectsizetoken {142.26365pt}{71.13175pt}
+  \pgfsyssoftpath@movetotoken {142.2637pt}{426.79115pt}
+  \pgfsyssoftpath@linetotoken {284.52745pt}{569.05485pt}
+  \pgfsyssoftpath@rectcornertoken {284.52745pt}{569.05485pt}
+  \pgfsyssoftpath@rectsizetoken {142.26365pt}{71.13175pt}
+  \pgfsyssoftpath@rectcornertoken {284.52745pt}{569.05485pt}
+  \pgfsyssoftpath@rectsizetoken {142.26365pt}{71.13175pt}
+  \pgfsyssoftpath@movetotoken {426.79115pt}{426.79115pt}
+  \pgfsyssoftpath@linetotoken {569.05485pt}{284.52745pt}
+  \pgfsyssoftpath@rectcornertoken {569.05485pt}{284.52745pt}
+  \pgfsyssoftpath@rectsizetoken {142.26365pt}{71.13175pt}
+  \pgfsyssoftpath@rectcornertoken {569.05485pt}{284.52745pt}
+  \pgfsyssoftpath@rectsizetoken {142.26365pt}{71.13175pt}
 }
 
 
@@ -540,7 +647,24 @@
 \pgfsyssoftpath@curvetosupportatoken {24.64087pt}{-12.52248pt}
 \pgfsyssoftpath@curvetosupportbtoken {29.25806pt}{19.46638pt}
 \pgfsyssoftpath@curvetotoken {38.86725pt}{41.65799pt}
-\pgfsyssoftpath@closepathtoken {24.64087pt}{-56.90549pt}
+  \pgfsyssoftpath@closepathtoken {24.64087pt}{-56.90549pt}
+  ,
+  \pgfsyssoftpath@rectcornertoken {5.0610532751pt}{-75.548681835pt}
+  \pgfsyssoftpath@rectsizetoken {0.9530306865pt}{63.5081855238pt}
+  \pgfsyssoftpath@rectcornertoken {5.0610532751pt}{-75.548681835pt}
+  \pgfsyssoftpath@rectsizetoken {0.9530306865pt}{63.5081855238pt}
+  \pgfsyssoftpath@movetotoken {-7.1128621723pt}{-49.2816071556pt}
+  \pgfsyssoftpath@linetotoken {-12.3199956197pt}{28.4530030094pt}
+  \pgfsyssoftpath@rectcornertoken {-12.3199956197pt}{28.4530030094pt}
+  \pgfsyssoftpath@rectsizetoken {0.9530306865pt}{63.5081855238pt}
+  \pgfsyssoftpath@rectcornertoken {-12.3199956197pt}{28.4530030094pt}
+  \pgfsyssoftpath@rectsizetoken {0.9530306865pt}{63.5081855238pt}
+  \pgfsyssoftpath@movetotoken {7.1135103277pt}{49.2821158538pt}
+  \pgfsyssoftpath@linetotoken {26.5470162751pt}{70.1112286982pt}
+  \pgfsyssoftpath@rectcornertoken {26.5470162751pt}{70.1112286982pt}
+  \pgfsyssoftpath@rectsizetoken {0.9530306865pt}{63.5081855238pt}
+  \pgfsyssoftpath@rectcornertoken {26.5470162751pt}{70.1112286982pt}
+\pgfsyssoftpath@rectsizetoken {0.9530306865pt}{63.5081855238pt}
 }
 
 \tl_new:N \l_test_initialactions_tl
@@ -550,7 +674,8 @@
   \pgfsyssoftpath@linetotoken,
   \pgfsyssoftpath@linetotoken,
   \pgfsyssoftpath@linetotoken,
-  \pgfsyssoftpath@linetotoken
+  \pgfsyssoftpath@linetotoken,
+  \pgfsyssoftpath@rectcornertoken,
 }
 
 \tl_new:N \l_test_finalactions_tl
@@ -560,7 +685,8 @@
   \pgfsyssoftpath@curvetotoken,
   \pgfsyssoftpath@curvetotoken,
   \pgfsyssoftpath@closepathtoken,
-  \pgfsyssoftpath@closepathtoken
+  \pgfsyssoftpath@closepathtoken,
+  \pgfsyssoftpath@rectcornertoken,
 }
 
 \tl_new:N \l_test_other_path_tl
@@ -625,7 +751,29 @@
 \pgfsyssoftpath@curvetosupportatoken {91.68816pt}{8.37102pt}
 \pgfsyssoftpath@curvetosupportbtoken {142.26372pt}{45.19476pt}
 \pgfsyssoftpath@curvetotoken {142.26372pt}{85.35823pt}
-\pgfsyssoftpath@linetotoken {113.81097pt}{0.0pt}
+  \pgfsyssoftpath@linetotoken {113.81097pt}{0.0pt}
+  ,
+\pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {28.45274pt}{85.35823pt}
+\pgfsyssoftpath@linetotoken {56.90549pt}{113.81097pt}
+\pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {85.35823pt}{85.35823pt}
+\pgfsyssoftpath@linetotoken {113.81097pt}{56.90549pt}
+\pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {142.2637pt}{71.13184pt}
+\pgfsyssoftpath@curvetosupportatoken {163.83197pt}{58.67943pt}
+\pgfsyssoftpath@curvetosupportbtoken {170.71645pt}{103.13249pt}
+\pgfsyssoftpath@curvetotoken {170.71645pt}{128.03732pt}
+  \pgfsyssoftpath@linetotoken {142.2637pt}{42.6791pt}
 }
 
 
@@ -691,7 +839,29 @@
 \pgfsyssoftpath@curvetosupportatoken {0.0pt}{28.45274pt}
 \pgfsyssoftpath@curvetosupportbtoken {0.0pt}{-28.45274pt}
 \pgfsyssoftpath@curvetotoken {56.90549pt}{-28.45274pt}
-\pgfsyssoftpath@linetotoken {28.45274pt}{56.90549pt}
+  \pgfsyssoftpath@linetotoken {28.45274pt}{56.90549pt}
+  ,
+\pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {28.45274pt}{85.35823pt}
+\pgfsyssoftpath@linetotoken {56.90549pt}{113.81097pt}
+\pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {85.35823pt}{85.35823pt}
+\pgfsyssoftpath@linetotoken {113.81097pt}{56.90549pt}
+\pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
+\pgfsyssoftpath@curvetosupportatoken {0.0pt}{28.45274pt}
+\pgfsyssoftpath@curvetosupportbtoken {0.0pt}{-28.45274pt}
+\pgfsyssoftpath@curvetotoken {56.90549pt}{-28.45274pt}
+  \pgfsyssoftpath@linetotoken {28.45274pt}{56.90549pt}
 }
 
 \tl_new:N \l_test_append_paths_tl
@@ -751,25 +921,55 @@
 \pgfsyssoftpath@curvetosupportatoken {0.0pt}{28.45274pt}
 \pgfsyssoftpath@curvetosupportbtoken {0.0pt}{-28.45274pt}
 \pgfsyssoftpath@curvetotoken {56.90549pt}{-28.45274pt}
-\pgfsyssoftpath@linetotoken {28.45274pt}{56.90549pt}
+  \pgfsyssoftpath@linetotoken {28.45274pt}{56.90549pt}
+  ,
+  \pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {29.25275pt}{57.70549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {28.45274pt}{85.35823pt}
+\pgfsyssoftpath@linetotoken {56.90549pt}{113.81097pt}
+\pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {56.90549pt}{113.81097pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {85.35823pt}{85.35823pt}
+\pgfsyssoftpath@linetotoken {113.81097pt}{56.90549pt}
+\pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@rectcornertoken {113.81097pt}{56.90549pt}
+\pgfsyssoftpath@rectsizetoken {28.45273pt}{14.22635pt}
+\pgfsyssoftpath@movetotoken {0.0pt}{0.0pt}
+\pgfsyssoftpath@curvetosupportatoken {0.0pt}{28.45274pt}
+\pgfsyssoftpath@curvetosupportbtoken {0.0pt}{-28.45274pt}
+\pgfsyssoftpath@curvetotoken {56.90549pt}{-28.45274pt}
+  \pgfsyssoftpath@linetotoken {28.45274pt}{56.90549pt}
 }
 
 \makeatother
 
-\test_cs_int:Nnn \l_test_paths_seq { spath_reallength:Nn } {1,2,2,3,3}
-\test_cs_int:Nnn \l_test_paths_seq { spath_greallength:Nn } {1,2,2,3,3}
-\test_cs_int:Nnn \l_test_paths_seq { spath_numberofcomponents:Nn } {1,1,2,1,2}
-\test_cs_int:Nnn \l_test_paths_seq { spath_gnumberofcomponents:Nn } {1,1,2,1,2}
-\test_cs_tl:Nnn \l_test_paths_seq { spath_initialpoint:Nn } {{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt}}
-\test_cs_tl:Nnn \l_test_paths_seq { spath_ginitialpoint:Nn } {{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt}}
+% Test the real lengths (local)
+\test_cs_int:Nnn \l_test_paths_seq { spath_reallength:Nn } {1,2,2,3,3,8}
+% Test the real lengths (global)
+\test_cs_int:Nnn \l_test_paths_seq { spath_greallength:Nn } {1,2,2,3,3,8}
+% Test the number of components (local)
+\test_cs_int:Nnn \l_test_paths_seq { spath_numberofcomponents:Nn } {1,1,2,1,2,8}
+% Test the number of components (global)
+\test_cs_int:Nnn \l_test_paths_seq { spath_gnumberofcomponents:Nn } {1,1,2,1,2,8}
+% Test the initial point (local)
+\test_cs_tl:Nnn \l_test_paths_seq { spath_initialpoint:Nn } {{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{29.25275pt}{57.70549pt}}
+% Test the initial point (global)
+\test_cs_tl:Nnn \l_test_paths_seq { spath_ginitialpoint:Nn } {{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{0.0pt}{0.0pt},{29.25275pt}{57.70549pt}}
 
+% Test the final point (local)
 \test_cs_point:Nnn \l_test_paths_seq { spath_finalpoint:Nn }
 {
   {56.90549pt}{28.45274pt},
   {113.81097pt}{28.45274pt},
   {113.81097pt}{28.45274pt},
   {0.0pt}{0.0pt},
-  {56.90549pt}{28.45274pt}
+  {56.90549pt}{28.45274pt},
+  {142.2637pt}{71.13184pt}
 }
 \test_cs_point:Nnn \l_test_paths_seq { spath_gfinalpoint:Nn }
 {
@@ -777,27 +977,34 @@
   {113.81097pt}{28.45274pt},
   {113.81097pt}{28.45274pt},
   {0.0pt}{0.0pt},
-  {56.90549pt}{28.45274pt}
+  {56.90549pt}{28.45274pt},
+  {142.2637pt}{71.13184pt}
 }
 
+% Test reversing the paths
 \test_cs_path:NnnV \l_test_paths_seq { spath_reverse:Nn } {} \l_test_reverse_paths_tl
 \test_cs_path:NnnV \l_test_paths_seq { spath_greverse:Nn } {} \l_test_reverse_paths_tl
 
+% Initial actions
 \test_cs_tl:NnV \l_test_paths_seq { spath_initialaction:Nn } \l_test_initialactions_tl
 \test_cs_tl:NnV \l_test_paths_seq { spath_ginitialaction:Nn } \l_test_initialactions_tl
 
+% Final actions
 \test_cs_tl:NnV \l_test_paths_seq { spath_finalaction:Nn } \l_test_finalactions_tl
 \test_cs_tl:NnV \l_test_paths_seq { spath_gfinalaction:Nn } \l_test_finalactions_tl
 
+% Translate the paths
 \test_cs_path:NnnV \l_test_paths_seq { spath_translate:Nnnn } {   {56.90549pt}{85.35823pt} } \l_test_translate_paths_tl
 \test_cs_path:NnnV \l_test_paths_seq { spath_gtranslate:Nnnn } {  {56.90549pt}{85.35823pt} } \l_test_translate_paths_tl
 
+% Get the lower-left of the bounding box
 \test_cs_point:Nnn \l_test_paths_seq { spath_minbb:Nn } {
   {0.0pt}{0.0pt},
   {0.0pt}{0.0pt},
   {0.0pt}{0.0pt},
   {0.0pt}{0.0pt},
-  {0.0pt}{0.0pt}
+  {0.0pt}{0.0pt},
+  {28.45274pt}{56.90549pt}
 }
 
 \test_cs_point:Nnn \l_test_paths_seq { spath_gminbb:Nn } {
@@ -805,15 +1012,18 @@
   {0.0pt}{0.0pt},
   {0.0pt}{0.0pt},
   {0.0pt}{0.0pt},
-  {0.0pt}{0.0pt}
+  {0.0pt}{0.0pt},
+  {28.45274pt}{56.90549pt}
 }
 
+% Get the upper-right of the bounding box
 \test_cs_point:Nnn \l_test_paths_seq { spath_maxbb:Nn } {
   {56.90549pt}{28.45274pt},
   {113.81097pt}{39.54845pt},
   {113.81097pt}{39.54845pt},
   {113.81097pt}{39.54845pt},
-  {113.81097pt}{39.54845pt}
+  {113.81097pt}{39.54845pt},
+  {142.2637pt}{128.03732pt}
 }
 
 \test_cs_point:Nnn \l_test_paths_seq { spath_gmaxbb:Nn } {
@@ -821,12 +1031,15 @@
   {113.81097pt}{39.54845pt},
   {113.81097pt}{39.54845pt},
   {113.81097pt}{39.54845pt},
-  {113.81097pt}{39.54845pt}
+  {113.81097pt}{39.54845pt},
+  {142.2637pt}{128.03732pt}
 }
 
+% Scale the paths
 \test_cs_path:NnnV \l_test_paths_seq { spath_scale:Nnnn } { 5 5 } \l_test_scale_paths_tl
 \test_cs_path:NnnV \l_test_paths_seq { spath_gscale:Nnnn } { 5 5 } \l_test_scale_paths_tl
 
+% Transform the paths
 \test_cs_path:NnnV \l_test_paths_seq { spath_transform:Nnnnnnnn } {
  {0.25pt}{1.73206pt}
  {-0.43301pt}{1.0pt}
@@ -846,15 +1059,19 @@
 \test_cs_path:NnVV \l_test_paths_seq { spath_weld:Nnn } \l_test_other_path_tl \l_test_weld_paths_tl
 \test_cs_path:NnVV \l_test_paths_seq { spath_gweld:Nnn } \l_test_other_path_tl \l_test_weld_paths_tl
 
+% Append the paths to another path, removing the intervening move
 \test_cs_path:NnVV \l_test_paths_seq { spath_append_no_move:Nnn } \l_test_another_path_tl \l_test_append_no_move_tl
 \test_cs_path:NnVV \l_test_paths_seq { spath_gappend_no_move:Nnn } \l_test_another_path_tl \l_test_append_no_move_tl
 
+% Append the paths to another path
 \test_cs_path:NnVV \l_test_paths_seq { spath_append:Nnn } \l_test_another_path_tl \l_test_append_paths_tl
 \test_cs_path:NnVV \l_test_paths_seq { spath_gappend:Nnn } \l_test_another_path_tl \l_test_append_paths_tl
 
+% Prepend a path to the paths
 \test_cs_other_path:NnVV \l_test_paths_seq { spath_prepend:Nnn } \l_test_another_path_tl \l_test_append_paths_tl
 \test_cs_other_path:NnVV \l_test_paths_seq { spath_gprepend:Nnn } \l_test_another_path_tl \l_test_append_paths_tl
 
+% Split a path at intersections
 \test_cs_path:NnVV \l_test_components_seq { spath_split_component_at_intersections:Nnn } \l_test_intersection_path_tl \l_test_components_tl
 
 
