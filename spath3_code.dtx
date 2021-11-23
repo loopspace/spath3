@@ -169,6 +169,7 @@ and the derived files            spath3.ins,
 % \changes{2.0}{2021/01/19}{Refactored the code to remove the OO approach and make it functional, introduced the spath3 TikZ library to provide a user interface.}
 % \changes{2.2}{2021/02/05}{Bugfixes and improvements, mainly with regard to the intersection and splitting routines.}
 % \changes{2.4}{2021/02/21}{Rejigged how the routines for using paths were implemented, added some more routines for joining paths.}
+% \changes{2.6}{2021/11/23}{Modified core routines to cope with a "true rectangle" path; added routines for splitting at a parametrised point.}
 %
 % \DoNotIndex{\newcommand,\newenvironment}
 %
@@ -257,7 +258,7 @@ and the derived files            spath3.ins,
 \NeedsTeXFormat{LaTeX2e}
 \RequirePackage{expl3}
 \RequirePackage{pgf}
-\ProvidesExplPackage {spath3} {2021/02/21} {2.4} {Functions for
+\ProvidesExplPackage {spath3} {2021/11/23} {2.6} {Functions for
 manipulating PGF soft paths}
 \RequirePackage{xparse}
 %    \end{macrocode}
@@ -8874,7 +8875,7 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 %
 %
-% Join the specified components together, joining each to its previous one.
+% Remove the specified components.
 %
 %    \begin{macrocode}
   remove~ components/.code~ 2~ args={
