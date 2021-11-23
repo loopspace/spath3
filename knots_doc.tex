@@ -1,4 +1,4 @@
-\immediate\write18{tex spath3_code.dtx}
+%\immediate\write18{tex spath3_code.dtx}
 \documentclass{ltxdoc}
 \usepackage[T1]{fontenc}
 \usepackage{trace}
@@ -610,6 +610,119 @@ Another tool for drawing knot diagrams is provided by the \Verb+hobby+ package w
 This can be combined with the facilities of this package but also has some features of its own that make it suitable for drawing knot diagrams.
 
 For braids themselves, there is the \Verb+braids+ package which allows input specification in the form of a word in the braid group.
+
+\section{Troubleshooting}
+
+The diagrams drawn by this package can involve quite complicated calculations and they don't always turn out as expected.
+There are plenty of \href{https://tex.stackexchange.com/search?q=knots}{questions on TeX-SX} about this package, but sifting through them can be tricky.
+Through answering some of them, I've developed a few strategies for figuring out what's going on.
+This section details some of what can go wrong and some of those strategies for finding out what's going on. 
+
+\subsection{Small Diagrams}
+
+A common situation when the diagrams don't always work out is when the diagram is relatively small.
+The defaults in this library are set for a diagram of a few centimetres across.
+Some of the key properties are stored as dimensions which means that they don't naturally scale but have to be reset.
+In particular, the \Verb!end tolerance! and \Verb!clip radius! are dimensions with defaults \Verb!14pt! and \Verb!10pt! respectively.
+
+The \Verb!end tolerance! is used to weed out false intersections that occur when a strand is split into pieces.
+Therefore, if the \Verb!consider self intersections! key is not set then \Verb!end tolerance! is largely unneeded (though it is still used) so can safely be set to something very small.
+
+The effect of this can be seen in the following (where to make the issue evident, I've made \Verb!end tolerance! larger rather than make the diagram small).
+
+\begin{example}
+\begin{tikzpicture}
+\begin{knot}[
+  end tolerance=1.5cm
+  ]
+\strand[red] (0,0) to[out=0,in=180] ++(1,1);
+\strand[blue] (0,1) to[out=0,in=180] ++(1,-1);
+\end{knot}
+\begin{knot}
+\strand[red] (1.5,0) to[out=0,in=180] ++(1,1);
+\strand[blue] (1.5,1) to[out=0,in=180] ++(1,-1);
+\end{knot}
+\end{tikzpicture}
+\end{example}
+
+The \Verb!clip radius! determines how much of the diagram is redrawn near a crossing.
+If the crossings are very close together, the redraws can interfere with each other.
+
+\begin{example}
+\begin{tikzpicture}
+\begin{knot}[
+  clip radius=.6cm,
+  flip crossing=2
+  ]
+\strand[red] (0,0) to[out=0,in=180] ++(1,.6) to[out=0,in=180] ++(1,-.6);
+\strand[blue] (0,1) to[out=0,in=180] ++(1,-.6) to[out=0,in=180] ++(1,.6);
+\end{knot}
+\begin{knot}[flip crossing=2]
+\strand[red] (2.5,0) to[out=0,in=180] ++(1,.6) to[out=0,in=180] ++(1,-.6);
+\strand[blue] (2.5,1) to[out=0,in=180] ++(1,-.6) to[out=0,in=180] ++(1,.6);
+\end{knot}
+\end{tikzpicture}
+\end{example}
+
+\subsection{Strategies}
+
+\begin{itemize}
+\item \Verb+draft mode=crossings+
+
+This is useful to check that all the intersections are actually being found.
+Any that aren't might be due to \Verb!end tolerance! being too large.
+Or if \Verb!consider self intersections! is set to \Verb!no splits! then some self intersections might not be found.
+
+\item \Verb+background clip+ and \Verb+clip+ styles.
+
+When a crossing is redrawn, the over strand is clipped to a circle centred on the crossing.
+First a background path is drawn to ``wipe out'' the under strand and then the over strand is drawn.
+The clip circle for the background path is slightly smaller than the over path to avoid an issue whereby faint artefacts are visible (called \href{https://tex.stackexchange.com/q/188447/86}{crop circles} in one question on TeX-SX).
+Rather than use a \Verb!\clip! directly, I use \Verb!\path[background clip]! and \Verb!\path[clip]! which means that these styles can be modified to show the region that is being used.
+A useful style is:
+
+\begin{lstlisting}
+ background clip/.append style={
+    preaction={
+      fill=gray,
+      fill opacity=.5,
+    }
+ }
+\end{lstlisting}
+
+\begin{example}
+\begin{tikzpicture}
+\begin{knot}[
+  clip radius=.6cm,
+  flip crossing=2,
+  background clip/.append style={
+    preaction={
+      fill=gray,
+      fill opacity=.5,
+    }
+  }
+]
+\strand[red] (0,0) to[out=0,in=180] ++(1,.6) to[out=0,in=180] ++(1,-.6);
+\strand[blue] (0,1) to[out=0,in=180] ++(1,-.6) to[out=0,in=180] ++(1,.6);
+\end{knot}
+\begin{knot}[
+  flip crossing=2,
+  background clip/.append style={
+    preaction={
+      fill=gray,
+      fill opacity=.5,
+    }
+  }
+]
+\strand[red] (2.5,0) to[out=0,in=180] ++(1,.6) to[out=0,in=180] ++(1,-.6);
+\strand[blue] (2.5,1) to[out=0,in=180] ++(1,-.6) to[out=0,in=180] ++(1,.6);
+\end{knot}
+\end{tikzpicture}
+\end{example}
+
+
+\end{itemize}
+
 
 \end{document}
 % Local Variables:
