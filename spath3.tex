@@ -102,6 +102,25 @@ The macro is constructed from the name, but there is scope for a prefix and suff
 By default, these are set up so to be compatible with the |intersections| library -- this package and that save their paths in the same underlying macro.
 Some packages that are built on top of this one (such as the |knot| and |penrose| packages) install their own prefixes and suffixes to avoid clashes.
 
+\begin{function}{
+  set prefix,
+  set suffix,
+  prefix,
+  suffix
+}
+\begin{syntax}
+|set prefix=|\marg{prefix}
+|set suffix=|\marg{suffix}
+|prefix=|\oarg{name}
+|suffix=|\oarg{name}
+|set name=|\oarg{name}
+\end{syntax}
+The first two keys set the prefix and suffix directly.
+The other keys allow for defining a label for a prefix and suffix for quick switching between different ones.
+The default (with key |default| or no key specified) is to match the |intersections| library.
+The |knots| library uses this to set a different prefix.
+\end{function}
+
 Using names rather than macros directly also makes it possible to link a soft path with a set of TikZ styles (this is particularly useful when splitting the path into components).
 
 \begin{variable}{current}
@@ -118,6 +137,13 @@ There are several commands that take multiple paths and |current| can be used in
 
 It only makes sense to use it in a path-building context, and it refers to the path at the moment of invocation, so it doesn't do a lot in the main options on that path but it can be used in options later on in the process.
 
+Sometimes it isn't possible to put commands partway through a path (for example, if the path command is buried in another macro) so there is a key which can be used to delay things to the end of the construction:
+
+\begin{verbatim}
+at end path construction={code}
+\end{verbatim}
+
+This invokes the |code| right after the path has finished being built.
 \end{variable}
 
 \subsection{Saving and Using Soft Paths}
@@ -133,6 +159,8 @@ This delays until the path is fully constructed so can be issued in the options 
 
 Soft paths constructed this way are local to the group in which the path command is issued.
 The |global| version saves the path globally which is useful when the original path is inside a scope or even another tikzpicture.
+
+If wanting to save the border of a node then because there are extra levels of grouping, the global version of this key has to be used.
 
 \end{function}
 
@@ -532,7 +560,7 @@ The middle path is transformed to fit (don't try this with a path whose starting
 \end{function}
 
 
-\subsection{Shortening Paths}
+\subsection{Shortening and Splitting Paths}
 
 \begin{function}{
 shorten at end,
@@ -557,6 +585,42 @@ This is particularly true for B\'ezier paths and if there is a very short segmen
 
 It uses the derivative at the end to work out how much to shorten by.
 If wanting to shorten by a large amount it is better to shorten by a small amount a number of times.
+\end{function}
+
+\begin{function}{
+  split at,
+  split globally at,
+  split at into,
+  split globally at into,
+  split at keep start,
+  split globally at keep start,
+  split at keep end,
+  split globally at keep end,
+  split at keep middle,
+  split globally at keep middle,
+}
+\begin{syntax}
+|split at=|\marg{path}\marg{parameter}
+|split globally at=|\marg{path}\marg{parameter}
+|split at into=|\marg{start path}\marg{end path}\marg{path}\marg{parameter}
+|split globally at into=|\marg{start path}\marg{end path}\marg{path}\marg{parameter}
+|split at keep start=|\marg{path}\marg{parameter}
+|split globally at keep start=|\marg{path}\marg{parameter}
+|split at keep end=|\marg{path}\marg{parameter}
+|split globally at keep end=|\marg{path}\marg{parameter}
+|split at keep middle=|\marg{path}\marg{parameter}\marg{parameter}
+|split globally at keep middle=|\marg{path}\marg{parameter}\marg{parameter}
+\end{syntax}
+
+These keys split a path at a point specified by a parameter.
+The interpretation of the parameter is described in Section~\ref{sec:coordinates}.
+
+The first two keys replace the path with the split path, so this introduces a break at the point specified by the parameter.
+The second two save the split path into a new path.
+
+The ones with \texttt{keep} in the name split a path and keep the designated piece (so throw away the rest).
+The ones that keep the middle need two parameters to specify the break points.
+
 \end{function}
 
 \subsection{Exporting Paths}
