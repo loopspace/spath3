@@ -222,7 +222,8 @@ Note that because the keys are processed and then acted upon, this key is always
 One thing should be noted about transformations.
 By the time a soft path is built, all available transformations have been applied.
 This means that when re-inserting a soft path back into a high level command (such as |\draw|), existing transformations should have no effect (other than those specified via the |transform| key).
-Where this gets a little tricky is with things like node placement -- using the \Verb+pos=D+ key on a node positions that node at a particular point on the path\footnote{Exactly how the parameter is interpreted is the same as for the \Verb+spath+ coordinate system described in Section~\ref{sec:coordinates}.}.
+Where this gets a little tricky is with things like node placement -- using the \Verb+pos=D+ key on a node positions that node at a particular point on the path.
+Exactly how the parameter is interpreted is the same as for the \Verb+spath+ coordinate system described in Section~\ref{sec:coordinates}.
 When restoring a path then the library tries to set up various internals of TikZ correctly, but there may be some things I've overlooked or not accounted for particularly with regard to existing transformations; if you spot anything working oddly then please report it to me.
 \end{function}
 
