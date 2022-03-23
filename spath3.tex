@@ -1083,8 +1083,8 @@ sin ++(1.57,1);
 }
 
 % If used in the preamble, this needs surrounding in \AtBeginDocument
-%\AtBeginDocument{
-\tikz[overlay] { \path[spath/save global=arc] (0,0) arc[radius=1cm, start angle=180, delta angle=-180]; }
+%\AtBeginDocument{%
+\tikz[overlay] { \path[spath/save global=arc] (0,0) arc[radius=1cm, start angle=180, delta angle=-180]; }%
 %}
 \begin{tikzpicture}
 \path[spath/save=over] (0,0) -| ++(1,1) -| ++(-1,1) -| ++(1,1) -| ++(-1,1);
@@ -1094,6 +1094,9 @@ sin ++(1.57,1);
 \draw[spath/use=under];
 \end{tikzpicture}
 \end{example}
+
+The command defining the arc does introduce a box which can introduce additional spacing.
+The syntax above, with the \% at the end of the lines, shouldn't add space but if for some reason it does then more sophisticated solutions to this are detailed at \href{https://tex.stackexchange.com/q/605800/86}{How to save or define a TikZ path for spath3 without introducing artifacts?}.
 
 \end{enumerate}
   \end{document}
