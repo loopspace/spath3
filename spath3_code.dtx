@@ -2800,7 +2800,7 @@ manipulating PGF soft paths}
 % \spath_gappend_no_move:Nn,
 % }
 % Append the path from the second \Verb+spath+ to the first, removing
-% the adjoining move if neither path has a rectangle either side of the join.
+% the adjoining move if neither path has a rectangle either side of the join or if the first path isn't closed.
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \@@_append_no_move:nn #1#2
 {
@@ -2810,6 +2810,8 @@ manipulating PGF soft paths}
   \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpb_tl}
   \spath_finalaction:Nn \l_@@_tmpd_tl {#1}
   \bool_if:nT {
+    ! \tl_if_eq_p:NN \l_@@_tmpd_tl \c_spath_closepath_tl
+    &&
     ! \tl_if_eq_p:NN \l_@@_tmpd_tl \c_spath_rectcorner_tl
     &&
     \tl_if_eq_p:NN \l_@@_tmpc_tl \c_spath_moveto_tl
