@@ -8,12 +8,13 @@ it is _baked_.
 
 This library provides ways of modifying these paths before they are baked.
 
-It also provides two sub-packages which make use of this facility:
+It also provides some sub-packages which make use of this facility:
 
 1. `knots` for drawing knot diagrams, sorting out the crossings at
    intersections
 2. `calligraphy` which turns a path into one that might be drawn by a
    calligraphic pen
+3. `spath3` which is a user-level interface to the core functionality
 
 # Installation
 
