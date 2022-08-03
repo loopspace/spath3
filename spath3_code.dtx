@@ -2997,6 +2997,56 @@ manipulating PGF soft paths}
 % \end{macro}
 %
 % \begin{macro}[internal]{
+% \spath_bake_shorten:Nn,
+% \spath_bake_shorten:N,
+% \spath_gbake_shorten:Nn,
+% \spath_gbake_shorten:N
+% }
+%
+% The shortening routine is applied quite late in the process of building a soft path so this ensures that it is done.
+% 
+%    \begin{macrocode}
+\cs_new_protected_nopar:Npn \@@_bake_shorten:n #1
+{
+  \group_begin:
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
+  \pgfsyssoftpath@getcurrentpath\l_@@_tmpb_tl
+  \pgfsyssoftpath@setcurrentpath\l_@@_tmpa_tl
+  \pgf@prepare@end@of@path
+  \pgf@prepare@start@of@path
+  \pgfsyssoftpath@getcurrentpath\l_@@_tmpa_tl
+  \pgfsyssoftpath@setcurrentpath\l_@@_tmpb_tl
+  \tl_gset_eq:NN \g_@@_output_tl \l_@@_tmpa_tl
+  \group_end:
+}
+\cs_new_protected_nopar:Npn \spath_bake_shorten:Nn #1#2
+{
+  \@@_bake_shorten:n {#2}
+  \tl_set_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_bake_shorten:Nn {NV}
+\cs_new_protected_nopar:Npn \spath_bake_shorten:N #1
+{
+  \spath_bake_shorten:NV #1#1
+}
+\cs_generate_variant:Nn \spath_bake_shorten:N {c}
+\cs_new_protected_nopar:Npn \spath_gbake_shorten:Nn #1#2
+{
+  \@@_bake_shorten:n {#2}
+  \tl_gset_eq:NN #1 \g_@@_output_tl
+  \tl_gclear:N \g_@@_output_tl
+}
+\cs_generate_variant:Nn \spath_gbake_shorten:Nn {NV}
+\cs_new_protected_nopar:Npn \spath_gbake_shorten:N #1
+{
+  \spath_gbake_shorten:NV #1#1
+}
+\cs_generate_variant:Nn \spath_gbake_shorten:N {c}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}[internal]{
 % \spath_close:Nn,
 % \spath_close:N,
 % \spath_gclose:Nn,
@@ -7858,6 +7908,7 @@ manipulating PGF soft paths}
     \tikz@addmode{
       \spath_get_current_path:N \l_@@_tmpa_tl
       \spath_bake_round:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
+      \spath_bake_shorten:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
       \spath_save_path:cV {\@@_path_name:n {#1}}
       \l_@@_tmpa_tl
     }
@@ -7866,6 +7917,7 @@ manipulating PGF soft paths}
     \tikz@addmode{
       \spath_get_current_path:N \l_@@_tmpa_tl
       \spath_bake_round:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
+      \spath_bake_shorten:NV \l_@@_tmpa_tl \l_@@_tmpa_tl
       \spath_gsave_path:cV {\@@_path_name:n {#1}}
       \l_@@_tmpa_tl
     }
