@@ -143,7 +143,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{9067}
+% \CheckSum{10189}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -1516,11 +1516,15 @@ manipulating PGF soft paths}
     \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectsize_tl
     {
       \dim_set:Nn \l_@@_tmpa_dim
-      {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl + \l_@@_rectx_dim} {\l_@@_tmpa_dim}}
+      {\dim_min:nn
+        {\tl_head:N \l_@@_tmpa_tl + \l_@@_rectx_dim} {\l_@@_tmpa_dim}
+      }
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     
       \dim_set:Nn \l_@@_tmpb_dim
-      {\dim_min:nn {\tl_head:N \l_@@_tmpa_tl + \l_@@_recty_dim} {\l_@@_tmpb_dim}}
+      {\dim_min:nn
+        {\tl_head:N \l_@@_tmpa_tl + \l_@@_recty_dim} {\l_@@_tmpb_dim}
+      }
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     }
     {
@@ -1603,11 +1607,15 @@ manipulating PGF soft paths}
     \tl_if_eq:NNTF \l_@@_tmpc_tl \c_spath_rectsize_tl
     {
       \dim_set:Nn \l_@@_tmpa_dim
-      {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl + \l_@@_rectx_dim} {\l_@@_tmpa_dim}}
+      {\dim_max:nn
+        {\tl_head:N \l_@@_tmpa_tl + \l_@@_rectx_dim} {\l_@@_tmpa_dim}
+      }
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     
       \dim_set:Nn \l_@@_tmpb_dim
-      {\dim_max:nn {\tl_head:N \l_@@_tmpa_tl + \l_@@_recty_dim} {\l_@@_tmpb_dim}}
+      {\dim_max:nn
+        {\tl_head:N \l_@@_tmpa_tl + \l_@@_recty_dim} {\l_@@_tmpb_dim}
+      }
       \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
     }
     {
@@ -2574,8 +2582,8 @@ manipulating PGF soft paths}
   \spath_initialpoint:Nn \l_@@_tmpc_tl {#2}
   \spath_initialtangent:Nn \l_@@_tmpd_tl {#2}
 
-  \spath_hobby_curve:NVVVV \l_@@_tmpe_tl \l_@@_tmpa_tl \l_@@_tmpb_tl \l_@@_tmpd_tl \l_@@_tmpc_tl
-
+  \spath_hobby_curve:NVVVV \l_@@_tmpe_tl
+  \l_@@_tmpa_tl \l_@@_tmpb_tl \l_@@_tmpd_tl \l_@@_tmpc_tl
 
   \tl_set:Nn \l_@@_tmpa_tl {#1}
   \spath_append_no_move:NV \l_@@_tmpa_tl \l_@@_tmpe_tl
@@ -2710,7 +2718,8 @@ manipulating PGF soft paths}
   }
   {
     
-    \spath_hobby_curve:NVVVV \l_@@_tmpe_tl \l_@@_tmpa_tl \l_@@_tmpb_tl \l_@@_tmpd_tl \l_@@_tmpc_tl
+    \spath_hobby_curve:NVVVV \l_@@_tmpe_tl
+    \l_@@_tmpa_tl \l_@@_tmpb_tl \l_@@_tmpd_tl \l_@@_tmpc_tl
 
     \tl_set:Nn \l_@@_tmpa_tl {#1}
     \spath_append_no_move:NV \l_@@_tmpa_tl \l_@@_tmpe_tl
@@ -4095,7 +4104,8 @@ manipulating PGF soft paths}
   \group_begin:
   \spath_open:Nn \l_@@_tmpa_tl {#1}
   \fp_set:Nn \l_@@_tmpa_fp {4*(#2)}
-  \spath_split_at:NNVV \l_@@_tmpa_tl \l_@@_tmpb_tl \l_@@_tmpa_tl \l_@@_tmpa_fp
+  \spath_split_at:NNVV
+  \l_@@_tmpa_tl \l_@@_tmpb_tl \l_@@_tmpa_tl \l_@@_tmpa_fp
   \@@_append_no_move:VV \l_@@_tmpb_tl \l_@@_tmpa_tl
   \group_end:
 }
@@ -6693,11 +6703,14 @@ manipulating PGF soft paths}
 % We surround all the keys with checks to ensure that the soft path under consideration does actually exist, but if it doesn't we should warn the user.
 %
 %    \begin{macrocode}
-\msg_new:nnn { spath3 } { missing soft path } { Soft~ path~ #1~ doesn't~ exist~ \msg_line_context:}
-\msg_new:nnnn { spath3 } { empty soft path } { Soft~ path~ #1~ is~ empty~ \msg_line_context:}
+\msg_new:nnn { spath3 } { missing soft path }
+{ Soft~ path~ #1~ doesn't~ exist~ \msg_line_context:}
+\msg_new:nnnn { spath3 } { empty soft path }
+{ Soft~ path~ #1~ is~ empty~ \msg_line_context:}
 {If~ it~ was~ defined~ inside~ a~ group,~ try~ using~ "save~ global". }
 \msg_new:nnn { spath3 } { load intersections }
-{ You~ need~ to~ load~ the~ "intersections"~ library~ to~ work~ with~ intersections }
+{ You~ need~ to~ load~ the~ "intersections"~ library~
+  to~ work~ with~ intersections }
 %    \end{macrocode}
 %
 % When saving a soft path, by default we use a naming convention that is compatible with the intersections library so that paths saved here and paths saved by the \texttt{name path} facility of the intersections library are mutually exchangeable.
@@ -6997,7 +7010,8 @@ manipulating PGF soft paths}
         \seq_gput_right:NV \g_@@_output_seq \l_@@_tmpa_tl
       }
       {
-        \seq_gput_right:Nx \g_@@_output_seq {\int_eval:n {#2 - \l_@@_tmpa_tl}}
+        \seq_gput_right:Nx \g_@@_output_seq
+        {\int_eval:n {#2 - \l_@@_tmpa_tl}}
       }
     }
     \seq_gsort:Nn \g_@@_output_seq
@@ -8466,7 +8480,8 @@ manipulating PGF soft paths}
     {
       \@@_check_path:nnn
       {
-        \spath_split_at_normalised:ccvn {\@@_path_name:n {#1}}  {\@@_path_name:n {#2}}
+        \spath_split_at_normalised:ccvn {\@@_path_name:n {#1}}
+        {\@@_path_name:n {#2}}
       }
     } {#3} { {} {#4} }
   },
@@ -8475,7 +8490,8 @@ manipulating PGF soft paths}
     {
       \@@_check_path:nnn
       {
-        \spath_gsplit_at_normalised:ccvn {\@@_path_name:n {#1}}  {\@@_path_name:n {#2}}
+        \spath_gsplit_at_normalised:ccvn {\@@_path_name:n {#1}}
+        {\@@_path_name:n {#2}}
       }
     } {#3} { {} {#4} }
   },
@@ -10473,7 +10489,8 @@ manipulating PGF soft paths}
 % Close the scope
 %    \begin{macrocode}
   \endpgfscope
-  \knot_debug:x {knot~rendered,~found~\int_use:N  \g_@@_intersections_int \c_space_tl~intersections}
+  \knot_debug:x {knot~rendered,
+    ~found~\int_use:N  \g_@@_intersections_int \c_space_tl~intersections}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -10644,7 +10661,8 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \knot_intersections:nn #1#2
 {
-  \knot_debug:x {knot~ intersections~ between~ \l_@@_prefix_tl \c_space_tl #1~ and~ #2}
+  \knot_debug:x {knot~ intersections~ between~
+    \l_@@_prefix_tl \c_space_tl #1~ and~ #2}
   \group_begin:
   \tl_set_eq:NN \l_@@_tmpa_tl \l_@@_prefix_tl
   \tl_put_right:Nn \l_@@_tmpa_tl {#1}
@@ -10757,7 +10775,8 @@ manipulating PGF soft paths}
   \pgfpointintersectionsolution{#1}
   \dim_set:Nn \l_@@_tmpa_dim {\pgf@x}
   \dim_set:Nn \l_@@_tmpb_dim {\pgf@y}
-  \knot_debug:x {intersection~at~(\dim_use:N \l_@@_tmpa_dim,\dim_use:N \l_@@_tmpb_dim)}
+  \knot_debug:x {intersection~at~
+    (\dim_use:N \l_@@_tmpa_dim,\dim_use:N \l_@@_tmpb_dim)}
 %    \end{macrocode}
 % If we're dealing with filaments, we can get false positives from the end points.
 %    \begin{macrocode}
@@ -10899,7 +10918,8 @@ manipulating PGF soft paths}
             !\tl_if_empty_p:c {knot previous \tl_use:N \l_@@_tmpg_tl}
           }
           {
-            \knot_debug:x {Prepending~ \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
+            \knot_debug:x {Prepending~
+              \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
             \spath_prepend_no_move:cv
             {knot \tl_use:N \l_@@_prefix_tl -1}
             {knot \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
@@ -10910,9 +10930,13 @@ manipulating PGF soft paths}
             {
               \l_@@_splits_bool
               &&
-              \tl_if_exist_p:c {knot previous \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
+              \tl_if_exist_p:c {knot previous
+                \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}
+              }
               &&
-              !\tl_if_empty_p:c {knot previous \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}
+              !\tl_if_empty_p:c {knot previous
+                \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}
+              }
             }
             {
               \knot_test_endpoint:NvnT
@@ -10920,7 +10944,11 @@ manipulating PGF soft paths}
               {knot previous \tl_use:N \l_@@_tmpg_tl}
               {initial point}
               {
-                \knot_debug:x {Prepending~ \tl_use:c {knot previous \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}}}
+                \knot_debug:x {Prepending~
+                  \tl_use:c {knot previous
+                    \tl_use:c {knot previous \tl_use:N \l_@@_tmpg_tl}
+                  }
+                }
                 \spath_prepend_no_move:cv
                 {knot \tl_use:N \l_@@_prefix_tl -1}
                 {knot \tl_use:c
@@ -10928,7 +10956,8 @@ manipulating PGF soft paths}
                     {knot previous \tl_use:N \l_@@_tmpg_tl}
                   }
                 }
-                \tl_set_eq:Nc \l_@@_tmpa_tl {knot \tl_use:N \l_@@_prefix_tl -1}
+                \tl_set_eq:Nc \l_@@_tmpa_tl
+                {knot \tl_use:N \l_@@_prefix_tl -1}
               }
             }
           }
@@ -10945,7 +10974,8 @@ manipulating PGF soft paths}
             !\tl_if_empty_p:c {knot next \tl_use:N \l_@@_tmpg_tl}
           }
           {
-            \knot_debug:x {Appending~ \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}
+            \knot_debug:x {Appending~
+              \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}
             \spath_append_no_move:cv
             {knot \tl_use:N \l_@@_prefix_tl -1}
             {knot \tl_use:c {knot next \tl_use:N \l_@@_tmpg_tl}}
@@ -10956,16 +10986,22 @@ manipulating PGF soft paths}
               \tl_if_exist_p:c {knot next \tl_use:c { knot next \tl_use:N
                 \l_@@_tmpg_tl}}
               &&
-              !\tl_if_empty_p:c {knot next \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}}
+              !\tl_if_empty_p:c {knot next
+                \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}
+              }
             }
             {
-              \knot_debug:x {Testing~ whether~ to~ append~ {knot next \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}}}
+              \knot_debug:x {Testing~ whether~ to~ append~
+                {knot next \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}}
+              }
               \knot_test_endpoint:NvnT
               \l_@@_redraw_tolerance_dim
               {knot next \tl_use:N \l_@@_tmpg_tl}
               {final point}
               {
-                \knot_debug:x {Appending~ {knot next \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}}}
+                \knot_debug:x {Appending~
+                  {knot next \tl_use:c { knot next \tl_use:N \l_@@_tmpg_tl}}
+                }
                 \spath_append_no_move:cv
                 {knot \tl_use:N \l_@@_prefix_tl -1}
                 {knot \tl_use:c
