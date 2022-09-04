@@ -528,6 +528,16 @@ This removes the listed components of the path.
 As with other list routines, the list is parsed via |foreach| first.
 \end{function}
 
+\begin{function}{open, open globally}
+\begin{syntax}
+|open=|\marg{path}
+|open globally=|\marg{path}
+\end{syntax}
+
+These open the path by removing all of the closing elements.
+If the closing elements add substantially to the path then they are replaced by a line segment. 
+\end{function}
+
 
 \begin{function}{close, close globally, close with, close globally with, close with curve, close globally with curve, adjust and close, adjust and close globally}
 \begin{syntax}

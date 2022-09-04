@@ -8355,6 +8355,29 @@ manipulating PGF soft paths}
   },
 %    \end{macrocode}
 %
+% Open a path.
+%
+%    \begin{macrocode}
+  open/.code={
+    \@@_maybe_current_path_reuse:nnn
+    {
+      \@@_check_path:nnn
+      {
+        \spath_open:c
+      }
+    } {#1} { {} }
+  },
+  open~ globally/.code={
+    \@@_maybe_current_path_reuse:nnn
+    {
+      \@@_check_path:nnn
+      {
+        \spath_gopen:c
+      }
+    } {#1} { {} }
+  },
+%    \end{macrocode}
+%
 % Close a path, ensuring that the end point is exactly where it will close up to.
 %
 %    \begin{macrocode}
