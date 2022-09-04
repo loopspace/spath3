@@ -4191,11 +4191,28 @@ manipulating PGF soft paths}
   \bool_set_true:N \l_@@_tmpa_bool
 
   \tl_set:Nn \l_@@_tmpe_tl {#1}
-  \tl_clear:N \l_@@_tmpc_tl
 
   \dim_zero:N \l_@@_tmpa_dim
   \dim_zero:N \l_@@_tmpb_dim
 
+  % Remember if the component is closed
+  \spath_finalaction:NV \l_@@_tmpa_tl \l_@@_tmpe_tl
+
+  \bool_set:Nn \l_@@_closed_bool
+  {
+    \tl_if_eq_p:NN \l_@@_tmpa_tl \c_spath_closepath_tl
+    ||
+    \tl_if_eq_p:NN \l_@@_tmpa_tl \c_spath_rectcorner_tl
+  }
+  
+  % Open it
+  \spath_open:N \l_@@_tmpe_tl
+
+  \tl_clear:N \l_@@_tmpa_tl
+  \tl_clear:N \l_@@_tmpb_tl
+  \tl_clear:N \l_@@_tmpc_tl
+  \tl_clear:N \l_@@_tmpd_tl
+  
   \bool_until_do:nn {
     \tl_if_empty_p:N \l_@@_tmpe_tl
     ||
@@ -4353,6 +4370,17 @@ manipulating PGF soft paths}
     }
   }
 
+  \bool_if:NT \l_@@_closed_bool
+  {
+    \prg_replicate:nn {3}
+    {
+      \tl_set:Nx \l_@@_tmpc_tl {\tl_tail:N \l_@@_tmpc_tl}
+    }
+    \tl_put_right:NV \l_@@_tmpb_tl \l_@@_tmpc_tl
+    \tl_set_eq:NN \l_@@_tmpc_tl \l_@@_tmpb_tl
+    \tl_clear:N \l_@@_tmpb_tl
+  }
+  
   \tl_gclear:N \g_@@_output_tl
   \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_tmpc_tl
   \@@_tl_gput_right_braced:NV \g_@@_output_tl \l_@@_tmpb_tl
