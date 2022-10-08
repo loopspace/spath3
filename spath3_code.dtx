@@ -3875,9 +3875,11 @@ manipulating PGF soft paths}
   }
   {
     \fp_set:Nn \l_@@_tmpa_fp {.5 * \l_@@_tmpa_fp / \l_@@_tmpb_fp}
-    \fp_compare:nTF
+    \bool_if:nTF
     {
-      0 < \l_@@_tmpa_fp && \l_@@_tmpa_fp < 1
+      \fp_compare_p:n {0 < \l_@@_tmpa_fp}
+      && 
+      \fp_compare_p:n {\l_@@_tmpa_fp < 1}
     }
     {
       \@@_split_curve:nV {#1} \l_@@_tmpa_fp
@@ -9109,6 +9111,30 @@ manipulating PGF soft paths}
     /tikz/spath/maybe~ spot~ weld~ globally=#1,
     /tikz/spath/render~ components=#1
   },
+%    \end{macrocode}
+%
+% For single argument commands which take a path as their argument, set the default to be \Verb+current+ so that they use the current path.
+%
+%    \begin{macrocode}
+  show/.default=current,
+  spot~ weld/.default=current,
+  spot~ weld~ globally/.default=current,
+  reverse/.default=current,
+  reverse~ globally/.default=current,
+  close/.default=current,
+  close~ globally/.default=current,
+  open/.default=current,
+  open~ globally/.default=current,
+  adjust~ and~ close/.default=current,
+  adjust~ and~ close~ globally/.default=current,
+  close~ with~ curve/.default=current,
+  close~ globally~ with~ curve/.default=current,
+  remove~ empty~ components/.default=current,
+  remove~ empty~ components~ globally/.default=current,
+  replace~ lines/.default=current,
+  replace~ lines~ globally/.default=current,
+  maybe~ spot~ weld/.default=current,
+  maybe~ spot~ weld~ globally/.default=current,
 }
 %    \end{macrocode}
 %
@@ -10659,9 +10685,11 @@ manipulating PGF soft paths}
       }
       {
         \fp_set:Nn \l_@@_tmpa_fp {.5 * \l_@@_tmpa_fp / \l_@@_tmpb_fp}
-        \fp_compare:nTF
+        \bool_if:nTF
         {
-          0 < \l_@@_tmpa_fp && \l_@@_tmpa_fp < 1
+          \fp_compare_p:n {0 < \l_@@_tmpa_fp}
+          && 
+          \fp_compare_p:n {\l_@@_tmpa_fp < 1}
         }
         {
           \spath_split_curve:NNnV
