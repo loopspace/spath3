@@ -1679,8 +1679,8 @@ manipulating PGF soft paths}
     \tl_clear:N \l_@@_tmpa_tl
     \tl_put_right:Nn \l_@@_tmpa_tl {
       \ExplSyntaxOn
-      \tl_clear_new:N #1
-      \tl_set:Nn #1 {#2}
+      \tl_gclear_new:N #1
+      \tl_gset:Nn #1 {#2}
       \ExplSyntaxOff
     }
     \protected@write\@auxout{}{
