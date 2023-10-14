@@ -3054,6 +3054,30 @@ manipulating PGF soft paths}
 }
 \cs_generate_variant:Nn \spath_gbake_shorten:N {c}
 %    \end{macrocode}
+%
+% Shortening the path when it is baked can cause issues with arrows.
+% Putting an arrow in a path definition affects the path because the path gets shortened so that the arrow ends where the path was meant to end.
+% So an arrow affects the path definition, but the arrow is not itself part of the path so if an arrow is used when the path is defined and again when the path is used, the path will be shortened twice which might not be what is intended.
+% Therefore it is useful to have a way to disable the shortening and place an arrow tip at the actual end of the line.
+% The following code achieves that.
+%
+% Save the original command that computes the arrow shortening.
+%    \begin{macrocode}
+\cs_set_eq:Nc \@@_pgf_arrow_compute_shortening:n {pgf@arrow@compute@shortening}
+%    \end{macrocode}
+%
+% After \verb+\pgf@arrow@compute@shortening+ then \verb+\pgf@xa+ is the amount to shorten the line by, so we will be setting that to 0pt.
+% Then \verb+\pgf@xb+ is the length of the arrow head which is used to position the arrow and so before zeroing \verb+\pgf@xa+ we subtract it from \verb+\pgf@xb+ so that the arrow is placed so that its back point is at the current position.
+%
+%    \begin{macrocode}
+\cs_new_nopar:Npn \@@_arrow_disable_shortening:n #1
+{
+  \@@_pgf_arrow_compute_shortening:n {#1}
+  \dim_sub:cn {pgf@xb} {\dim_use:c {pgf@xa}}
+  \dim_zero:c {pgf@xa}
+}
+%    \end{macrocode}
+%
 % \end{macro}
 %
 % \begin{macro}[internal]{
@@ -6880,7 +6904,7 @@ manipulating PGF soft paths}
     }
   }
   {
-    \msg_warning:nnn { spath3 } { missing soft path } { #2 }
+    \msg_warning:nnx { spath3 } { missing soft path } { #2 }
   }
   \tl_use:N \l_@@_check_tl
 }
@@ -9112,6 +9136,12 @@ manipulating PGF soft paths}
     /tikz/spath/render~ components=#1
   },
 %    \end{macrocode}
+%
+%    \begin{macrocode}
+  disable~ arrow~ shortening/.code={
+    \cs_set_eq:cN {pgf@arrow@compute@shortening} \__spath_arrow_disable_shortening:n
+  },
+%    \end{macrocode}  
 %
 % For single argument commands which take a path as their argument, set the default to be \Verb+current+ so that they use the current path.
 %
