@@ -457,7 +457,7 @@ manipulating PGF soft paths}
   {
     \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
-    \tl_case:NnF \l_@@_tmpc_tl
+    \token_case_meaning:NnF \l_@@_tmpc_tl
     {
       \c_spath_moveto_tl
       {
@@ -718,7 +718,7 @@ manipulating PGF soft paths}
   \int_set:Nn \l_@@_tmpa_int {0}
   \tl_map_inline:nn {#1} {
     \tl_set:Nn \l_@@_tmpa_tl {##1}
-    \tl_case:NnT \l_@@_tmpa_tl
+    \token_case_meaning:NnT \l_@@_tmpa_tl
     {
       \c_spath_lineto_tl {}
       \c_spath_curveto_tl {}
@@ -763,7 +763,7 @@ manipulating PGF soft paths}
   \int_set:Nn \l_@@_tmpa_int {0}
   \tl_map_inline:nn {#1} {
     \tl_set:Nn \l_@@_tmpa_tl {##1}
-    \tl_case:Nn \l_@@_tmpa_tl
+    \token_case_meaning:Nn \l_@@_tmpa_tl
     {
       \c_spath_moveto_tl
       {
@@ -910,7 +910,7 @@ manipulating PGF soft paths}
   }
   {
     \tl_set:Nx \l_@@_tmpb_tl {\tl_head:N \l_@@_tmpa_tl}
-    \tl_case:Nn \l_@@_tmpb_tl
+    \token_case_meaning:Nn \l_@@_tmpb_tl
     {
       \c_spath_moveto_tl
       {
@@ -1102,7 +1102,7 @@ manipulating PGF soft paths}
   }
   {
     \tl_set:Nx \l_@@_tmpb_tl {\tl_head:N \l_@@_tmpa_tl}
-    \tl_case:Nn \l_@@_tmpb_tl
+    \token_case_meaning:Nn \l_@@_tmpb_tl
     {
       \c_spath_moveto_tl
       {
@@ -1229,7 +1229,7 @@ manipulating PGF soft paths}
       \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
       \bool_set_false:N \l_@@_rect_bool
 
-      \tl_case:NnTF \l_@@_tmpc_tl
+      \token_case_meaning:NnTF \l_@@_tmpc_tl
       {
         \c_spath_moveto_tl {
         
@@ -3233,7 +3233,7 @@ manipulating PGF soft paths}
     \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
     \tl_set:Nx \l_@@_tmpa_tl {\tl_tail:N \l_@@_tmpa_tl}
 
-    \tl_case:NnF \l_@@_tmpc_tl
+    \token_case_meaning:NnF \l_@@_tmpc_tl
     {
       \c_spath_closepath_tl {
 
@@ -3954,7 +3954,7 @@ manipulating PGF soft paths}
   }
   {
     \tl_set:Nx \l_@@_tmpc_tl {\tl_head:N \l_@@_tmpa_tl}
-    \tl_case:NnF \l_@@_tmpc_tl
+    \token_case_meaning:NnF \l_@@_tmpc_tl
     {
       \c_spath_curvetoa_tl
       {
@@ -4249,7 +4249,7 @@ manipulating PGF soft paths}
   {
     \tl_set:Nx \l_@@_tmpf_tl {\tl_head:N \l_@@_tmpe_tl}
     \tl_set:Nx \l_@@_tmpe_tl {\tl_tail:N \l_@@_tmpe_tl }
-    \tl_case:Nn \l_@@_tmpf_tl
+    \token_case_meaning:Nn \l_@@_tmpf_tl
     {
       \c_spath_lineto_tl
       {
@@ -4303,7 +4303,7 @@ manipulating PGF soft paths}
   }
   {
 
-    \tl_case:Nn \l_@@_tmpf_tl
+    \token_case_meaning:Nn \l_@@_tmpf_tl
     {
       \c_spath_lineto_tl
       {
@@ -5042,7 +5042,7 @@ manipulating PGF soft paths}
 
       \tl_clear:N \l_@@_tmpc_tl
   
-      \tl_case:Nn \l_@@_tmpb_tl
+      \token_case_meaning:Nn \l_@@_tmpb_tl
       {
         \c_spath_moveto_tl
         {
@@ -5287,7 +5287,7 @@ manipulating PGF soft paths}
 
       \tl_clear:N \l_@@_tmpc_tl
   
-      \tl_case:Nn \l_@@_tmpb_tl
+      \token_case_meaning:Nn \l_@@_tmpb_tl
       {
         \c_spath_moveto_tl
         {
@@ -6407,7 +6407,7 @@ manipulating PGF soft paths}
   \tl_map_inline:nn {#1}
   {
     \tl_set:Nn \l_@@_tmpb_tl {##1}
-    \tl_case:NnF \l_@@_tmpb_tl
+    \token_case_meaning:NnF \l_@@_tmpb_tl
     {
       \c_spath_moveto_tl
       {
@@ -9646,7 +9646,7 @@ manipulating PGF soft paths}
     \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpa_tl {3}}
     \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {4}}
 
-    \tl_case:NnF \l_@@_tmpb_tl
+    \token_case_meaning:NnF \l_@@_tmpb_tl
     {
       \c_spath_lineto_tl
       {
@@ -9698,7 +9698,7 @@ manipulating PGF soft paths}
     \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpa_tl {-1}}
     \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {-3}}
 
-    \tl_case:NnF \l_@@_tmpb_tl
+    \token_case_meaning:NnF \l_@@_tmpb_tl
     {
       \c_spath_lineto_tl
       {
@@ -10679,7 +10679,7 @@ manipulating PGF soft paths}
 {
   \knot_debug:n {knot~ split~ self~ intersects}
   \tl_set:Nx \l_@@_tmpc_tl {\tl_item:nn {#1} {4}}
-  \tl_case:NnF \l_@@_tmpc_tl
+  \token_case_meaning:NnF \l_@@_tmpc_tl
   {
     \c_spath_curvetoa_tl
     {
@@ -11314,7 +11314,7 @@ manipulating PGF soft paths}
 {
   \knot_debug:n {knot~ save~ filament}
   \tl_set:Nx \l_@@_tmpb_tl {\tl_item:nn {#1} {4}}
-  \tl_case:NnF \l_@@_tmpb_tl
+  \token_case_meaning:NnF \l_@@_tmpb_tl
   {
     \c_spath_moveto_tl
     {
