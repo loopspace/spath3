@@ -10441,6 +10441,15 @@ manipulating PGF soft paths}
   }
 }
 
+\cs_new_nopar:Npn \knot_show_strand:n #1
+{
+  \bool_if:NT \l_@@_debugging_bool
+  {
+    \iow_term:n {===Knot~ debug: #1===}
+    \spath_show:v {knot #1}
+  }
+}
+
 \cs_generate_variant:Nn \knot_debug:n {x}
 %    \end{macrocode}
 % \end{macro}
@@ -10622,6 +10631,7 @@ manipulating PGF soft paths}
     knot~ diagram/only~ when~ rendering/.try,
     only~ when~ rendering/.try,
   }
+  \knot_show_strand:n {strand #1}
   \spath_tikz_path:Vv \l_@@_tmpa_tl {knot strand #1}
   \group_end:
   \endpgfscope
@@ -10659,6 +10669,7 @@ manipulating PGF soft paths}
   }
   {
     \tl_clear:N \l_@@_tmpa_tl
+    \spath_remove_empty_components:c {knot strand #1}
     \spath_initialpoint:Nv \l_@@_tmpa_tl {knot strand #1}
     \tl_put_left:NV \l_@@_tmpa_tl \c_spath_moveto_tl
     \spath_segments_to_seq:Nv \l_@@_segments_seq {knot strand #1}
@@ -11301,6 +11312,7 @@ manipulating PGF soft paths}
   \int_set_eq:NN \l_@@_component_start_int \g_@@_filaments_int
   \int_incr:N \l_@@_component_start_int
   \tl_set_eq:Nc \l_@@_tmpa_tl {l_@@_options_strand #1}
+  \spath_remove_empty_components:c {knot strand #1}
   \spath_segments_to_seq:Nv \l_@@_segments_seq {knot strand #1}
   \seq_map_function:NN \l_@@_segments_seq \knot_save_filament:N
 }
