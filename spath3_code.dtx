@@ -143,7 +143,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{10189}
+% \CheckSum{10272}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -6540,10 +6540,14 @@ manipulating PGF soft paths}
 \cs_new_protected_nopar:Npn \spath_protocol_path:n #1
 {
   \spath_minbb:Nn \l_@@_tmpa_tl {#1}
-  \exp_last_unbraced:NV \pgf@protocolsizes\l_@@_tmpa_tl
+  \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpa_tl {1}}
+  \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpa_tl {2}}
+  \pgf@protocolsizes\l_@@_tmpa_dim\l_@@_tmpb_dim
 
   \spath_maxbb:Nn \l_@@_tmpa_tl {#1}
-  \exp_last_unbraced:NV \pgf@protocolsizes\l_@@_tmpa_tl
+  \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpa_tl {1}}
+  \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpa_tl {2}}
+  \pgf@protocolsizes\l_@@_tmpa_dim\l_@@_tmpb_dim
 }
 \cs_generate_variant:Nn \spath_protocol_path:n {V}
 %    \end{macrocode}
