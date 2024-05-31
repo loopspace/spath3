@@ -5,7 +5,7 @@
 %<*readme>
 ----------------------------------------------------------------
 spath3 --- LaTeX3 functions for manipulating PGF soft paths
-E-mail: loopspace@mathforge.org
+E-mail: Andrew Stacey loopspace@mathforge.org
 Released under the LaTeX Project Public License v1.3c or later
 See http://www.latex-project.org/lppl.txt
 ----------------------------------------------------------------
@@ -27,7 +27,7 @@ As applications of its use, included are a package for drawing calligraphic path
 \preamble
 ----------------------------------------------------------------
 spath3 --- Functions for manipulating PGF soft paths
-E-mail: loopspace@mathforge.org
+E-mail: Andrew Stacey loopspace@mathforge.org
 Released under the LaTeX Project Public License v1.3c or later
 See http://www.latex-project.org/lppl.txt
 ----------------------------------------------------------------
@@ -35,7 +35,7 @@ See http://www.latex-project.org/lppl.txt
 \endpreamble
 \postamble
 
-Copyright (C) 2011-2021 by Andrew Stacey <loopspace@mathforge.org>
+Copyright (C) 2011-2024 by Andrew Stacey <loopspace@mathforge.org>
 
 This work may be distributed and/or modified under the
 conditions of the LaTeX Project Public License (LPPL), either
@@ -143,7 +143,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{10272}
+% \CheckSum{10278}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -171,6 +171,7 @@ and the derived files            spath3.ins,
 % \changes{2.4}{2021/02/21}{Rejigged how the routines for using paths were implemented, added some more routines for joining paths.}
 % \changes{2.6}{2021/11/23}{Modified core routines to cope with a "true rectangle" path; added routines for splitting at a parametrised point.}
 % \changes{2.7}{2022/08/24}{Bug fixes}
+% \changes{2.8}{2024/05/31}{Routine to disable arrow shortening, bug fixes}
 %
 % \DoNotIndex{\newcommand,\newenvironment}
 %
@@ -198,7 +199,7 @@ and the derived files            spath3.ins,
 % It was originally not really intended for use by end users but as a foundation on which other packages can be built.
 % However, over the years I've found myself using it at ever higher levels and so a set of interfaces has been designed using TikZ keys.
 %
-% It also provides the engine that drives a few other packages, such as the  \Verb+calligraphy+, \Verb+knot+, and \Verb+penrose+ packages.
+% It also provides the engine that drives a few other packages, such as the  \Verb+calligraphy+, \Verb+knot+, and \Verb+tilings+ (formerly, \Verb+penrose+) packages.
 % The first two of these are subpackages of this one.
 % The \Verb+calligraphy+ package simulates a calligraphic pen stroking a path.
 % The \Verb+knots+ package can be used to draw knot (and similar) diagrams.
@@ -208,7 +209,7 @@ and the derived files            spath3.ins,
 % \begin{itemize}
 % \item \Verb+calligraphy+
 % \item \Verb+knots+
-% \item \Verb+penrose+
+% \item \Verb+tilings+ 
 % \item \Verb+spath3+ (\emph{this} document is the code, there's another which focusses on usage)
 % \end{itemize}
 %
@@ -259,7 +260,7 @@ and the derived files            spath3.ins,
 \NeedsTeXFormat{LaTeX2e}
 \RequirePackage{expl3}
 \RequirePackage{pgf}
-\ProvidesExplPackage {spath3} {2022/08/24} {2.7} {Functions for
+\ProvidesExplPackage {spath3} {2024/05/31} {2.8} {Functions for
 manipulating PGF soft paths}
 \RequirePackage{xparse}
 %    \end{macrocode}
@@ -373,6 +374,13 @@ manipulating PGF soft paths}
 %
 %    \begin{macrocode}
 \bool_new:N \l_spath_movetorelevant_bool
+%    \end{macrocode}
+%
+% When manipulating soft paths, we might need to separate the shortening due to an arrow from when the path is rendered.
+%
+%    \begin{macrocode}
+\bool_new:N \l_spath_arrow_shortening_bool
+\bool_set_true:N \l_spath_arrow_shortening_bool
 %    \end{macrocode}
 %
 % The intersection routine can't happen inside a group so we need two token lists to hold the paths that we'll intersect.
@@ -3070,12 +3078,17 @@ manipulating PGF soft paths}
 % Then \verb+\pgf@xb+ is the length of the arrow head which is used to position the arrow and so before zeroing \verb+\pgf@xa+ we subtract it from \verb+\pgf@xb+ so that the arrow is placed so that its back point is at the current position.
 %
 %    \begin{macrocode}
-\cs_new_nopar:Npn \@@_arrow_disable_shortening:n #1
+\cs_new_nopar:Npn \@@_arrow_compute_shortening:n #1
 {
   \@@_pgf_arrow_compute_shortening:n {#1}
-  \dim_sub:cn {pgf@xb} {\dim_use:c {pgf@xa}}
-  \dim_zero:c {pgf@xa}
+  \bool_if:NF \l_spath_arrow_shortening_bool
+  {
+    \dim_sub:cn {pgf@xb} {\dim_use:c {pgf@xa}}
+    \dim_zero:c {pgf@xa}
+  }
 }
+
+\cs_set_eq:cN {pgf@arrow@compute@shortening} \@@_arrow_compute_shortening:n
 %    \end{macrocode}
 %
 % \end{macro}
@@ -9055,12 +9068,8 @@ manipulating PGF soft paths}
 % This puts a conditional around the \texttt{spot weld} key because when figuring out a knot drawing then we will initially want to render it without the spot weld to keep the number of components constant.
 %
 %    \begin{macrocode}
-  draft~ mode/.is~ choice,
-  draft~ mode/true/.code={
-    \bool_set_true:N \l_@@_draft_bool
-  },
-  draft~ mode/false/.code={
-    \bool_set_false:N \l_@@_draft_bool
+  draft~ mode/.code={
+    \@@_set_bool:Nn \l_@@_draft_bool {#1}
   },
   maybe~ spot~ weld/.code={
     \bool_if:NF \l_@@_draft_bool
@@ -9142,8 +9151,8 @@ manipulating PGF soft paths}
 %    \end{macrocode}
 %
 %    \begin{macrocode}
-  disable~ arrow~ shortening/.code={
-    \cs_set_eq:cN {pgf@arrow@compute@shortening} \__spath_arrow_disable_shortening:n
+  arrow~ shortening/.code={
+    \@@_set_bool:Nn \l_spath_arrow_shortening_bool {#1}
   },
 %    \end{macrocode}  
 %

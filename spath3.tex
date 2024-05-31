@@ -1,5 +1,5 @@
 \RequirePackage{shellesc}
-\immediate\write18{tex spath3_code.dtx}
+%\immediate\write18{tex spath3_code.dtx}
 \documentclass{l3doc}
 \usepackage{tikz}
 \usetikzlibrary{
@@ -50,27 +50,29 @@
 
 \title{The \textsf{spath3} Package: Documentation}
 \author{Andrew Stacey \\ \url{loopspace@mathforge.org}}
-  \date{\fileversion~from \filedate}
+\date{\fileversion~from \filedate}
 
-  \begin{document}
+\let\OriginalBar=|
 
-  \maketitle
+\begin{document}
+
+\maketitle
 
 \tableofcontents
 
-  \section{Introduction}
+\section{Introduction}
 
-  The \texttt{spath3} package was originally designed as a low-level package for manipulating the \emph{soft paths} defined by PGF/TikZ.
-  Soft paths form one stage of the stack of translations between what the author writes in the \texttt{tikzpicture} environments in their \LaTeX\ document and what is eventually written to the output file.
-  Most of the complicated processing has been done by the time a soft path is constructed, but it is still very definitely a \TeX\ object and there has not, for example, been any consideration as to what the eventual output file format is (such as PDF, DVI, or SVG).
-  So it is very amenable to being modified at this stage and this package provides a set of routines for doing so.
+The \texttt{spath3} package was originally designed as a low-level package for manipulating the \emph{soft paths} defined by PGF/TikZ.
+Soft paths form one stage of the stack of translations between what the author writes in the \texttt{tikzpicture} environments in their \LaTeX\ document and what is eventually written to the output file.
+Most of the complicated processing has been done by the time a soft path is constructed, but it is still very definitely a \TeX\ object and there has not, for example, been any consideration as to what the eventual output file format is (such as PDF, DVI, or SVG).
+So it is very amenable to being modified at this stage and this package provides a set of routines for doing so.
 
-  The original purpose was to provide a common core on which other packages would be built.
-  Indeed, the packages \texttt{calligraphy}, \texttt{knots}, and \texttt{penrose} all use this package.
-  However, over time I've found myself wanting to use the routines of this package at a higher level and so have designed some user-level interfaces.
-  This document documents those.
+The original purpose was to provide a common core on which other packages would be built.
+Indeed, the packages \texttt{calligraphy}, \texttt{knots}, and \texttt{tilings} all use this package.
+However, over time I've found myself wanting to use the routines of this package at a higher level and so have designed some user-level interfaces.
+This document documents those.
 
-  To clarify some terminology used in this document (and more generally, this package), I regard paths as being composed of \emph{segments} and \emph{components}.
+To clarify some terminology used in this document (and more generally, this package), I regard paths as being composed of \emph{segments} and \emph{components}.
 A \emph{segment} is a minimal drawing piece.
 Thus it might be a straight line or a B\'ezier curve.
 A \emph{component} is a minimal connected section of the path.
@@ -142,7 +144,7 @@ Sometimes it isn't possible to put commands partway through a path (for example,
 \begin{verbatim}
 at end path construction={code}
 \end{verbatim}
-
+%
 This invokes the |code| right after the path has finished being built.
 \end{variable}
 
@@ -634,6 +636,24 @@ The ones that keep the middle need two parameters to specify the break points.
 
 \end{function}
 
+\begin{function}{
+  arrow shortening
+}
+\begin{syntax}
+|arrow shortening|
+|arrow shortening=|\marg{true{\OriginalBar}false}
+\end{syntax}
+
+When an arrow is added to a path then the path is shortened so that the arrow tip is at the end of where the path should end up.
+Placing an arrow, therefore, has two effects: modifying the path and rendering the arrow.
+The former should happen before a soft path is manipulated, the latter afterwards.
+This key allows for the necessary separation to occur.
+Invoking it when the path is used disables the shortening at that juncture.
+
+Note that if the path (or its last segment) is very short then when the arrow is eventually placed it may end up pointing backwards.
+Fixing this is on the \emph{ToDo} list!
+\end{function}
+
 \subsection{Exporting Paths}
 
 There are two keys to export a path.
@@ -662,8 +682,8 @@ Saves the path to the file \texttt{path.svg} as an SVG document.
   draft mode
 }
 \begin{syntax}
-|knot=|\meta{path}\meta{gap}\meta{components}
-|global knot=|\meta{path}\meta{gap}\meta{components}
+|knot=|\marg{path}\marg{gap}\marg{components}
+|global knot=|\marg{path}\marg{gap}\marg{components}
 \end{syntax}
 
 This style combines various of the above to make it simpler to draw knots and links.
@@ -905,6 +925,21 @@ The intention with the second key is that it is similar to what happens with the
   ] +(0,3pt) -- +(0,-3pt);
   \node[text=red] at (spath cs:{\cpt} .5) {\(\k\)};
 }
+\end{tikzpicture}
+\end{example}
+
+\begin{example}
+\begin{tikzpicture}[>=Latex, line width=5pt]
+% Just a simple line
+\draw (0,1) to[bend left] +(5,0);
+% Same line but with arrows, also save the path
+\draw[->.>, spath/save=arrow] (0,0) to[bend left] +(5,0);
+% Let's redraw that path without the arrows - it's short! But also distorted
+\draw[spath/use={arrow,transform={yshift=-1cm}}];
+% So if we redraw it with arrows it gets doubly shortened
+\draw[->.>,spath/use={arrow,transform={yshift=-2cm}}];
+% If we disable the shortening, the arrows end up in the right place
+\draw[->.>,spath/use={arrow,transform={yshift=-3cm}}, spath/arrow shortening=false];
 \end{tikzpicture}
 \end{example}
 
