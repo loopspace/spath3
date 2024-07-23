@@ -6571,17 +6571,18 @@ manipulating PGF soft paths}
 % \spath_set_current_path:N
 % }
 % Sets the current path to the specified soft path.
+% 
 %    \begin{macrocode}
-\cs_new_protected_nopar:Npn \spath_set_current_path:n #1
-{
-  \spath_protocol_path:n {#1}
-  \tl_set:Nn \l_@@_tmpa_tl {#1}
-  \pgfsyssoftpath@setcurrentpath\l_@@_tmpa_tl
-}
 \cs_new_protected_nopar:Npn \spath_set_current_path:N #1
 {
+  \pgf@resetpathsizes
   \spath_protocol_path:V #1
   \pgfsyssoftpath@setcurrentpath #1
+}
+\cs_new_protected_nopar:Npn \spath_set_current_path:n #1
+{
+  \tl_set:Nn \l_@@_tmpa_tl {#1}
+  \spath_set_current_path:N \l_@@_tmpa_tl
 }
 \cs_generate_variant:Nn \spath_set_current_path:N {c}
 %    \end{macrocode}
