@@ -8212,7 +8212,7 @@ manipulating PGF soft paths}
         \@@_process_tikz_point:Nn \l_@@_tmpb_tl {#3}
         \spath_span:cVV
       }
-    } {#1} { {} \l_@@_tmpa_tl \l_@@_tmpb_tl }
+    } {#1} { \use_none:nn \l_@@_tmpa_tl \l_@@_tmpb_tl }
   },
   span~ global/.code ~n~ args={3}{
     \@@_maybe_current_path_reuse:nnn
@@ -8223,7 +8223,7 @@ manipulating PGF soft paths}
         \@@_process_tikz_point:Nn \l_@@_tmpb_tl {#3}
         \spath_span:cVV
       }
-    } {#1} { {} \l_@@_tmpa_tl \l_@@_tmpb_tl }
+    } {#1} { \use_none:nn \l_@@_tmpa_tl \l_@@_tmpb_tl }
   },
 %    \end{macrocode}
 % 
@@ -8289,7 +8289,7 @@ manipulating PGF soft paths}
       {
         \@@_join_components_with:cvV
       }
-    } {#1} { \l_@@_tmpc_tl {} \l_@@_tmpd_tl  } 
+    } {#1} { \l_@@_tmpc_tl \use_none:n \l_@@_tmpd_tl  } 
   },
   join~ components~ globally~ with/.code~2~args={
     \tl_if_head_is_group:nTF {#2}
@@ -8308,7 +8308,7 @@ manipulating PGF soft paths}
       {
         \@@_gjoin_components_with:cvV
       }
-    } {#1} { \l_@@_tmpc_tl {} \l_@@_tmpd_tl  } 
+    } {#1} { \l_@@_tmpc_tl \use_none:n \l_@@_tmpd_tl  } 
   },
   join~ components~ upright~ with/.code~2~args={
     \tl_if_head_is_group:nTF {#2}
@@ -8327,7 +8327,7 @@ manipulating PGF soft paths}
       {
         \@@_join_components_upright_with:cvV
       }
-    } {#1} { \l_@@_tmpc_tl {} \l_@@_tmpd_tl  } 
+    } {#1} { \l_@@_tmpc_tl \use_none:n \l_@@_tmpd_tl  } 
   },
   join~ components~ globally~ upright~ with/.code~2~args={
     \tl_if_head_is_group:nTF {#2}
@@ -8346,7 +8346,7 @@ manipulating PGF soft paths}
       {
         \@@_gjoin_components_upright_with:cvV
       }
-    } {#1} { \l_@@_tmpc_tl {} \l_@@_tmpd_tl  } 
+    } {#1} { \l_@@_tmpc_tl \use_none:n \l_@@_tmpd_tl  } 
   },
   join~ components~ with~ bezier/.code={
     \tl_if_head_is_group:nTF {#1}
@@ -8365,7 +8365,7 @@ manipulating PGF soft paths}
       {
         \@@_join_components_with_bezier:cV
       }
-    } \l_@@_tmpc_tl { {} \l_@@_tmpd_tl }
+    } \l_@@_tmpc_tl { \use_none:n \l_@@_tmpd_tl }
   },
   join~ components~ globally~ with~ bezier/.code~2~args={
     \@@_maybe_current_path_reuse:nnn
@@ -8374,7 +8374,7 @@ manipulating PGF soft paths}
       {
         \@@_gjoin_components_with_bezier:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
 %    \end{macrocode}
 %
@@ -8503,7 +8503,7 @@ manipulating PGF soft paths}
       {
         \spath_shorten_at_end:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   shorten~ at~ start/.code~ 2~ args ={
     \@@_maybe_current_path_reuse:nnn
@@ -8512,7 +8512,7 @@ manipulating PGF soft paths}
       {
         \spath_shorten_at_start:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   shorten~ at~ both~ ends/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
@@ -8521,7 +8521,7 @@ manipulating PGF soft paths}
       {
         \spath_shorten_at_both_ends:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   shorten~ globally~ at~ end/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
@@ -8530,7 +8530,7 @@ manipulating PGF soft paths}
       {
         \spath_gshorten_at_end:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   shorten~ globally~ at~ start/.code~ 2~ args ={
     \@@_maybe_current_path_reuse:nnn
@@ -8539,7 +8539,7 @@ manipulating PGF soft paths}
       {
         \spath_gshorten_at_start:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   shorten~ globally~ at~ both~ ends/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
@@ -8548,7 +8548,7 @@ manipulating PGF soft paths}
       {
         \spath_gshorten_at_both_ends:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
 %    \end{macrocode}
 %
@@ -8581,7 +8581,7 @@ manipulating PGF soft paths}
         \spath_split_at_normalised:ccvn {\@@_path_name:n {#1}}
         {\@@_path_name:n {#2}}
       }
-    } {#3} { {} {#4} }
+    } {#3} { \use_none:n {#4} }
   },
   split~ globally~ at~ into/.code~ n~ args={4}{
     \@@_maybe_current_path_reuse:nnn
@@ -8591,7 +8591,7 @@ manipulating PGF soft paths}
         \spath_gsplit_at_normalised:ccvn {\@@_path_name:n {#1}}
         {\@@_path_name:n {#2}}
       }
-    } {#3} { {} {#4} }
+    } {#3} { \use_none:n {#4} }
   },
   split~ at~ keep~ start/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
@@ -8600,7 +8600,7 @@ manipulating PGF soft paths}
       {
         \spath_split_at_normalised_keep_start:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   split~ globally~ at~ keep~ start/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
@@ -8609,7 +8609,7 @@ manipulating PGF soft paths}
       {
         \spath_gsplit_at_normalised_keep_start:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   split~ at~ keep~ end/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
@@ -8618,7 +8618,7 @@ manipulating PGF soft paths}
       {
         \spath_split_at_normalised_keep_end:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   split~ globally~ at~ keep~ end/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
@@ -8627,7 +8627,7 @@ manipulating PGF soft paths}
       {
         \spath_gsplit_at_normalised_keep_end:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   split~ at~ keep~ middle/.style~ n~ args={3}{
     /tikz/spath/split~ at~ keep~ start={#1}{#3},
@@ -8649,7 +8649,7 @@ manipulating PGF soft paths}
       {
         \spath_translate:cnn
       }
-    } {#1} { {} {#2}{#3} }
+    } {#1} { \use_none:nn {#2}{#3} }
   },
   translate~ globally/.code~ n~ args={3}{
     \@@_maybe_current_path_reuse:nnn
@@ -8658,7 +8658,7 @@ manipulating PGF soft paths}
       {
         \spath_gtranslate:cnn
       }
-    } {#1} { {} {#2}{#3} }
+    } {#1} { \use_none:nn {#2}{#3} }
   },
 %    \end{macrocode}
 %
@@ -8702,7 +8702,7 @@ manipulating PGF soft paths}
       {
         \spath_transform:cV
       }
-    } {#1} { {} \g_@@_smuggle_tl }
+    } {#1} { \use_none:n \g_@@_smuggle_tl }
   },
   transform~globally/.code~ 2~ args={
     \group_begin:
@@ -8718,7 +8718,7 @@ manipulating PGF soft paths}
       {
         \spath_gtransform:cV
       }
-    } {#1} { {} \g_@@_smuggle_tl }
+    } {#1} { \use_none:n \g_@@_smuggle_tl }
   },
 %    \end{macrocode}
 %
@@ -8906,7 +8906,7 @@ manipulating PGF soft paths}
       {
         \@@_insert_gaps_after_components:cVV
       }
-    } {#1} { {} \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
+    } {#1} { \use_none:nn \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
   },
   insert~ gaps~ globally~ after~ components/.code~ 2~ args={
     \tl_if_head_is_group:nTF {#2}
@@ -8925,7 +8925,7 @@ manipulating PGF soft paths}
       {
         \@@_ginsert_gaps_after_components:cVV
       }
-    } {#1} { {} \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
+    } {#1} { \use_none:nn \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
   },
 %    \end{macrocode}
 %
@@ -8950,7 +8950,7 @@ manipulating PGF soft paths}
       {
         \@@_insert_gaps_after_segments:cVV
       }
-    } {#1} { {} \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
+    } {#1} { \use_none:nn \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
   },
   insert~ gaps~ globally~ after~ segments/.code~ 2~ args={
     \tl_if_head_is_group:nTF {#2}
@@ -8969,7 +8969,7 @@ manipulating PGF soft paths}
       {
         \@@_ginsert_gaps_after_segments:cVV
       }
-    } {#1} { {} \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
+    } {#1} { \use_none:nn \l_@@_tmpc_tl \l_@@_tmpd_tl  } 
   },
 %    \end{macrocode}
 %
@@ -8983,7 +8983,7 @@ manipulating PGF soft paths}
       {
         \@@_join_components:cn
       }
-    } {#1} { {} {#2} } 
+    } {#1} { \use_none:n {#2} } 
   },
   join~ components~ globally/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
@@ -8992,7 +8992,7 @@ manipulating PGF soft paths}
       {
         \@@_gjoin_components:cn
       }
-    } {#1} { {} {#2} } 
+    } {#1} { \use_none:n {#2} } 
   },
 %    \end{macrocode}
 %
@@ -9053,7 +9053,7 @@ manipulating PGF soft paths}
       {
         \@@_remove_components:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
   remove~ components~ globally/.code~ 2~ args={
     \@@_maybe_current_path_reuse:nnn
@@ -9062,7 +9062,7 @@ manipulating PGF soft paths}
       {
         \@@_gremove_components:cn
       }
-    } {#1} { {} {#2} }
+    } {#1} { \use_none:n {#2} }
   },
 %    \end{macrocode}
 %   
