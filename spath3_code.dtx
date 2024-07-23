@@ -6239,7 +6239,7 @@ manipulating PGF soft paths}
   \dim_set:Nn \l_@@_move_y_dim {\tl_item:nn {#1} {3} + 10 pt}
 
   \int_set:Nn \l_@@_tmpa_int {\seq_count:N \l_@@_tmpa_seq}
-  
+
   \seq_map_inline:Nn \l_@@_tmpa_seq
   {
     \tl_set:Nn \l_@@_tmpa_tl {##1}
@@ -6266,10 +6266,13 @@ manipulating PGF soft paths}
       }
       \int_decr:N \l_@@_tmpa_int
     }
-    \tl_reverse:N \l_@@_tmpa_tl
-    \dim_set:Nn \l_@@_move_x_dim {\tl_item:Nn \l_@@_tmpa_tl {2}}
-    \dim_set:Nn \l_@@_move_y_dim {\tl_item:Nn \l_@@_tmpa_tl {1}}
-    \tl_reverse:N \l_@@_tmpa_tl
+    \tl_if_empty:NF \l_@@_tmpa_tl
+    {
+      \tl_reverse:N \l_@@_tmpa_tl
+      \dim_set:Nn \l_@@_move_x_dim {\tl_item:Nn \l_@@_tmpa_tl {2}}
+      \dim_set:Nn \l_@@_move_y_dim {\tl_item:Nn \l_@@_tmpa_tl {1}}
+      \tl_reverse:N \l_@@_tmpa_tl
+    }
     \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpa_tl
   }
 
@@ -6552,6 +6555,7 @@ manipulating PGF soft paths}
 %    \begin{macrocode}
 \cs_new_protected_nopar:Npn \spath_protocol_path:n #1
 {
+  \group_begin:
   \spath_minbb:Nn \l_@@_tmpa_tl {#1}
   \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpa_tl {1}}
   \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpa_tl {2}}
@@ -6561,6 +6565,7 @@ manipulating PGF soft paths}
   \dim_set:Nn \l_@@_tmpa_dim {\tl_item:Nn \l_@@_tmpa_tl {1}}
   \dim_set:Nn \l_@@_tmpb_dim {\tl_item:Nn \l_@@_tmpa_tl {2}}
   \pgf@protocolsizes\l_@@_tmpa_dim\l_@@_tmpb_dim
+  \group_end:
 }
 \cs_generate_variant:Nn \spath_protocol_path:n {V}
 %    \end{macrocode}
