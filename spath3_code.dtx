@@ -5266,189 +5266,188 @@ manipulating PGF soft paths}
 
   \spath_segments_to_seq:Nn \l_@@_tmpa_seq {#1}
 
-  \int_compare:nTF
+  \int_compare:nT
   {
     \l_@@_tmpa_int < 1
   }
   {
-    \spath_initialpoint:Nn \l_@@_tmpc_tl {#1}
+    \int_set:Nn \l_@@_tmpa_int {1}
+    \fp_set:Nn \l_@@_tmpa_fp {0}
+  }
+
+  \int_compare:nT
+  {
+    \l_@@_tmpa_int > \seq_count:N \l_@@_tmpa_seq
   }
   {
-    \int_compare:nTF
-    {
-      \l_@@_tmpa_int > \seq_count:N \l_@@_tmpa_seq
-    }
-    {
-      \spath_finalpoint:Nn \l_@@_tmpc_tl {#1}
-    }
-    {
+    \int_set:Nn \l_@@_tmpa_int { \seq_count:N \l_@@_tmpa_seq }
+    \fp_set:Nn \l_@@_tmpa_fp {1}
+  }
   
-      \tl_set:Nx
-      \l_@@_tmpa_tl
-      {\seq_item:Nn \l_@@_tmpa_seq { \l_@@_tmpa_int} }
+  \tl_set:Nx
+  \l_@@_tmpa_tl
+  {\seq_item:Nn \l_@@_tmpa_seq { \l_@@_tmpa_int} }
 
-      \int_compare:nTF
-      {
-        \tl_count:N \l_@@_tmpa_tl > 3
-      }
-      {
-        \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {4}}
-      }
-      {
-        \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {1}}
-      }
+  \int_compare:nTF
+  {
+    \tl_count:N \l_@@_tmpa_tl > 3
+  }
+  {
+    \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {4}}
+  }
+  {
+    \tl_set:Nx \l_@@_tmpb_tl {\tl_item:Nn \l_@@_tmpa_tl {1}}
+  }
 
-      \tl_clear:N \l_@@_tmpc_tl
+  \tl_clear:N \l_@@_tmpc_tl
   
-      \token_case_meaning:Nn \l_@@_tmpb_tl
+  \token_case_meaning:Nn \l_@@_tmpb_tl
+  {
+    \c_spath_moveto_tl
+    {
+      \tl_set:Nx \l_@@_tmpc_tl
       {
-        \c_spath_moveto_tl
         {
-          \tl_set:Nx \l_@@_tmpc_tl
+          \tl_item:Nn \l_@@_tmpa_tl {2}
+        }
+        {
+          \tl_item:Nn \l_@@_tmpa_tl {3}
+        }
+      }
+    }
+    
+    \c_spath_lineto_tl
+    {
+      \tl_set:Nx \l_@@_tmpc_tl
+      {
+        {\fp_to_dim:n
           {
-            {
-              \tl_item:Nn \l_@@_tmpa_tl {2}
-            }
-            {
-              \tl_item:Nn \l_@@_tmpa_tl {3}
-            }
+            ( \tl_item:Nn \l_@@_tmpa_tl {5} )
+            -
+            ( \tl_item:Nn \l_@@_tmpa_tl {2} )
           }
         }
-        
-        \c_spath_lineto_tl
+        {\fp_to_dim:n
+          {
+            ( \tl_item:Nn \l_@@_tmpa_tl {6} )
+            -
+            ( \tl_item:Nn \l_@@_tmpa_tl {3} )
+          }
+        }
+      }
+    }
+
+    \c_spath_rectsize_tl
+    {
+      \fp_compare:nTF
+      {
+        \l_@@_tmpa_fp <= .25
+      }
+      {
+        \tl_set:Nx \l_@@_tmpc_tl
+        {
+          {\fp_to_dim:n
+            {
+              \tl_item:Nn \l_@@_tmpa_tl {5}
+            }
+          }
+          {0pt}
+        }
+      }
+      {
+        \fp_compare:nTF
+        {
+          \l_@@_tmpa_fp <= .5
+        }
         {
           \tl_set:Nx \l_@@_tmpc_tl
           {
-            {\fp_to_dim:n
-              {
-                ( \tl_item:Nn \l_@@_tmpa_tl {5} )
-                -
-                ( \tl_item:Nn \l_@@_tmpa_tl {2} )
-              }
-            }
+            {0pt}
             {\fp_to_dim:n
               {
                 ( \tl_item:Nn \l_@@_tmpa_tl {6} )
-                -
-                ( \tl_item:Nn \l_@@_tmpa_tl {3} )
               }
             }
           }
         }
-
-        \c_spath_rectsize_tl
         {
           \fp_compare:nTF
           {
-            \l_@@_tmpa_fp <= .25
+            \l_@@_tmpa_fp <= .75
           }
           {
             \tl_set:Nx \l_@@_tmpc_tl
             {
               {\fp_to_dim:n
                 {
-                  \tl_item:Nn \l_@@_tmpa_tl {5}
+                  -( \tl_item:Nn \l_@@_tmpa_tl {5} )
                 }
               }
               {0pt}
             }
+            
           }
           {
-            \fp_compare:nTF
+            \tl_set:Nx \l_@@_tmpc_tl
             {
-              \l_@@_tmpa_fp <= .5
-            }
-            {
-              \tl_set:Nx \l_@@_tmpc_tl
-              {
-                {0pt}
-                {\fp_to_dim:n
-                  {
-                    ( \tl_item:Nn \l_@@_tmpa_tl {6} )
-                  }
-                }
-              }
-            }
-            {
-              \fp_compare:nTF
-              {
-                \l_@@_tmpa_fp <= .75
-              }
-              {
-                \tl_set:Nx \l_@@_tmpc_tl
+              {0pt}
+              {\fp_to_dim:n
                 {
-                  {\fp_to_dim:n
-                    {
-                      -( \tl_item:Nn \l_@@_tmpa_tl {5} )
-                    }
-                  }
-                  {0pt}
-                }
-                
-              }
-              {
-                \tl_set:Nx \l_@@_tmpc_tl
-                {
-                  {0pt}
-                  {\fp_to_dim:n
-                    {
-                      - ( \tl_item:Nn \l_@@_tmpa_tl {6} )
-                    }
-                  }
+                  - ( \tl_item:Nn \l_@@_tmpa_tl {6} )
                 }
               }
             }
           }
         }
+      }
+    }
 
-        \c_spath_closepath_tl
-        {
-          \tl_set:Nx \l_@@_tmpc_tl
+    \c_spath_closepath_tl
+    {
+      \tl_set:Nx \l_@@_tmpc_tl
+      {
+        {\fp_to_dim:n
           {
-            {\fp_to_dim:n
-              {
-                ( \tl_item:Nn \l_@@_tmpa_tl {5} )
-                -
-                ( \tl_item:Nn \l_@@_tmpa_tl {2} )
-              }
-            }
-            {\fp_to_dim:n
-              {
-                ( \tl_item:Nn \l_@@_tmpa_tl {6} )
-                -
-                ( \tl_item:Nn \l_@@_tmpa_tl {3} )
-              }
-            }
+            ( \tl_item:Nn \l_@@_tmpa_tl {5} )
+            -
+            ( \tl_item:Nn \l_@@_tmpa_tl {2} )
           }
         }
+        {\fp_to_dim:n
+          {
+            ( \tl_item:Nn \l_@@_tmpa_tl {6} )
+            -
+            ( \tl_item:Nn \l_@@_tmpa_tl {3} )
+          }
+        }
+      }
+    }
     
-        \c_spath_curvetoa_tl
-        {
-          \tl_set:Nx \l_@@_tmpc_tl
+    \c_spath_curvetoa_tl
+    {
+      \tl_set:Nx \l_@@_tmpc_tl
+      {
+        {\fp_to_dim:n
           {
-            {\fp_to_dim:n
-              {
-                3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {5}
-                - \tl_item:Nn \l_@@_tmpa_tl {2})
-                + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *
-                (\tl_item:Nn \l_@@_tmpa_tl {8}
-                - \tl_item:Nn \l_@@_tmpa_tl {5})
-                + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {11}
-                - \tl_item:Nn \l_@@_tmpa_tl {8})
-              }
-            }
-            {\fp_to_dim:n
-              {
-                3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {6}
-                - \tl_item:Nn \l_@@_tmpa_tl {3})
-                + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *
-                (\tl_item:Nn \l_@@_tmpa_tl {9}
-                - \tl_item:Nn \l_@@_tmpa_tl {6})
-                + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {12}
-                - \tl_item:Nn \l_@@_tmpa_tl {9})
-            }}
+            3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {5}
+            - \tl_item:Nn \l_@@_tmpa_tl {2})
+            + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *
+            (\tl_item:Nn \l_@@_tmpa_tl {8}
+            - \tl_item:Nn \l_@@_tmpa_tl {5})
+            + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {11}
+            - \tl_item:Nn \l_@@_tmpa_tl {8})
           }
         }
+        {\fp_to_dim:n
+          {
+            3*(1 - \l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {6}
+            - \tl_item:Nn \l_@@_tmpa_tl {3})
+            + 6 * (1 - \l_@@_tmpa_fp) * (\l_@@_tmpa_fp) *
+            (\tl_item:Nn \l_@@_tmpa_tl {9}
+            - \tl_item:Nn \l_@@_tmpa_tl {6})
+            + 3*(\l_@@_tmpa_fp)^2 * (\tl_item:Nn \l_@@_tmpa_tl {12}
+            - \tl_item:Nn \l_@@_tmpa_tl {9})
+        }}
       }
     }
   }
