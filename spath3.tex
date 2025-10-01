@@ -42,6 +42,18 @@
 \end{center}
 }
 
+\newenvironment{justexample}
+{\VerbatimEnvironment
+\begin{VerbatimOut}[gobble=0]{example.out}}
+{\end{VerbatimOut}
+   \begin{center}
+   \setlength{\parindent}{0pt}
+   \fbox{\begin{minipage}{.9\linewidth}
+     \lstinputlisting[]{example.out}
+   \end{minipage}}
+   \end{center}
+}
+
 \providecommand*{\url}{\texttt}
 \GetFileInfo{spath3.sty}
 
@@ -148,7 +160,107 @@ at end path construction={code}
 \end{verbatim}
 %
 This invokes the |code| right after the path has finished being built.
+Note that this stores code, so if you want to add a style then wrap it in |\tikzset|. 
 \end{variable}
+
+\subsection{Actions and Bounding Boxes with the Current Path}
+
+Using the |current| path can be a bit tricksy.
+Two situations that I'm aware of are the bounding box and actions (both pre and post).
+
+Let's consider bounding boxes.
+Under normal operation, TikZ keeps track of two bounding boxes: one for the whole picture and one for the current path.
+As the current path is built up, TikZ updates these with each point that is used.
+If the path is drawn then TikZ further updates the picture bounding box to ensure that it contains the current path together with its line width (it can't do that as it builds the path since the line width might not be set until afterwards).
+
+The |overlay| key suppresses updating the picture bounding box, but the path bounding box is still created.
+
+If the |current| path is transformed using the |spath3| library then the information used to update the bounding boxes is possibly incorrect.
+As the path bounding box only depends on the path, it is relatively easy to reset that when the |current| path is replaced.
+However, the picture bounding box is not so straightforward to fix, and trying to fix it at the code level seems fraught with opportunity to go spectacularly wrong!
+Fortunately, judicious use of the |overlay| key can help here: specifying the |overlay| key while the path is being built prevents the picture bounding box from being updated, while disabling the |overlay| key when the |current| path is transformed means that the picture bounding box gets updated with the new path dimensions.
+
+The following example illustrates this: the bounding box only encompasses the rendered path and not the original rectangle. 
+
+\begin{example}
+\begin{tikzpicture}[
+  execute at end picture={
+    \draw[dashed]
+    (current bounding box.north east) rectangle
+    (current bounding box.south west);
+  }
+]
+\path[
+  draw=blue!50,
+  line width=10pt,
+  overlay,
+  spath/at end path construction={
+    \tikzset{
+      overlay=false,
+      spath/transform={current}{shift={(2,1)}}
+    }
+  }
+] (0,0) rectangle (1,1);
+\end{tikzpicture}
+\end{example}
+
+When using the |current| path in actions then there are traps for the unwary with regard to when the |current| path is available.
+As mentioned in the previous section, the |current| path reflects the path at that instant, so the full path is not available until after the path has been built.
+But because of how pre- and post-actions are invoked, the available paths are a little confusing.
+Here's an attempt at summarising.
+Consider the following pseudoexample:
+
+\begin{justexample}
+\begin{tikzpicture}
+\path[
+  main path options,
+  at end path construction={path manipulation code},
+  preaction={preaction options},
+  postaction={postaction options}
+]
+path definition;
+\end{tikzpicture}
+\end{justexample}
+
+What happens is the following:
+
+\begin{enumerate}
+\item The |main path options| are invoked, the |current| path is empty, the pre- and post-action options are saved.
+\item The path is defined.
+\item The |path manipulation code| is invoked, the |current| path is fully-defined and is updated to reflect the manipulations (if any).
+\item The main path is copied into |\tikz@actions@path|.
+\item The |preaction options| are invoked, the main path is still in place so the |current| path can be used here to modify the path for the preactions.
+\item The preaction path is used, which clears it so the |current| path is empty.
+\item The main path is restored from |\tikz@actions@path|, so this is now the |current| path.
+\item The main path is used, which clears it so the |current| path is empty.
+\item The |postaction options| are invoked, the |current| path is still empty.
+\item The main path is restored (again) from |\tikz|actions|path|, so the |current| path is available again.
+\item The postaction path is used, which clears it so the |current| path is empty once more.
+\end{enumerate}
+
+From this, we can see that using |current| in pre- and post-actions is different.
+In the pre-action options, it is possible to use |current| to refer to the whole path straighaway.
+The post-action, however, has to be treated the same as the original path: to use |current| in its options it is probable that you need to wrap it in the |at end path construction| key.
+
+\begin{example}
+\begin{tikzpicture}
+\draw[
+  preaction={
+    draw=red,
+    ultra thick,
+    spath/transform={current}{shift={(0,1)}}
+  },
+  postaction={
+    draw=blue,
+    ultra thick,
+    spath/at end path construction={
+      \tikzset{spath/transform={current}{shift={(0,-1)}}}
+    }
+  },
+]
+(0,0) to[bend right] (3,1);
+\end{tikzpicture}
+\end{example}
 
 \subsection{Saving and Using Soft Paths}
 
