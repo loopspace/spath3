@@ -3847,8 +3847,8 @@ manipulating PGF soft paths}
 %
 %
 % \begin{macro}[internal]{
-% \spath_maybe_split_curve:Nn,
-% \spath_maybe_gsplit_curve:Nn,
+% \spath_maybe_split_curve:NNn,
+% \spath_maybe_gsplit_curve:NNn,
 % }
 % Possibly splits a bezier curve to ensure that the pieces don't self-intersect.
 % Figuring out whether a Bezier cubic self intersects is apparently a difficult problem so we don't bother.
@@ -3937,7 +3937,7 @@ manipulating PGF soft paths}
   \tl_set:Nx #2 {\tl_item:Nn \g_@@_output_tl {2}}
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_maybe_split_curve:NNn {NNn, NNV }
+\cs_generate_variant:Nn \spath_maybe_split_curve:NNn { NNV }
 \cs_new_protected_nopar:Npn \spath_maybe_gsplit_curve:NNn #1#2#3
 {
   \@@_maybe_split_curve:n {#3}
@@ -3945,7 +3945,7 @@ manipulating PGF soft paths}
   \tl_gset:Nx #2 {\tl_item:Nn \g_@@_output_tl {2}}
   \tl_gclear:N \g_@@_output_tl
 }
-\cs_generate_variant:Nn \spath_maybe_gsplit_curve:NNn {NNn, NNV}
+\cs_generate_variant:Nn \spath_maybe_gsplit_curve:NNn { NNV }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -5902,8 +5902,9 @@ manipulating PGF soft paths}
 {
   \group_begin:
   \tl_set:Nn \l_@@_tmpe_tl {#1}
-
-  % Remember if the component is closed
+%    \end{macrocode}
+% Remember if the component is closed
+%    \begin{macrocode}
   \spath_finalaction:NV \l_@@_tmpa_tl \l_@@_tmpe_tl
 
   \bool_set:Nn \l_@@_closed_bool
@@ -5911,32 +5912,46 @@ manipulating PGF soft paths}
     \tl_if_eq_p:NN \l_@@_tmpa_tl \c_spath_closepath_tl
   }
   
-  % Copy the path
+%    \end{macrocode}
+% Copy the path
+%    \begin{macrocode}
   \tl_set:Nn \l_@@_tmpe_tl {#1}
 
-  % Open the path
+%    \end{macrocode}
+% Open the path
+%    \begin{macrocode}
   \spath_open:N \l_@@_tmpe_tl
-  % Ensure beziers don't self-intersect
+%    \end{macrocode}
+% Ensure beziers don't self-intersect
+%    \begin{macrocode}
   \spath_split_curves:N \l_@@_tmpe_tl
 
-  % Make a copy for later
+%    \end{macrocode}
+% Make a copy for later
+%    \begin{macrocode}
   \tl_set_eq:NN \l_@@_tmpg_tl \l_@@_tmpe_tl
   
-  % Clear some token lists and sequences
+%    \end{macrocode}
+% Clear some token lists and sequences
+%    \begin{macrocode}
   \tl_clear:N \l_@@_tmpd_tl
   \seq_clear:N \l_@@_tmpb_seq
   \int_zero:N \l_@@_tmpa_int
 
   \pgfintersectionsortbyfirstpath
 
-  % Split the path into a sequence of segments
+%    \end{macrocode}
+% Split the path into a sequence of segments
+%    \begin{macrocode}
   \spath_segments_to_seq:NV \l_@@_tmpa_seq \l_@@_tmpe_tl
 
   \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
   {
     \seq_map_indexed_inline:Nn \l_@@_tmpa_seq
     {
-      % Don't intersect a segment with itself
+%    \end{macrocode}
+% Don't intersect a segment with itself
+%    \begin{macrocode}
       \int_compare:nF
       {
         ##1 == ####1
@@ -5946,7 +5961,9 @@ manipulating PGF soft paths}
         
         \int_compare:nT {\pgfintersectionsolutions > 0}
         {
-          % Find the times of the intersections on each path
+%    \end{macrocode}
+% Find the times of the intersections on each path
+%    \begin{macrocode}
           \int_step_inline:nnnn {1} {1} {\pgfintersectionsolutions}
           {
             \pgfintersectiongetsolutiontimes
@@ -5997,7 +6014,9 @@ manipulating PGF soft paths}
     }
   }
 
-  % Sort the sequence by reverse order along the path
+%    \end{macrocode}
+% Sort the sequence by reverse order along the path
+%    \begin{macrocode}
   \seq_sort:Nn \l_@@_tmpb_seq
   {
     \fp_compare:nNnTF { ##1 } < { ##2 }
@@ -6022,10 +6041,14 @@ manipulating PGF soft paths}
     \bool_set_false:N \l_@@_closed_bool
   }
   
-  % Restore the original copy of the path
+%    \end{macrocode}
+% Restore the original copy of the path
+%    \begin{macrocode}
   \tl_set_eq:NN \l_@@_tmpe_tl \l_@@_tmpg_tl
 
-  % Clear the token lists
+%    \end{macrocode}
+% Clear the token lists
+%    \begin{macrocode}
   \tl_clear:N \l_@@_tmpf_tl
   \tl_clear:N \l_@@_tmph_tl
   \tl_clear:N \l_@@_tmpg_tl
@@ -6076,7 +6099,9 @@ manipulating PGF soft paths}
 
   \spath_remove_empty_components:N \l_@@_tmpg_tl
 
-  % Do something with closed
+%    \end{macrocode}
+% Do something with closed
+%    \begin{macrocode}
   \bool_if:NT \l_@@_closed_bool
   {
     \spath_join_component:Nn \l_@@_tmpg_tl {1}
@@ -6130,37 +6155,51 @@ manipulating PGF soft paths}
   \spath_components_to_seq:Nn \l_@@_tmpa_seq {#1}
   \seq_clear:N \l_@@_tmpb_seq
   \seq_clear:N \l_@@_tmpc_seq
-
-  % Iterate over the components of the original path.
+%    \end{macrocode}
+% Iterate over the components of the original path.
+%    \begin{macrocode}
   \bool_do_until:nn
   {
     \seq_if_empty_p:N \l_@@_tmpa_seq
   }
   {
-    % Get the next component
+%    \end{macrocode}
+% Get the next component
+%    \begin{macrocode}
     \seq_pop_left:NN \l_@@_tmpa_seq \l_@@_tmpa_tl
-    % Copy for later
+%    \end{macrocode}
+% Copy for later
+%    \begin{macrocode}
     \tl_set_eq:NN \l_@@_tmpc_tl \l_@@_tmpa_tl
     \int_compare:nT
     {
       \tl_count:N \l_@@_tmpa_tl > 3
     }
     {
-    
-      % Split against itself
+%    \end{macrocode}
+% Split against itself
+%    \begin{macrocode}
       \spath_split_component_at_self_intersections:N \l_@@_tmpa_tl
-      % Grab the rest of the path
+%    \end{macrocode}
+% Grab the rest of the path
+%    \begin{macrocode}
       \tl_set:Nx \l_@@_tmpb_tl
       {
         \seq_use:Nn \l_@@_tmpb_seq {}
         \seq_use:Nn \l_@@_tmpa_seq {}
       }
-      % Split against the rest of the path
+%    \end{macrocode}
+% Split against the rest of the path
+%    \begin{macrocode}
       \spath_split_path_at_intersections:NV \l_@@_tmpa_tl \l_@@_tmpb_tl
     }
-    % Save the split path
+%    \end{macrocode}
+% Save the split path
+%    \begin{macrocode}
     \seq_put_right:NV \l_@@_tmpc_seq \l_@@_tmpa_tl
-    % Add the original copy to the sequence of processed components
+%    \end{macrocode}
+% Add the original copy to the sequence of processed components
+%    \begin{macrocode}
     \seq_put_right:NV \l_@@_tmpb_seq \l_@@_tmpc_tl
   }
 
