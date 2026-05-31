@@ -258,11 +258,9 @@ and the derived files            spath3.ins,
 % Load the \LaTeX3 foundation and register us as a \LaTeX3\ package.
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}
-\RequirePackage{expl3}
 \RequirePackage{pgf}
 \ProvidesExplPackage {spath3} {2024/05/31} {2.8} {Functions for
 manipulating PGF soft paths}
-\RequirePackage{xparse}
 %    \end{macrocode}
 %
 % Utilities copied from \url{https://github.com/loopspace/LaTeX3-Utilities} for adding something in braces to a token list.
@@ -6873,7 +6871,6 @@ manipulating PGF soft paths}
 %
 %     \begin{macrocode}
 \RequirePackage{spath3}
-\RequirePackage{expl3}
 \ExplSyntaxOn
 
 \tl_new:N \l_@@_tmpa_tl
