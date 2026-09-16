@@ -35,7 +35,7 @@ See http://www.latex-project.org/lppl.txt
 \endpreamble
 \postamble
 
-Copyright (C) 2011-2024 by Andrew Stacey <loopspace@mathforge.org>
+Copyright (C) 2011-2026 by Andrew Stacey <loopspace@mathforge.org>
 
 This work may be distributed and/or modified under the
 conditions of the LaTeX Project Public License (LPPL), either
@@ -143,7 +143,7 @@ and the derived files            spath3.ins,
 %</driver>
 % \fi
 %
-% \CheckSum{10278}
+% \CheckSum{10432}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -172,6 +172,7 @@ and the derived files            spath3.ins,
 % \changes{2.6}{2021/11/23}{Modified core routines to cope with a "true rectangle" path; added routines for splitting at a parametrised point.}
 % \changes{2.7}{2022/08/24}{Bug fixes}
 % \changes{2.8}{2024/05/31}{Routine to disable arrow shortening, bug fixes}
+% \changes{2.9}{2026/05/31}{Bug fixes}
 %
 % \DoNotIndex{\newcommand,\newenvironment}
 %
@@ -259,7 +260,7 @@ and the derived files            spath3.ins,
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}
 \RequirePackage{pgf}
-\ProvidesExplPackage {spath3} {2024/05/31} {2.8} {Functions for
+\ProvidesExplPackage {spath3} {2026/05/31} {2.9} {Functions for
 manipulating PGF soft paths}
 %    \end{macrocode}
 %
@@ -6766,6 +6767,8 @@ manipulating PGF soft paths}
     \exp_not:c {tikz@lasty}=\exp_not:c {pgf@y} \relax
     \exp_not:c {tikz@lastxsaved}=\exp_not:c {pgf@x} \relax
     \exp_not:c {tikz@lastysaved}=\exp_not:c {pgf@y} \relax
+    \exp_not:c {pgf@path@lastx}=\exp_not:c {pgf@x} \relax
+    \exp_not:c {pgf@path@lasty}=\exp_not:c {pgf@y} \relax
   }
   \tl_use:N \l_@@_tmpa_tl
   \spath_finalmovepoint:Nn \l_@@_tmpa_tl {#1}
